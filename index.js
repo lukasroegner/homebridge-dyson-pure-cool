@@ -502,11 +502,11 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
       // TODO: check if some characteristics could be used for TP02 and DP02
       airQualitySensorService
         .removeCharacteristic(Characteristic.PM2_5Density);
-      airPurifierService
+      airQualitySensorService
         .removeCharacteristic(Characteristic.PM10Density);
-      airPurifierService
+      airQualitySensorService
         .removeCharacteristic(Characteristic.VOCDensity);
-      airPurifierService
+      airQualitySensorService
         .removeCharacteristic(Characteristic.NitrogenDioxideDensity);
     }
 
