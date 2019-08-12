@@ -501,18 +501,25 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
     } else {
       // TODO: check if some characteristics could be used for TP02 and DP02
       airQualitySensorService
-        .removeCharacteristic(Characteristic.PM2_5Density)
-        .removeCharacteristic(Characteristic.PM10Density)
-        .removeCharacteristic(Characteristic.VOCDensity)
+        .removeCharacteristic(Characteristic.PM2_5Density);
+      airPurifierService
+        .removeCharacteristic(Characteristic.PM10Density);
+      airPurifierService
+        .removeCharacteristic(Characteristic.VOCDensity);
+      airPurifierService
         .removeCharacteristic(Characteristic.NitrogenDioxideDensity);
     }
 
     // Completely removes the air quality properties from the air purifier itself
     airPurifierService
-      .removeCharacteristic(Characteristic.AirQuality)
-      .removeCharacteristic(Characteristic.PM2_5Density)
-      .removeCharacteristic(Characteristic.PM10Density)
-      .removeCharacteristic(Characteristic.VOCDensity)
+      .removeCharacteristic(Characteristic.AirQuality);
+    airPurifierService
+      .removeCharacteristic(Characteristic.PM2_5Density);
+    airPurifierService
+      .removeCharacteristic(Characteristic.PM10Density);
+    airPurifierService
+      .removeCharacteristic(Characteristic.VOCDensity);
+    airPurifierService
       .removeCharacteristic(Characteristic.NitrogenDioxideDensity);
   } else {
     if (airQualitySensorService) {
@@ -532,9 +539,12 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
     } else {
       // TODO: check if some characteristics could be used for TP02 and DP02
       airPurifierService
-        .removeCharacteristic(Characteristic.PM2_5Density)
-        .removeCharacteristic(Characteristic.PM10Density)
-        .removeCharacteristic(Characteristic.VOCDensity)
+        .removeCharacteristic(Characteristic.PM2_5Density);
+      airPurifierService
+        .removeCharacteristic(Characteristic.PM10Density);
+      airPurifierService
+        .removeCharacteristic(Characteristic.VOCDensity);
+      airPurifierService
         .removeCharacteristic(Characteristic.NitrogenDioxideDensity);
     }
   }
