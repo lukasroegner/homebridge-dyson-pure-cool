@@ -63,7 +63,8 @@ function DysonPureCoolPlatform(log, config, api) {
   platform.config.countryCode = platform.config.countryCode || 'US';
   platform.config.devices = platform.config.devices || [];
   platform.config.apiUri = 'https://api.cp.dyson.com';
-  platform.config.supportedProductTypes = ['438', '520'];
+  // TODO: find out model type for DP02
+  platform.config.supportedProductTypes = ['438', '475', '520'];
 
   // Checks whether the API object is available
   if (!api) {
@@ -331,15 +332,26 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   // Creates the model name
   let model = 'Pure Cool';
   let hardwareRevision = '';
+  let hasJetFocus = false;
+  let hasAdvancedAirQualitySensors = false;
   switch (accessory.context.productType) {
     case '438':
       model = 'Dyson Pure Cool Tower';
       hardwareRevision = 'TP04';
+      hasJetFocus = true;
+      hasAdvancedAirQualitySensors = true;
+      break;
+    case '475':
+      model = 'Dyson Pure Cool Link Tower';
+      hardwareRevision = 'TP02';
       break;
     case '520':
       model = 'Dyson Pure Cool Desk';
       hardwareRevision = 'DP04';
+      hasJetFocus = true;
+      hasAdvancedAirQualitySensors = true;
       break;
+    // TODO: Add DP02 support
   }
 
   // Updates the accessory information
@@ -401,7 +413,7 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
 
   // Updates the jet focus
   let jetFocusSwitchService = accessory.getServiceByUUIDAndSubType(Service.Switch, 'JetFocus');
-  if (accessory.context.isJetFocusEnabled) {
+  if (accessory.context.isJetFocusEnabled && hasJetFocus) {
     if (!jetFocusSwitchService) {
       jetFocusSwitchService = accessory.addService(Service.Switch, accessory.context.name + ' Jet Focus', 'JetFocus');
     }
@@ -477,11 +489,25 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
       airQualitySensorService = accessory.addService(Service.AirQualitySensor, accessory.context.name + ' Air Quality', 'AirQuality');
     }
     airQualitySensorService
-      .setCharacteristic(Characteristic.AirQuality, Characteristic.AirQuality.UNKNOWN)
-      .setCharacteristic(Characteristic.PM2_5Density, 0)
-      .setCharacteristic(Characteristic.PM10Density, 0)
-      .setCharacteristic(Characteristic.VOCDensity, 0)
-      .setCharacteristic(Characteristic.NitrogenDioxideDensity, 0);
+      .setCharacteristic(Characteristic.AirQuality, Characteristic.AirQuality.UNKNOWN);
+
+    // Sets or proactively removes the advanced air quality properties
+    if (hasAdvancedAirQualitySensors) {
+      airQualitySensorService
+        .setCharacteristic(Characteristic.PM2_5Density, 0)
+        .setCharacteristic(Characteristic.PM10Density, 0)
+        .setCharacteristic(Characteristic.VOCDensity, 0)
+        .setCharacteristic(Characteristic.NitrogenDioxideDensity, 0);
+    } else {
+      // TODO: check if some characteristics could be used for TP02 and DP02
+      airQualitySensorService
+        .removeCharacteristic(Characteristic.PM2_5Density)
+        .removeCharacteristic(Characteristic.PM10Density)
+        .removeCharacteristic(Characteristic.VOCDensity)
+        .removeCharacteristic(Characteristic.NitrogenDioxideDensity);
+    }
+
+    // Completely removes the air quality properties from the air purifier itself
     airPurifierService
       .removeCharacteristic(Characteristic.AirQuality)
       .removeCharacteristic(Characteristic.PM2_5Density)
@@ -494,11 +520,23 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
       airQualitySensorService = null;
     }
     airPurifierService
-      .setCharacteristic(Characteristic.AirQuality, Characteristic.AirQuality.UNKNOWN)
-      .setCharacteristic(Characteristic.PM2_5Density, 0)
-      .setCharacteristic(Characteristic.PM10Density, 0)
-      .setCharacteristic(Characteristic.VOCDensity, 0)
-      .setCharacteristic(Characteristic.NitrogenDioxideDensity, 0);
+      .setCharacteristic(Characteristic.AirQuality, Characteristic.AirQuality.UNKNOWN);
+
+    // Sets or proactively removes the advanced air quality properties
+    if (hasAdvancedAirQualitySensors) {
+      airPurifierService
+        .setCharacteristic(Characteristic.PM2_5Density, 0)
+        .setCharacteristic(Characteristic.PM10Density, 0)
+        .setCharacteristic(Characteristic.VOCDensity, 0)
+        .setCharacteristic(Characteristic.NitrogenDioxideDensity, 0);
+    } else {
+      // TODO: check if some characteristics could be used for TP02 and DP02
+      airPurifierService
+        .removeCharacteristic(Characteristic.PM2_5Density)
+        .removeCharacteristic(Characteristic.PM10Density)
+        .removeCharacteristic(Characteristic.VOCDensity)
+        .removeCharacteristic(Characteristic.NitrogenDioxideDensity);
+    }
   }
 
   // Adds the accessory
@@ -575,10 +613,21 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
       }
 
       // Parses the air quality sensor data
-      const pm25 = Number.parseInt(content['data']['pm25']);
-      const pm10 = Number.parseInt(content['data']['pm10']);
-      const va10 = Number.parseInt(content['data']['va10']);
-      const noxl = Number.parseInt(content['data']['noxl']);
+      let pm25 = 0;
+      let pm10 = 0;
+      let va10 = 0;
+      let noxl = 0;
+      let p = 0;
+      let v = 0;
+      if (hasAdvancedAirQualitySensors) {
+        pm25 = Number.parseInt(content['data']['pm25']);
+        pm10 = Number.parseInt(content['data']['pm10']);
+        va10 = Number.parseInt(content['data']['va10']);
+        noxl = Number.parseInt(content['data']['noxl']);
+      } else {
+        p = Number.parseInt(content['data']['pact']);
+        v = Number.parseInt(content['data']['vact']);
+      }
 
       // Maps the values of the sensors to the relative values described in the app (1 - 5 => Good, Medium, Bad, Very Bad, Extremely Bad)
       const pm25Quality = pm25 <= 35 ? 1 : (pm25 <= 53 ? 2 : (pm25 <= 70 ? 3 : (pm25 <= 150 ? 4 : 5)));
@@ -590,21 +639,38 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
       // NO2 seems to be ignored when calculating the overall air quality in the app
       const noxlQuality = 0;
 
+      // Maps the values of the sensors to the relative values described in the app
+      // TODO: Find out the ranges for p and v
+      const pQuality = p <= 30 ? 1 : (p <= 60 ? 2 : (p <= 80 ? 3 : (p <= 90 ? 4 : 5)));
+      const vQuality = v <= 30 ? 1 : (v <= 60 ? 2 : (v <= 80 ? 3 : (v <= 90 ? 4 : 5)));
+
       // Sets the sensor data for air quality (the poorest sensor result wins)
       if (airQualitySensorService) {
-        airQualitySensorService
-          .updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality))
-          .updateCharacteristic(Characteristic.PM2_5Density, pm25)
-          .updateCharacteristic(Characteristic.PM10Density, pm10)
-          .updateCharacteristic(Characteristic.VOCDensity, va10)
-          .updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
+        if (hasAdvancedAirQualitySensors) {
+          airQualitySensorService
+            .updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality))
+            .updateCharacteristic(Characteristic.PM2_5Density, pm25)
+            .updateCharacteristic(Characteristic.PM10Density, pm10)
+            .updateCharacteristic(Characteristic.VOCDensity, va10)
+            .updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
+        } else {
+          // TODO: check if some characteristics could be used for TP02 and DP02
+          airQualitySensorService
+            .updateCharacteristic(Characteristic.AirQuality, Math.max(pQuality, vQuality));
+        }
       } else {
-        airPurifierService
-          .updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality))
-          .updateCharacteristic(Characteristic.PM2_5Density, pm25)
-          .updateCharacteristic(Characteristic.PM10Density, pm10)
-          .updateCharacteristic(Characteristic.VOCDensity, va10)
-          .updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
+        if (hasAdvancedAirQualitySensors) {
+          airPurifierService
+            .updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality))
+            .updateCharacteristic(Characteristic.PM2_5Density, pm25)
+            .updateCharacteristic(Characteristic.PM10Density, pm10)
+            .updateCharacteristic(Characteristic.VOCDensity, va10)
+            .updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
+        } else {
+          // TODO: check if some characteristics could be used for TP02 and DP02
+          airPurifierService
+            .updateCharacteristic(Characteristic.AirQuality, Math.max(pQuality, vQuality));
+        }
       }
 
       return;
@@ -613,19 +679,52 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
     // Updates the state data
     if (content.msg === 'CURRENT-STATE') {
 
-      // Sets the state of the air purifier
+      // Sets the power state
+      if (content['product-state']['fpwr']) {
+        airPurifierService
+          .updateCharacteristic(Characteristic.Active, content['product-state']['fpwr'] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
+      }
+      if (content['product-state']['fmod']) {
+        // TODO: check whether value of fmod is actually OFF
+        airPurifierService
+          .updateCharacteristic(Characteristic.Active, content['product-state']['fmod'] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
+      }
+
+      // Sets the operation mode
+      if (content['product-state']['fpwr'] && content['product-state']['fnst'] && content['product-state']['auto']) {
+        airPurifierService
+          .updateCharacteristic(Characteristic.CurrentAirPurifierState, content['product-state']['fpwr'] === 'OFF' ? Characteristic.CurrentAirPurifierState.INACTIVE : (content['product-state']['fnst'] === 'OFF' ?  Characteristic.CurrentAirPurifierState.IDLE : Characteristic.CurrentAirPurifierState.PURIFYING_AIR))
+          .updateCharacteristic(Characteristic.TargetAirPurifierState, content['product-state']['auto'] === 'OFF' ? Characteristic.TargetAirPurifierState.MANUAL : Characteristic.TargetAirPurifierState.AUTO);
+      }
+      if (content['product-state']['fmod'] && content['product-state']['fnst']) {
+        // TODO: check whether fnst can be used for current state
+        airPurifierService
+          .updateCharacteristic(Characteristic.CurrentAirPurifierState, content['product-state']['fmod'] === 'OFF' ? Characteristic.CurrentAirPurifierState.INACTIVE : (content['product-state']['fnst'] === 'FAN' ? Characteristic.CurrentAirPurifierState.PURIFYING_AIR : Characteristic.CurrentAirPurifierState.IDLE))
+          .updateCharacteristic(Characteristic.TargetAirPurifierState, content['product-state']['fmod'] === 'AUTO' ? Characteristic.TargetAirPurifierState.AUTO : Characteristic.TargetAirPurifierState.MANUAL);
+      }
+        
+      // Sets the rotation status
       airPurifierService
-        .updateCharacteristic(Characteristic.Active, content['product-state']['fpwr'] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE)
-        .updateCharacteristic(Characteristic.CurrentAirPurifierState, content['product-state']['fpwr'] === 'OFF' ? Characteristic.CurrentAirPurifierState.INACTIVE : (content['product-state']['fnst'] === 'OFF' ?  Characteristic.CurrentAirPurifierState.IDLE : Characteristic.CurrentAirPurifierState.PURIFYING_AIR))
-        .updateCharacteristic(Characteristic.TargetAirPurifierState, content['product-state']['auto'] === 'OFF' ? Characteristic.TargetAirPurifierState.MANUAL : Characteristic.TargetAirPurifierState.AUTO)
-        .updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED)
-        .updateCharacteristic(Characteristic.FilterChangeIndication, Math.min(Number.parseInt(content['product-state']['cflr']), Number.parseInt(content['product-state']['hflr'])) >= 10 ? Characteristic.FilterChangeIndication.FILTER_OK : Characteristic.FilterChangeIndication.CHANGE_FILTER)
-        .updateCharacteristic(Characteristic.FilterLifeLevel, Math.min(Number.parseInt(content['product-state']['cflr']), Number.parseInt(content['product-state']['hflr'])));
+        .updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED);
       
+      // Sets the filter life
+      if (content['product-state']['cflr'] && content['product-state']['hflr']) {
+        airPurifierService
+          .updateCharacteristic(Characteristic.FilterChangeIndication, Math.min(Number.parseInt(content['product-state']['cflr']), Number.parseInt(content['product-state']['hflr'])) >= 10 ? Characteristic.FilterChangeIndication.FILTER_OK : Characteristic.FilterChangeIndication.CHANGE_FILTER)
+          .updateCharacteristic(Characteristic.FilterLifeLevel, Math.min(Number.parseInt(content['product-state']['cflr']), Number.parseInt(content['product-state']['hflr'])));
+      }
+      if (content['product-state']['filf']) {
+        // TODO: find correct value for filter life, assuming 12 hours a day (365 days) based on https://www.bestbuy.com/site/questions/dyson-tp04-pure-cool-tower-400-sq-ft-air-purifier-white-silver/6192408/question/e2950d63-c24b-3e07-96f0-ba98e25422ac
+        const filterLife = Number.parseInt(content['product-state']['filf']) / (365 * 12);
+        airPurifierService
+          .updateCharacteristic(Characteristic.FilterChangeIndication, Math.round(filterLife * 100) >= 10 ? Characteristic.FilterChangeIndication.FILTER_OK : Characteristic.FilterChangeIndication.CHANGE_FILTER)
+          .updateCharacteristic(Characteristic.FilterLifeLevel, Math.round(filterLife * 100));
+      }
+
       // Sets the fan speed based on the auto setting
       if (content['product-state']['fnsp'] !== 'AUTO') {
         airPurifierService
-        .updateCharacteristic(Characteristic.RotationSpeed, Number.parseInt(content['product-state']['fnsp']) * 10);
+          .updateCharacteristic(Characteristic.RotationSpeed, Number.parseInt(content['product-state']['fnsp']) * 10);
       }
       
       // Sets the state of the night mode switch
@@ -646,15 +745,48 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
     // Starts a new request as the state should be updated
     if (content.msg === 'STATE-CHANGE') {
 
-      // Sets the state of the air purifier
+      // Sets the power state
+      if (content['product-state']['fpwr']) {
+        airPurifierService
+          .updateCharacteristic(Characteristic.Active, content['product-state']['fpwr'][1] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
+      }
+      if (content['product-state']['fmod']) {
+        // TODO: check whether value of fmod is actually OFF
+        airPurifierService
+          .updateCharacteristic(Characteristic.Active, content['product-state']['fmod'][1] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
+      }
+
+      // Sets the operation mode
+      if (content['product-state']['fpwr'] && content['product-state']['fnst'] && content['product-state']['auto']) {
+        airPurifierService
+          .updateCharacteristic(Characteristic.CurrentAirPurifierState, content['product-state']['fpwr'][1] === 'OFF' ? Characteristic.CurrentAirPurifierState.INACTIVE : (content['product-state']['fnst'][1] === 'OFF' ?  Characteristic.CurrentAirPurifierState.IDLE : Characteristic.CurrentAirPurifierState.PURIFYING_AIR))
+          .updateCharacteristic(Characteristic.TargetAirPurifierState, content['product-state']['auto'][1] === 'OFF' ? Characteristic.TargetAirPurifierState.MANUAL : Characteristic.TargetAirPurifierState.AUTO);
+      }
+      if (content['product-state']['fmod'] && content['product-state']['fnst']) {
+        // TODO: check whether fnst can be used for current state
+        airPurifierService
+          .updateCharacteristic(Characteristic.CurrentAirPurifierState, content['product-state']['fmod'][1] === 'OFF' ? Characteristic.CurrentAirPurifierState.INACTIVE : (content['product-state']['fnst'][1] === 'FAN' ? Characteristic.CurrentAirPurifierState.PURIFYING_AIR : Characteristic.CurrentAirPurifierState.IDLE))
+          .updateCharacteristic(Characteristic.TargetAirPurifierState, content['product-state']['fmod'][1] === 'AUTO' ? Characteristic.TargetAirPurifierState.AUTO : Characteristic.TargetAirPurifierState.MANUAL);
+      }
+        
+      // Sets the rotation status
       airPurifierService
-        .updateCharacteristic(Characteristic.Active, content['product-state']['fpwr'][1] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE)
-        .updateCharacteristic(Characteristic.CurrentAirPurifierState, content['product-state']['fpwr'][1] === 'OFF' ? Characteristic.CurrentAirPurifierState.INACTIVE : (content['product-state']['fnst'][1] === 'OFF' ?  Characteristic.CurrentAirPurifierState.IDLE : Characteristic.CurrentAirPurifierState.PURIFYING_AIR))
-        .updateCharacteristic(Characteristic.TargetAirPurifierState, content['product-state']['auto'][1] === 'OFF' ? Characteristic.TargetAirPurifierState.MANUAL : Characteristic.TargetAirPurifierState.AUTO)
-        .updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'][1] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED)
-        .updateCharacteristic(Characteristic.FilterChangeIndication, Math.min(Number.parseInt(content['product-state']['cflr'][1]), Number.parseInt(content['product-state']['hflr'][1])) >= 10 ? Characteristic.FilterChangeIndication.FILTER_OK : Characteristic.FilterChangeIndication.CHANGE_FILTER)
-        .updateCharacteristic(Characteristic.FilterLifeLevel, Math.min(Number.parseInt(content['product-state']['cflr'][1]), Number.parseInt(content['product-state']['hflr'][1])));
+        .updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'][1] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED);
       
+      // Sets the filter life
+      if (content['product-state']['cflr'] && content['product-state']['hflr']) {
+        airPurifierService
+          .updateCharacteristic(Characteristic.FilterChangeIndication, Math.min(Number.parseInt(content['product-state']['cflr'][1]), Number.parseInt(content['product-state']['hflr'][1])) >= 10 ? Characteristic.FilterChangeIndication.FILTER_OK : Characteristic.FilterChangeIndication.CHANGE_FILTER)
+          .updateCharacteristic(Characteristic.FilterLifeLevel, Math.min(Number.parseInt(content['product-state']['cflr'][1]), Number.parseInt(content['product-state']['hflr'][1])));
+      }
+      if (content['product-state']['filf']) {
+        // TODO: find correct value for filter life, assuming 12 hours a day (365 days) based on https://www.bestbuy.com/site/questions/dyson-tp04-pure-cool-tower-400-sq-ft-air-purifier-white-silver/6192408/question/e2950d63-c24b-3e07-96f0-ba98e25422ac
+        const filterLife = Number.parseInt(content['product-state']['filf'][1]) / (365 * 12);
+        airPurifierService
+          .updateCharacteristic(Characteristic.FilterChangeIndication, Math.round(filterLife * 100) >= 10 ? Characteristic.FilterChangeIndication.FILTER_OK : Characteristic.FilterChangeIndication.CHANGE_FILTER)
+          .updateCharacteristic(Characteristic.FilterLifeLevel, Math.round(filterLife * 100));
+      }
+
       // Sets the fan speed based on the auto setting
       if (content['product-state']['fnsp'][1] !== 'AUTO') {
         airPurifierService
@@ -678,25 +810,33 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   });
 
   // Subscribes for changes of the active characteristic
+  // TODO: check if values are ignored (both possibilities are sent to the device)
   airPurifierService
     .getCharacteristic(Characteristic.Active).on('set', function (value, callback) {
-      platform.log(accessory.context.serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON' }));
+      platform.log(accessory.context.serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
       mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
         time: new Date().toISOString(), 
-        data: { fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON' }
+        data: { 
+          fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', 
+          fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN'
+        }
       }));
       callback(null);
     });
 
   // Subscribes for changes of the target state characteristic
+  // TODO: check if values are ignored (both possibilities are sent to the device)
   airPurifierService
     .getCharacteristic(Characteristic.TargetAirPurifierState).on('set', function (value, callback) {
-      platform.log(accessory.context.serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON' }));
+      platform.log(accessory.context.serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
       mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
         time: new Date().toISOString(), 
-        data: { auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON' }
+        data: { 
+          auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON',
+          fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' 
+        }
       }));
       callback(null);
     });
