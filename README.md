@@ -1,6 +1,14 @@
 # homebridge-dyson-pure-cool
 
-This project is a homebridge plugin for the 2018 Dyson Pure Cool devices (Tower and Desk, TP04 and DP04). The device information is downloaded from your Dyson account. You just have to provide the IP addresses of the devices in the local network.
+This project is a homebridge plugin for the Dyson air purifiers. Supported devices are:
+
+- 2018 Dyson Pure Cool Tower (TP04)
+- 2018 Dyson Pure Cool Desk (DP04)
+- Dyson Pure Cool Link Tower (TP02)
+
+If your device is not supported, please open an issue, I'll try to add support for it.
+
+The device information is downloaded from your Dyson account. You just have to provide the IP addresses of the devices in the local network.
 
 All your devices are exposed as air purifiers in HomeKit, with support (also in Apple Home app) for:
 - On/off
@@ -9,11 +17,11 @@ All your devices are exposed as air purifiers in HomeKit, with support (also in 
 - Oscillation on/off
 - Relative humidity
 - Current temperature (in Apple Home app only supported as separate sensor)
-- Air quality (incl. PM2.5, PM10, VOC and NO2 data)
+- Air quality (incl. PM2.5, PM10, VOC and NO2 data for 2018 devices)
 
 Optionally, the following switches are exposed:
 - Night mode (on/off)
-- Jet Focus (on/off)
+- Jet Focus (on/off for 2018 devices)
 
 ## Installation
 
@@ -63,7 +71,7 @@ npm install homebridge-dyson-pure-cool -g
 
 **isNightModeEnabled**: If set to true, a switch is exposed for the night mode.
 
-**isJetFocusEnabled**: If set to true, a switch is exposed for the jet focus.
+**isJetFocusEnabled**: If set to true, a switch is exposed for the jet focus. Only used for 2018 devices.
 
 **isTemperatureSensorEnabled**: If set to true, a separate temperature sensor is exposed. If set to false, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app).
 
