@@ -390,7 +390,7 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
     .getCharacteristic(Characteristic.RotationSpeed)
     .setProps({
       minStep: 10,
-      minValue: 10,
+      minValue: 0,
       maxValue: 100
     });
 
