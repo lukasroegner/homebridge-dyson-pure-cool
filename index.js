@@ -814,7 +814,6 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   accessory.context.timeoutHandle = null;
 
   // Subscribes for changes of the active characteristic
-  // TODO: check if values are ignored (both possibilities are sent to the device)
   airPurifierService
     .getCharacteristic(Characteristic.Active).on('set', function (value, callback) {
 
@@ -839,7 +838,6 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
     });
 
   // Subscribes for changes of the target state characteristic
-  // TODO: check if values are ignored (both possibilities are sent to the device)
   airPurifierService
     .getCharacteristic(Characteristic.TargetAirPurifierState).on('set', function (value, callback) {
       platform.log(accessory.context.serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
@@ -853,6 +851,7 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
             fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' 
           }
         }));
+        accessory.context.timeoutHandle = null;
       }, 250);
       callback(null);
     });
