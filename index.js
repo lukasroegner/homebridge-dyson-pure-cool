@@ -718,8 +718,8 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
         // Calculates the filter life, assuming 12 hours a day, 360 days
         const filterLife = Number.parseInt(content['product-state']['filf']) / (360 * 12);
         airPurifierService
-          .updateCharacteristic(Characteristic.FilterChangeIndication, Math.round(filterLife * 100) >= 10 ? Characteristic.FilterChangeIndication.FILTER_OK : Characteristic.FilterChangeIndication.CHANGE_FILTER)
-          .updateCharacteristic(Characteristic.FilterLifeLevel, Math.round(filterLife * 100));
+          .updateCharacteristic(Characteristic.FilterChangeIndication, Math.ceil(filterLife * 100) >= 10 ? Characteristic.FilterChangeIndication.FILTER_OK : Characteristic.FilterChangeIndication.CHANGE_FILTER)
+          .updateCharacteristic(Characteristic.FilterLifeLevel, Math.ceil(filterLife * 100));
       }
 
       // Sets the fan speed based on the auto setting
@@ -782,8 +782,8 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
         // Calculates the filter life, assuming 12 hours a day, 360 days
         const filterLife = Number.parseInt(content['product-state']['filf'][1]) / (360 * 12);
         airPurifierService
-          .updateCharacteristic(Characteristic.FilterChangeIndication, Math.round(filterLife * 100) >= 10 ? Characteristic.FilterChangeIndication.FILTER_OK : Characteristic.FilterChangeIndication.CHANGE_FILTER)
-          .updateCharacteristic(Characteristic.FilterLifeLevel, Math.round(filterLife * 100));
+          .updateCharacteristic(Characteristic.FilterChangeIndication, Math.ceil(filterLife * 100) >= 10 ? Characteristic.FilterChangeIndication.FILTER_OK : Characteristic.FilterChangeIndication.CHANGE_FILTER)
+          .updateCharacteristic(Characteristic.FilterLifeLevel, Math.ceil(filterLife * 100));
       }
 
       // Sets the fan speed based on the auto setting
@@ -808,10 +808,24 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
     }
   });
 
+  // Defines the timeout handle for fixing a bug in the Home app: whenever the air purifier is switched on, the TargetAirPurifierState is set to AUTO
+  // This is prevented by delaying changes of the TargetAirPurifierState. If the Active characteristic is changed milliseconds after the TargetAirPurifierState,
+  // it is detected and changing of the TargetAirPurifierState won't be executed
+  accessory.context.timeoutHandle = null;
+
   // Subscribes for changes of the active characteristic
   // TODO: check if values are ignored (both possibilities are sent to the device)
   airPurifierService
     .getCharacteristic(Characteristic.Active).on('set', function (value, callback) {
+
+      // Checks if a timeout has been set, which has to be cleared
+      if (accessory.context.timeoutHandle) {
+        platform.log(accessory.context.serialNumber + ' - set Active to ' + value + ': setting TargetAirPurifierState cancelled');
+        clearTimeout(accessory.context.timeoutHandle);
+        accessory.context.timeoutHandle = null;
+      }
+
+      // Executes the actual change of the active state
       platform.log(accessory.context.serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
       mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
@@ -828,15 +842,18 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   // TODO: check if values are ignored (both possibilities are sent to the device)
   airPurifierService
     .getCharacteristic(Characteristic.TargetAirPurifierState).on('set', function (value, callback) {
-      platform.log(accessory.context.serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
-      mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
-        msg: 'STATE-SET', 
-        time: new Date().toISOString(), 
-        data: { 
-          auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON',
-          fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' 
-        }
-      }));
+      platform.log(accessory.context.serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
+      accessory.context.timeoutHandle = setTimeout(function() {
+        platform.log(accessory.context.serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
+        mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
+          msg: 'STATE-SET', 
+          time: new Date().toISOString(), 
+          data: { 
+            auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON',
+            fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' 
+          }
+        }));
+      }, 250);
       callback(null);
     });
 
