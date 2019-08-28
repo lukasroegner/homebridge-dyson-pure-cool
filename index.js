@@ -884,11 +884,15 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   if (nightModeSwitchService) {
     nightModeSwitchService
       .getCharacteristic(Characteristic.On).on('set', function (value, callback) {
-        platform.log(accessory.context.serialNumber + ' - set NightMode to ' + value + ': ' + JSON.stringify({ nmod: value ? 'ON' : 'OFF' }));
+        platform.log(accessory.context.serialNumber + ' - set NightMode to ' + value + ': ' + JSON.stringify({ nmod: value ? 'ON' : 'OFF', fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
         mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
           msg: 'STATE-SET', 
           time: new Date().toISOString(), 
-          data: { nmod: value ? 'ON' : 'OFF' }
+          data: { 
+            fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', 
+            fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN',
+            nmod: value ? 'ON' : 'OFF' 
+          }
         }));
         callback(null);
       });
