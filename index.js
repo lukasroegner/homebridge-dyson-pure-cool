@@ -39,11 +39,6 @@ function DysonPureCoolPlatform(log, config, api) {
   platform.pluginName = pluginName;
   platform.platformName = platformName;
 
-  // Registers the shutdown event
-  homebridgeObj.on('shutdown', function() {
-    platform.shutdown();
-  });
-
   // Checks whether a configuration is provided, otherwise the plugin should not be initialized
   if (!config) {
     return;
@@ -55,6 +50,15 @@ function DysonPureCoolPlatform(log, config, api) {
   platform.authorizationHeader = null;
   platform.devices = [];
   platform.accessories = [];
+
+  // Registers the shutdown event
+  homebridgeObj.on('shutdown', function() {
+    
+    // Shuts down all devices
+    for (let i = 0; i < platform.devices.length; i++) {
+      platform.devices[i].shutdown();
+    }
+  });
 
   // Initializes the configuration
   platform.config.username = platform.config.username || null;
@@ -261,18 +265,6 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
 }
 
 /**
- * Closes all connections to MQTT clients.
- */
-DysonPureCoolPlatform.prototype.shutdown = function () {
-  const platform = this;
-
-  // Shuts down all devices
-  for (let i = 0; i < platform.devices.length; i++) {
-    platform.device[i].shutdown();
-  }
-}
-
-/**
  * Represents a physical Dyson device.
  * @param platform The DysonPureCoolPlatform instance.
  * @param name The device information provided by the Dyson API.
@@ -288,6 +280,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
   // Stores the information of the device that is used for shutdown
   device.serialNumber = serialNumber;
+  device.platform = platform;
   device.mqttClient = null;
 
   // Creates the device information from the API results
@@ -434,7 +427,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   }
 
   // Registers the newly created accessories
-  platform.api.registerPlatformAccessories(platform.pluginName, platform.platformName, [airPurifierAccessory]);
+  platform.api.registerPlatformAccessories(platform.pluginName, platform.platformName, newDeviceAccessories);
 
   // Removes all unused accessories
   for (let i = 0; i < unusedDeviceAccessories.length; i++) {
@@ -567,13 +560,13 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   }
 
   // Initializes the MQTT client for local communication with the device
-  device.mqttClient = mqtt.connect('mqtt://' + ipAddress, {
+  device.mqttClient = mqtt.connect('mqtt://' + config.ipAddress, {
     username: serialNumber,
     password: password,
     protocolVersion: 3,
     protocolId: 'MQIsdp'
   });
-  platform.log(serialNumber + ' - MQTT connection requested for ' + ipAddress + '.');
+  platform.log(serialNumber + ' - MQTT connection requested for ' + config.ipAddress + '.');
 
   // Subscribes for events of the MQTT client
   device.mqttClient.on('connect', function() {
@@ -913,6 +906,6 @@ DysonPureCoolDevice.prototype.shutdown = function() {
   // Ends the MQTT connection
   if (device.mqttClient) {
     device.mqttClient.end(true);
-    platform.log(device.serialNumber + ' - MQTT connection ended.');
+    device.platform.log(device.serialNumber + ' - MQTT connection ended.');
   }
 }
