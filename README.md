@@ -23,6 +23,8 @@ Optionally, the following switches are exposed:
 - Night mode (on/off)
 - Jet Focus (on/off for 2018 devices)
 
+The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode and jet focus switches are combined in a separate settings accessory.
+
 ## Installation
 
 Install the plugin via npm:
