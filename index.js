@@ -314,7 +314,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   for (let i = 0; i < platform.accessories.length; i++) {
     if (platform.accessories[i].context.serialNumber === serialNumber) {
       unusedDeviceAccessories.push(platform.accessories[i]);
-      break;
     }
   }
 
