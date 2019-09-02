@@ -39,11 +39,6 @@ function DysonPureCoolPlatform(log, config, api) {
   platform.pluginName = pluginName;
   platform.platformName = platformName;
 
-  // Registers the shutdown event
-  homebridgeObj.on('shutdown', function() {
-    platform.shutdown();
-  });
-
   // Checks whether a configuration is provided, otherwise the plugin should not be initialized
   if (!config) {
     return;
@@ -55,7 +50,15 @@ function DysonPureCoolPlatform(log, config, api) {
   platform.authorizationHeader = null;
   platform.devices = [];
   platform.accessories = [];
-  platform.mqttClients = [];
+
+  // Registers the shutdown event
+  homebridgeObj.on('shutdown', function() {
+    
+    // Shuts down all devices
+    for (let i = 0; i < platform.devices.length; i++) {
+      platform.devices[i].shutdown();
+    }
+  });
 
   // Initializes the configuration
   platform.config.username = platform.config.username || null;
@@ -178,42 +181,71 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
       return callback(false);
     }
 
-    // Stores the device information
-    platform.devices = body;
+    // Initializes a device for each device from the API
+    for (let i = 0; i < body.length; i++) {
 
-    // Cycles through all existing homebridge accessory to remove the ones that do not exist in the Dyson account
-    for (var i = 0; i < platform.accessories.length; i++) {
+      // Checks if the device is supported by this plugin
+      let isSupported = false;
+      for (let j = 0; j < platform.config.supportedProductTypes.length; j++) {
+        if (platform.config.supportedProductTypes[j] === body[i].ProductType) {
+          isSupported = true;
+          break;
+        }
+      }
+      if (!isSupported) {
+        platform.log('Device with serial number ' + body[i].Serial + ' not added, as it is not supported by this plugin.');
+        continue;
+      }
+
+      // Gets the corresponding IP address
+      let config = null;
+      for (let j = 0; j < platform.config.devices.length; j++) {
+        if (platform.config.devices[j].serialNumber === body[i].Serial) {
+          config = platform.config.devices[i];
+          break;
+        }
+      }
+      if (!config) {
+        platform.log('No IP address provided for device with ' + body[i].Serial + '.');
+        return;
+      }
+
+      // Gets the MQTT credentials from the device (see https://github.com/CharlesBlonde/libpurecoollink/blob/master/libpurecoollink/utils.py)
+      const key = Uint8Array.from(Array(32), (_, index) => index + 1);
+      const initializationVector = new Uint8Array(16);
+      const decipher = crypto.createDecipheriv('aes-256-cbc', key, initializationVector);
+      const decryptedPasswordString = decipher.update(body[i].LocalCredentials, 'base64', 'utf8') + decipher.final('utf8');
+      const decryptedPasswordJson = JSON.parse(decryptedPasswordString);
+      const password = decryptedPasswordJson.apPasswordHash;
+      
+      // Creates the device instance and adds it to the list of all devices
+      platform.devices.push(new DysonPureCoolDevice(platform, body[i].Name, body[i].Serial, body[i].ProductType, body[i].Version, password, config));
+    }
+
+    // Removes the accessories that are not bound to a device
+    let accessoriesToRemove = [];
+    for (let i = 0; i < platform.accessories.length; i++) {
 
       // Checks if the device exists
-      var deviceExists = false;
-      for (var j = 0; j < platform.devices.length; j++) {
-        if (platform.devices[j].Serial == platform.accessories[i].context.serialNumber) {
+      let deviceExists = false;
+      for (let j = 0; j < platform.devices.length; j++) {
+        if (platform.devices[j].serialNumber === platform.accessories[i].context.serialNumber) {
           deviceExists = true;
+          break;
         }
+      }
+      if (deviceExists) {
+        continue;
       }
 
       // Removes the accessory
-      if (!deviceExists) {
-        platform.removeAccessory(platform.devices[j].Serial);
-      }
+      platform.log('Removing accessory with serial number ' + platform.accessories[i].context.serialNumber + ' and kind ' + platform.accessories[i].context.kind + '.');
+      accessoriesToRemove.push(accessory);
+      platform.accessories.splice(i, 1);
     }
 
-    // Cycles through all devices to add new accessories
-    for (var i = 0; i < platform.devices.length; i++) {
-
-      // Checks if an accessory already exists
-      var accessoryExists = false;
-      for (var j = 0; j < platform.accessories.length; j++) {
-        if (platform.accessories[j].context.serialNumber == platform.devices[i].Serial) {
-          accessoryExists = true;
-        }
-      }
-
-      // Creates the new accessory
-      if (!accessoryExists) {
-        platform.addAccessory(platform.devices[i].Serial);
-      }
-    }
+    // Actually removes the accessories from the platform
+    platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, accessoriesToRemove);
 
     // Returns a positive result
     platform.log('Got devices from the Dyson API.');
@@ -222,118 +254,41 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
 }
 
 /**
- * Adds a new accessory to the platform.
- * @param serialNumber The serial number for which the accessory is to be created.
- */
-DysonPureCoolPlatform.prototype.addAccessory = function (serialNumber) {
-  const platform = this;
-  const { UUIDGen, Accessory } = platform;
-
-  // Gets the corresponding devices object
-  platform.log('Adding new accessory with serial number ' + serialNumber + '.');
-  var device = null;
-  for (var i = 0; i < platform.devices.length; i++) {
-    if (platform.devices[i].Serial == serialNumber) {
-      device = platform.devices[i];
-    }
-  }
-
-  // Checks if the device has been found
-  if (!device) {
-    platform.log('Error while adding new accessory with serial number ' + serialNumber + ': not received from the Dyson API.');
-    return;
-  }
-
-  // Checks if the device is supported by this plugin
-  let isSupported = false;
-  for (var i = 0; i < platform.config.supportedProductTypes.length; i++) {
-    if (platform.config.supportedProductTypes[i] == device.ProductType) {
-      isSupported = true;
-    }
-  }
-  if (!isSupported) {
-    platform.log('Accessory with serial number ' + serialNumber + ' not added, as it is not supported by this plugin.');
-    return;
-  }
-
-  // Gets the corresponding IP address
-  let configDevice = null;
-  for (let i = 0; i < platform.config.devices.length; i++) {
-    if (platform.config.devices[i].serialNumber == serialNumber) {
-      configDevice = platform.config.devices[i];
-      break;
-    }
-  }
-
-  // Checks if the IP address has been found
-  if (!configDevice) {
-    platform.log('No IP address provided for device with ' + serialNumber + '.');
-    return;
-  }
-
-  // Gets the MQTT credentials from the device (see https://github.com/CharlesBlonde/libpurecoollink/blob/master/libpurecoollink/utils.py)
-  const key = Uint8Array.from(Array(32), (_, index) => index + 1);
-  const initializationVector = new Uint8Array(16);
-  const decipher = crypto.createDecipheriv('aes-256-cbc', key, initializationVector);
-  const decryptedPasswordString = decipher.update(device.LocalCredentials, 'base64', 'utf8') + decipher.final('utf8');
-  const decryptedPasswordJson = JSON.parse(decryptedPasswordString);
-  const password = decryptedPasswordJson.apPasswordHash;
-
-  // Creates the new accessory
-  var accessory = new Accessory(device.Name, UUIDGen.generate(device.Serial));
-  accessory.context.name = device.Name;
-  accessory.context.serialNumber = serialNumber;
-  accessory.context.productType = device.ProductType;
-  accessory.context.version = device.Version;
-  accessory.context.password = password;
-
-  // configures the accessory
-  platform.configureAccessory(accessory);
-
-  // Adds the accessory
-  platform.api.registerPlatformAccessories(platform.pluginName, platform.platformName, [accessory]);
-  platform.log('Accessory for serial number ' + serialNumber + ' added.');
-}  
-
-/**
  * Configures a previously cached accessory.
  * @param accessory The cached accessory.
  */
 DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   const platform = this;
-  const { Characteristic, Service } = platform;
+  
+  // Adds the cached accessory to the list
+  platform.accessories.push(accessory);
+}
 
-  platform.log('Configuring accessory with serial number ' + accessory.context.serialNumber + '.');
+/**
+ * Represents a physical Dyson device.
+ * @param platform The DysonPureCoolPlatform instance.
+ * @param name The device information provided by the Dyson API.
+ * @param serialNumber The device information provided by the Dyson API.
+ * @param productType The device information provided by the Dyson API.
+ * @param version The device information provided by the Dyson API.
+ * @param password The device password used for MQTT connections.
+ * @param config The device configuration.
+ */
+function DysonPureCoolDevice(platform, name, serialNumber, productType, version, password, config) {
+  const device = this;
+  const { UUIDGen, Accessory, Characteristic, Service } = platform;
 
-  // Gets the corresponding configuration
-  let configDevice = null;
-  for (let i = 0; i < platform.config.devices.length; i++) {
-    if (platform.config.devices[i].serialNumber == accessory.context.serialNumber) {
-      configDevice = platform.config.devices[i];
-      break;
-    }
-  }
+  // Stores the information of the device that is used for shutdown
+  device.serialNumber = serialNumber;
+  device.platform = platform;
+  device.mqttClient = null;
 
-  // Checks if the configuration has been found
-  if (!configDevice) {
-    platform.log('No configuration provided for device with ' + accessory.context.serialNumber + '.');
-    return;
-  }
-
-  // Updates the configuration
-  accessory.context.ipAddress = configDevice.ipAddress;
-  accessory.context.isNightModeEnabled = configDevice.isNightModeEnabled || false;
-  accessory.context.isJetFocusEnabled = configDevice.isJetFocusEnabled || false;
-  accessory.context.isTemperatureSensorEnabled = configDevice.isTemperatureSensorEnabled || false;
-  accessory.context.isHumiditySensorEnabled = configDevice.isHumiditySensorEnabled || false;
-  accessory.context.isAirQualitySensorEnabled = configDevice.isAirQualitySensorEnabled || false;
-
-  // Creates the model name
+  // Creates the device information from the API results
   let model = 'Pure Cool';
   let hardwareRevision = '';
   let hasJetFocus = false;
   let hasAdvancedAirQualitySensors = false;
-  switch (accessory.context.productType) {
+  switch (productType) {
     case '438':
       model = 'Dyson Pure Cool Tower';
       hardwareRevision = 'TP04';
@@ -352,22 +307,152 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
       break;
   }
 
-  // Updates the accessory information
-  let accessoryInformationService = accessory.getService(Service.AccessoryInformation);
-  if (!accessoryInformationService) {
-    accessoryInformationService = accessory.addService(Service.AccessoryInformation);
+  // Gets all accessories from the platform that match the serial number
+  let unusedDeviceAccessories = [];
+  let newDeviceAccessories = [];
+  let deviceAccessories = [];
+  for (let i = 0; i < platform.accessories.length; i++) {
+    if (platform.accessories[i].context.serialNumber === serialNumber) {
+      unusedDeviceAccessories.push(platform.accessories[i]);
+    }
   }
-  accessoryInformationService
-    .setCharacteristic(Characteristic.Manufacturer, 'Dyson')
-    .setCharacteristic(Characteristic.Model, model)
-    .setCharacteristic(Characteristic.SerialNumber, accessory.context.serialNumber)
-    .setCharacteristic(Characteristic.FirmwareRevision, accessory.context.version)
-    .setCharacteristic(Characteristic.HardwareRevision, hardwareRevision);
+
+  // Gets the air purifier accessory
+  let airPurifierAccessory = null; 
+  for (let i = 0; i < unusedDeviceAccessories.length; i++) {
+    if (unusedDeviceAccessories[i].context.kind === 'AirPurifierAccessory') {
+      airPurifierAccessory = unusedDeviceAccessories[i];
+      unusedDeviceAccessories.splice(i, 1);
+      break;
+    }
+  }
+
+  // Creates a new one if it has not been cached
+  if (!airPurifierAccessory) {
+    platform.log('Adding new accessory with serial number ' + serialNumber + ' and kind AirPurifierAccessory.');
+    airPurifierAccessory = new Accessory(name, UUIDGen.generate(serialNumber + 'AirPurifierAccessory'));
+    airPurifierAccessory.context.serialNumber = serialNumber;
+    airPurifierAccessory.context.kind = 'AirPurifierAccessory';
+    newDeviceAccessories.push(airPurifierAccessory);
+  }
+  deviceAccessories.push(airPurifierAccessory);
+
+  // Gets the temperature accessory
+  let temperatureAccessory = null;
+  if (config.isTemperatureSensorEnabled) {
+    for (let i = 0; i < unusedDeviceAccessories.length; i++) {
+      if (unusedDeviceAccessories[i].context.kind === 'TemperatureAccessory') {
+        temperatureAccessory = unusedDeviceAccessories[i];
+        unusedDeviceAccessories.splice(i, 1);
+        break;
+      }
+    }
+
+    // Creates a new one if it has not been cached
+    if (!temperatureAccessory) {
+      platform.log('Adding new accessory with serial number ' + serialNumber + ' and kind TemperatureAccessory.');
+      temperatureAccessory = new Accessory(name + ' Temperature', UUIDGen.generate(serialNumber + 'TemperatureAccessory'));
+      temperatureAccessory.context.serialNumber = serialNumber;
+      temperatureAccessory.context.kind = 'TemperatureAccessory';
+      newDeviceAccessories.push(temperatureAccessory);
+    }
+    deviceAccessories.push(temperatureAccessory);
+  }
+
+  // Gets the humidity accessory
+  let humidityAccessory = null;
+  if (config.isHumiditySensorEnabled) {
+    for (let i = 0; i < unusedDeviceAccessories.length; i++) {
+      if (unusedDeviceAccessories[i].context.kind === 'HumidityAccessory') {
+        humidityAccessory = unusedDeviceAccessories[i];
+        unusedDeviceAccessories.splice(i, 1);
+        break;
+      }
+    }
+
+    // Creates a new one if it has not been cached
+    if (!humidityAccessory) {
+      platform.log('Adding new accessory with serial number ' + serialNumber + ' and kind HumidityAccessory.');
+      humidityAccessory = new Accessory(name + ' Humidity', UUIDGen.generate(serialNumber + 'HumidityAccessory'));
+      humidityAccessory.context.serialNumber = serialNumber;
+      humidityAccessory.context.kind = 'HumidityAccessory';
+      newDeviceAccessories.push(humidityAccessory);
+    }
+    deviceAccessories.push(humidityAccessory);
+  }
+
+  // Gets the air quality accessory
+  let airQualityAccessory = null;
+  if (config.isAirQualitySensorEnabled) {
+    for (let i = 0; i < unusedDeviceAccessories.length; i++) {
+      if (unusedDeviceAccessories[i].context.kind === 'AirQualityAccessory') {
+        airQualityAccessory = unusedDeviceAccessories[i];
+        unusedDeviceAccessories.splice(i, 1);
+        break;
+      }
+    }
+
+    // Creates a new one if it has not been cached
+    if (!airQualityAccessory) {
+      platform.log('Adding new accessory with serial number ' + serialNumber + ' and kind AirQualityAccessory.');
+      airQualityAccessory = new Accessory(name + ' Air Quality', UUIDGen.generate(serialNumber + 'AirQualityAccessory'));
+      airQualityAccessory.context.serialNumber = serialNumber;
+      airQualityAccessory.context.kind = 'AirQualityAccessory';
+      newDeviceAccessories.push(airQualityAccessory);
+    }
+    deviceAccessories.push(airQualityAccessory);
+  }
+
+  // Gets the switch accessory
+  let switchAccessory = null;
+  if (config.isNightModeEnabled || (config.isJetFocusEnabled && hasJetFocus)) {
+    for (let i = 0; i < unusedDeviceAccessories.length; i++) {
+      if (unusedDeviceAccessories[i].context.kind === 'SwitchAccessory') {
+        switchAccessory = unusedDeviceAccessories[i];
+        unusedDeviceAccessories.splice(i, 1);
+        break;
+      }
+    }
+
+    // Creates a new one if it has not been cached
+    if (!switchAccessory) {
+      platform.log('Adding new accessory with serial number ' + serialNumber + ' and kind SwitchAccessory.');
+      switchAccessory = new Accessory(name + ' Settings', UUIDGen.generate(serialNumber + 'SwitchAccessory'));
+      switchAccessory.context.serialNumber = serialNumber;
+      switchAccessory.context.kind = 'SwitchAccessory';
+      newDeviceAccessories.push(switchAccessory);
+    }
+    deviceAccessories.push(switchAccessory);
+  }
+
+  // Registers the newly created accessories
+  platform.api.registerPlatformAccessories(platform.pluginName, platform.platformName, newDeviceAccessories);
+
+  // Removes all unused accessories
+  for (let i = 0; i < unusedDeviceAccessories.length; i++) {
+    platform.log('Removing unused accessory with serial number ' + serialNumber + ' and kind ' + unusedDeviceAccessories[i].context.kind + '.');
+    platform.accessories.splice(platform.accessories.indexOf(unusedDeviceAccessories[i]), 1);
+  }
+  platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, unusedDeviceAccessories);
+
+  // Updates the accessory information
+  for (let i = 0; i < deviceAccessories.length; i++) {
+    let accessoryInformationService = deviceAccessories[i].getService(Service.AccessoryInformation);
+    if (!accessoryInformationService) {
+      accessoryInformationService = deviceAccessories[i].addService(Service.AccessoryInformation);
+    }
+    accessoryInformationService
+      .setCharacteristic(Characteristic.Manufacturer, 'Dyson')
+      .setCharacteristic(Characteristic.Model, model)
+      .setCharacteristic(Characteristic.SerialNumber, serialNumber)
+      .setCharacteristic(Characteristic.FirmwareRevision, version)
+      .setCharacteristic(Characteristic.HardwareRevision, hardwareRevision);
+  }
 
   // Updates the air purifier
-  let airPurifierService = accessory.getService(Service.AirPurifier);
+  let airPurifierService = airPurifierAccessory.getService(Service.AirPurifier);
   if (!airPurifierService) {
-    airPurifierService = accessory.addService(Service.AirPurifier);
+    airPurifierService = airPurifierAccessory.addService(Service.AirPurifier);
   }
   airPurifierService
     .setCharacteristic(Characteristic.Active, Characteristic.Active.INACTIVE)
@@ -394,205 +479,125 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
       maxValue: 100
     });
 
+  // Updates the temperature sensor
+  let temperatureService = null;
+  if (!temperatureAccessory) {
+    temperatureService = airPurifierService;
+  } else {
+    temperatureService = temperatureAccessory.getService(Service.TemperatureSensor);
+    if (!temperatureService) {
+      temperatureService = temperatureAccessory.addService(Service.TemperatureSensor);
+    }
+  }
+  temperatureService
+    .setCharacteristic(Characteristic.CurrentTemperature, 0);
+
+  // Updates the temperature steps
+  airPurifierService
+    .getCharacteristic(Characteristic.CurrentTemperature)
+    .setProps({ 
+      minValue: -50, 
+      maxValue: 100, 
+      unit: "celsius" 
+    });
+
+  // Updates the humidity sensor
+  let humidityService = null;
+  if (!humidityAccessory) {
+    humidityService = airPurifierService;
+  } else {
+    humidityService = humidityAccessory.getService(Service.HumiditySensor);
+    if (!humidityService) {
+      humidityService = humidityAccessory.addService(Service.HumiditySensor);
+    }
+  }
+  humidityService
+    .setCharacteristic(Characteristic.CurrentRelativeHumidity, 0);
+
+  // Updates the air quality sensor
+  let airQualityService = null;
+  if (!airQualityAccessory) {
+    airQualityService = airPurifierService;
+  } else {
+    airQualityService = airQualityAccessory.getService(Service.AirQualitySensor);
+    if (!airQualityService) {
+      airQualityService = airQualityAccessory.addService(Service.AirQualitySensor);
+    }
+  }
+  airQualityService
+    .setCharacteristic(Characteristic.AirQuality, Characteristic.AirQuality.UNKNOWN);
+
+  // Sets The air quality properties
+  if (hasAdvancedAirQualitySensors) {
+    airQualityService
+      .setCharacteristic(Characteristic.PM2_5Density, 0)
+      .setCharacteristic(Characteristic.PM10Density, 0)
+      .setCharacteristic(Characteristic.VOCDensity, 0)
+      .setCharacteristic(Characteristic.NitrogenDioxideDensity, 0);
+  }
+
   // Updates the night mode
-  let nightModeSwitchService = accessory.getServiceByUUIDAndSubType(Service.Switch, 'NightMode');
-  if (accessory.context.isNightModeEnabled) {
+  let nightModeSwitchService = null;
+  if (switchAccessory) {
+    nightModeSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'NightMode');
     if (!nightModeSwitchService) {
-      nightModeSwitchService = accessory.addService(Service.Switch, accessory.context.name + ' Night Mode', 'NightMode');
+      nightModeSwitchService = switchAccessory.addService(Service.Switch, 'Night Mode', 'NightMode');
     }
     nightModeSwitchService
       .setCharacteristic(Characteristic.On, false);
-  } else {
-    if (nightModeSwitchService) {
-      accessory.removeService(nightModeSwitchService);
-      nightModeSwitchService = null;
-    }
   }
 
-  // Updates the jet focus
-  let jetFocusSwitchService = accessory.getServiceByUUIDAndSubType(Service.Switch, 'JetFocus');
-  if (accessory.context.isJetFocusEnabled && hasJetFocus) {
+  // Updates the jet focus mode
+  let jetFocusSwitchService = null;
+  if (switchAccessory) {
+    jetFocusSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'JetFocus');
     if (!jetFocusSwitchService) {
-      jetFocusSwitchService = accessory.addService(Service.Switch, accessory.context.name + ' Jet Focus', 'JetFocus');
+      jetFocusSwitchService = switchAccessory.addService(Service.Switch, 'Jet Focus', 'JetFocus');
     }
     jetFocusSwitchService
       .setCharacteristic(Characteristic.On, false);
-  } else {
-    if (jetFocusSwitchService) {
-      accessory.removeService(jetFocusSwitchService);
-      jetFocusSwitchService = null;
-    }
   }
-
-  // Updates the temperature sensor
-  let temperatureSensorService = accessory.getServiceByUUIDAndSubType(Service.TemperatureSensor, 'Temperature');
-  if (accessory.context.isTemperatureSensorEnabled) {
-    if (!temperatureSensorService) {
-      temperatureSensorService = accessory.addService(Service.TemperatureSensor, accessory.context.name + ' Temperature', 'Temperature');
-    }
-    temperatureSensorService
-      .setCharacteristic(Characteristic.CurrentTemperature, 0);
-    airPurifierService
-      .removeCharacteristic(Characteristic.CurrentTemperature);
-
-    // Updates the temperature steps
-    temperatureSensorService
-      .getCharacteristic(Characteristic.CurrentTemperature)
-      .setProps({ 
-        minValue: -50, 
-        maxValue: 100, 
-        unit: "celsius" 
-      });
-  } else {
-    if (temperatureSensorService) {
-      accessory.removeService(temperatureSensorService);
-      temperatureSensorService = null;
-    }
-    airPurifierService
-      .setCharacteristic(Characteristic.CurrentTemperature, 0);
-
-    // Updates the temperature steps
-    airPurifierService
-      .getCharacteristic(Characteristic.CurrentTemperature)
-      .setProps({ 
-        minValue: -50, 
-        maxValue: 100, 
-        unit: "celsius" 
-      });
-  }
-
-  // Updates the humidity sensor
-  let humiditySensorService = accessory.getServiceByUUIDAndSubType(Service.HumiditySensor, 'Humidity');
-  if (accessory.context.isSeparateHumiditySensorEnabled) {
-    if (!humiditySensorService) {
-      humiditySensorService = accessory.addService(Service.HumiditySensor, accessory.context.name + ' Humidity', 'Humidity');
-    }
-    humiditySensorService
-      .setCharacteristic(Characteristic.CurrentRelativeHumidity, 0);
-    airPurifierService
-      .removeCharacteristic(Characteristic.CurrentRelativeHumidity);
-  } else {
-    if (humiditySensorService) {
-      accessory.removeService(humiditySensorService);
-      humiditySensorService = null;
-    }
-    airPurifierService
-      .setCharacteristic(Characteristic.CurrentRelativeHumidity, 0);
-  }
-
-  // Updates the air quality sensor
-  let airQualitySensorService = accessory.getServiceByUUIDAndSubType(Service.AirQualitySensor, 'AirQuality');
-  if (accessory.context.isSeparateAirQualitySensorEnabled) {
-    if (!airQualitySensorService) {
-      airQualitySensorService = accessory.addService(Service.AirQualitySensor, accessory.context.name + ' Air Quality', 'AirQuality');
-    }
-    airQualitySensorService
-      .setCharacteristic(Characteristic.AirQuality, Characteristic.AirQuality.UNKNOWN);
-
-    // Sets or proactively removes the advanced air quality properties
-    if (hasAdvancedAirQualitySensors) {
-      airQualitySensorService
-        .setCharacteristic(Characteristic.PM2_5Density, 0)
-        .setCharacteristic(Characteristic.PM10Density, 0)
-        .setCharacteristic(Characteristic.VOCDensity, 0)
-        .setCharacteristic(Characteristic.NitrogenDioxideDensity, 0);
-    } else {
-      airQualitySensorService
-        .removeCharacteristic(Characteristic.PM2_5Density);
-      airQualitySensorService
-        .removeCharacteristic(Characteristic.PM10Density);
-      airQualitySensorService
-        .removeCharacteristic(Characteristic.VOCDensity);
-      airQualitySensorService
-        .removeCharacteristic(Characteristic.NitrogenDioxideDensity);
-    }
-
-    // Completely removes the air quality properties from the air purifier itself
-    airPurifierService
-      .removeCharacteristic(Characteristic.AirQuality);
-    airPurifierService
-      .removeCharacteristic(Characteristic.PM2_5Density);
-    airPurifierService
-      .removeCharacteristic(Characteristic.PM10Density);
-    airPurifierService
-      .removeCharacteristic(Characteristic.VOCDensity);
-    airPurifierService
-      .removeCharacteristic(Characteristic.NitrogenDioxideDensity);
-  } else {
-    if (airQualitySensorService) {
-      accessory.removeService(airQualitySensorService);
-      airQualitySensorService = null;
-    }
-    airPurifierService
-      .setCharacteristic(Characteristic.AirQuality, Characteristic.AirQuality.UNKNOWN);
-
-    // Sets or proactively removes the advanced air quality properties
-    if (hasAdvancedAirQualitySensors) {
-      airPurifierService
-        .setCharacteristic(Characteristic.PM2_5Density, 0)
-        .setCharacteristic(Characteristic.PM10Density, 0)
-        .setCharacteristic(Characteristic.VOCDensity, 0)
-        .setCharacteristic(Characteristic.NitrogenDioxideDensity, 0);
-    } else {
-      airPurifierService
-        .removeCharacteristic(Characteristic.PM2_5Density);
-      airPurifierService
-        .removeCharacteristic(Characteristic.PM10Density);
-      airPurifierService
-        .removeCharacteristic(Characteristic.VOCDensity);
-      airPurifierService
-        .removeCharacteristic(Characteristic.NitrogenDioxideDensity);
-    }
-  }
-
-  // Adds the accessory
-  platform.log('Configured accessory for device with serial number ' + accessory.context.serialNumber + '.');
-  platform.accessories.push(accessory);
 
   // Initializes the MQTT client for local communication with the device
-  const mqttClient = mqtt.connect('mqtt://' + accessory.context.ipAddress, {
-    username: accessory.context.serialNumber,
-    password: accessory.context.password,
+  device.mqttClient = mqtt.connect('mqtt://' + config.ipAddress, {
+    username: serialNumber,
+    password: password,
     protocolVersion: 3,
     protocolId: 'MQIsdp'
   });
-  platform.mqttClients.push({
-    serialNumber: accessory.context.serialNumber,
-    mqttClient: mqttClient
-  });
-  platform.log(accessory.context.serialNumber + ' - MQTT connection requested for ' + accessory.context.ipAddress + '.');
+  platform.log(serialNumber + ' - MQTT connection requested for ' + config.ipAddress + '.');
 
   // Subscribes for events of the MQTT client
-  mqttClient.on('connect', function() {
-    platform.log(accessory.context.serialNumber + ' - MQTT connection established.');
+  device.mqttClient.on('connect', function() {
+    platform.log(serialNumber + ' - MQTT connection established.');
 
     // Subscribes to the status topic to receive updates
-    mqttClient.subscribe(accessory.context.productType + '/' + accessory.context.serialNumber + '/status/current', function() {
+    device.mqttClient.subscribe(productType + '/' + serialNumber + '/status/current', function() {
 
       // Sends an initial request for the current state
-      mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({
+      device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
         msg: 'REQUEST-CURRENT-STATE',
         time: new Date().toISOString()
       }));
     });
   });
-  mqttClient.on('error', function(error) {
-    platform.log(accessory.context.serialNumber + ' - MQTT error: ' + error);
+  device.mqttClient.on('error', function(error) {
+    platform.log(serialNumber + ' - MQTT error: ' + error);
   });
-  mqttClient.on('reconnect', function() {
-    platform.log(accessory.context.serialNumber + ' - MQTT reconnecting.');
+  device.mqttClient.on('reconnect', function() {
+    platform.log(serialNumber + ' - MQTT reconnecting.');
   });
-  mqttClient.on('close', function() {
-    platform.log(accessory.context.serialNumber + ' - MQTT disconnected.');
+  device.mqttClient.on('close', function() {
+    platform.log(serialNumber + ' - MQTT disconnected.');
   });
-  mqttClient.on('offline', function() {
-    platform.log(accessory.context.serialNumber + ' - MQTT offline.');
+  device.mqttClient.on('offline', function() {
+    platform.log(serialNumber + ' - MQTT offline.');
   });
-  mqttClient.on('end', function() {
-    platform.log(accessory.context.serialNumber + ' - MQTT ended.');
+  device.mqttClient.on('end', function() {
+    platform.log(serialNumber + ' - MQTT ended.');
   });
-  mqttClient.on('message', function(topic, payload) {
-    platform.log(accessory.context.serialNumber + ' - MQTT message received: ' + payload.toString());
+  device.mqttClient.on('message', function(_, payload) {
+    platform.log(serialNumber + ' - MQTT message received: ' + payload.toString());
 
     // Parses the payload
     const content = JSON.parse(payload);
@@ -601,22 +606,12 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
     if (content.msg === 'ENVIRONMENTAL-CURRENT-SENSOR-DATA') {
       
       // Sets the sensor data for temperature
-      if (temperatureSensorService) {
-        temperatureSensorService
-          .updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
-      } else {
-        airPurifierService
-          .updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
-      }
+      temperatureService
+        .updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
 
       // Sets the sensor data for humidity
-      if (humiditySensorService) {
-        humiditySensorService
-          .updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']));
-      } else {
-        airPurifierService
-          .updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']));
-      }
+      humidityService
+        .updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']));
 
       // Parses the air quality sensor data
       let pm25 = 0;
@@ -650,30 +645,16 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
       const vQuality = (v * 0.125) <= 3 ? 1 : ((v * 0.125) <= 6 ? 2 : ((v * 0.125) <= 8 ? 3 : 4));
 
       // Sets the sensor data for air quality (the poorest sensor result wins)
-      if (airQualitySensorService) {
-        if (hasAdvancedAirQualitySensors) {
-          airQualitySensorService
-            .updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality))
-            .updateCharacteristic(Characteristic.PM2_5Density, pm25)
-            .updateCharacteristic(Characteristic.PM10Density, pm10)
-            .updateCharacteristic(Characteristic.VOCDensity, va10)
-            .updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
-        } else {
-          airQualitySensorService
-            .updateCharacteristic(Characteristic.AirQuality, Math.max(pQuality, vQuality));
-        }
+      if (hasAdvancedAirQualitySensors) {
+        airQualityService
+          .updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality))
+          .updateCharacteristic(Characteristic.PM2_5Density, pm25)
+          .updateCharacteristic(Characteristic.PM10Density, pm10)
+          .updateCharacteristic(Characteristic.VOCDensity, va10)
+          .updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
       } else {
-        if (hasAdvancedAirQualitySensors) {
-          airPurifierService
-            .updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality))
-            .updateCharacteristic(Characteristic.PM2_5Density, pm25)
-            .updateCharacteristic(Characteristic.PM10Density, pm10)
-            .updateCharacteristic(Characteristic.VOCDensity, va10)
-            .updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
-        } else {
-          airPurifierService
-            .updateCharacteristic(Characteristic.AirQuality, Math.max(pQuality, vQuality));
-        }
+        airQualityService
+          .updateCharacteristic(Characteristic.AirQuality, Math.max(pQuality, vQuality));
       }
 
       return;
@@ -715,6 +696,7 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
           .updateCharacteristic(Characteristic.FilterLifeLevel, Math.min(Number.parseInt(content['product-state']['cflr']), Number.parseInt(content['product-state']['hflr'])));
       }
       if (content['product-state']['filf']) {
+
         // Calculates the filter life, assuming 12 hours a day, 360 days
         const filterLife = Number.parseInt(content['product-state']['filf']) / (360 * 12);
         airPurifierService
@@ -779,6 +761,7 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
           .updateCharacteristic(Characteristic.FilterLifeLevel, Math.min(Number.parseInt(content['product-state']['cflr'][1]), Number.parseInt(content['product-state']['hflr'][1])));
       }
       if (content['product-state']['filf']) {
+
         // Calculates the filter life, assuming 12 hours a day, 360 days
         const filterLife = Number.parseInt(content['product-state']['filf'][1]) / (360 * 12);
         airPurifierService
@@ -811,22 +794,22 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   // Defines the timeout handle for fixing a bug in the Home app: whenever the air purifier is switched on, the TargetAirPurifierState is set to AUTO
   // This is prevented by delaying changes of the TargetAirPurifierState. If the Active characteristic is changed milliseconds after the TargetAirPurifierState,
   // it is detected and changing of the TargetAirPurifierState won't be executed
-  accessory.context.timeoutHandle = null;
+  let timeoutHandle = null;
 
   // Subscribes for changes of the active characteristic
   airPurifierService
     .getCharacteristic(Characteristic.Active).on('set', function (value, callback) {
 
       // Checks if a timeout has been set, which has to be cleared
-      if (accessory.context.timeoutHandle) {
-        platform.log(accessory.context.serialNumber + ' - set Active to ' + value + ': setting TargetAirPurifierState cancelled');
-        clearTimeout(accessory.context.timeoutHandle);
-        accessory.context.timeoutHandle = null;
+      if (timeoutHandle) {
+        platform.log(serialNumber + ' - set Active to ' + value + ': setting TargetAirPurifierState cancelled');
+        clearTimeout(timeoutHandle);
+        timeoutHandle = null;
       }
 
       // Executes the actual change of the active state
-      platform.log(accessory.context.serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
-      mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
+      platform.log(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
+      device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
         time: new Date().toISOString(), 
         data: { 
@@ -840,10 +823,10 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   // Subscribes for changes of the target state characteristic
   airPurifierService
     .getCharacteristic(Characteristic.TargetAirPurifierState).on('set', function (value, callback) {
-      platform.log(accessory.context.serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
-      accessory.context.timeoutHandle = setTimeout(function() {
-        platform.log(accessory.context.serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
-        mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
+      platform.log(serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
+      timeoutHandle = setTimeout(function() {
+        platform.log(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
+        device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
           msg: 'STATE-SET', 
           time: new Date().toISOString(), 
           data: { 
@@ -851,7 +834,7 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
             fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' 
           }
         }));
-        accessory.context.timeoutHandle = null;
+        timeoutHandle = null;
       }, 250);
       callback(null);
     });
@@ -859,8 +842,8 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   // Subscribes for changes of the swing mode characteristic
   airPurifierService
     .getCharacteristic(Characteristic.SwingMode).on('set', function (value, callback) {
-      platform.log(accessory.context.serialNumber + ' - set SwingMode to ' + value + ': ' + JSON.stringify({ oson: value === Characteristic.SwingMode.SWING_DISABLED ? 'OFF' : 'ON' }));
-      mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
+      platform.log(serialNumber + ' - set SwingMode to ' + value + ': ' + JSON.stringify({ oson: value === Characteristic.SwingMode.SWING_DISABLED ? 'OFF' : 'ON' }));
+      device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
         time: new Date().toISOString(), 
         data: { oson: value === Characteristic.SwingMode.SWING_DISABLED ? 'OFF' : 'ON' }
@@ -871,8 +854,8 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   // Subscribes for changes of the rotation speed characteristic
   airPurifierService
     .getCharacteristic(Characteristic.RotationSpeed).on('set', function (value, callback) {
-      platform.log(accessory.context.serialNumber + ' - set RotationSpeed to ' + value + ': ' + JSON.stringify({ fnsp: ('0000' + Math.round(value / 10.0).toString()).slice(-4) }));
-      mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
+      platform.log(serialNumber + ' - set RotationSpeed to ' + value + ': ' + JSON.stringify({ fnsp: ('0000' + Math.round(value / 10.0).toString()).slice(-4) }));
+      device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
         time: new Date().toISOString(), 
         data: { fnsp: ('0000' + Math.round(value / 10.0).toString()).slice(-4) }
@@ -884,8 +867,8 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   if (nightModeSwitchService) {
     nightModeSwitchService
       .getCharacteristic(Characteristic.On).on('set', function (value, callback) {
-        platform.log(accessory.context.serialNumber + ' - set NightMode to ' + value + ': ' + JSON.stringify({ nmod: value ? 'ON' : 'OFF', fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
-        mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
+        platform.log(serialNumber + ' - set NightMode to ' + value + ': ' + JSON.stringify({ nmod: value ? 'ON' : 'OFF', fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
+        device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
           msg: 'STATE-SET', 
           time: new Date().toISOString(), 
           data: { 
@@ -902,8 +885,8 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
   if (jetFocusSwitchService) {
     jetFocusSwitchService
       .getCharacteristic(Characteristic.On).on('set', function (value, callback) {
-        platform.log(accessory.context.serialNumber + ' - set JetFocus to ' + value + ': ' + JSON.stringify({ fdir: value ? 'ON' : 'OFF' }));
-        mqttClient.publish(accessory.context.productType + '/' + accessory.context.serialNumber + '/command', JSON.stringify({ 
+        platform.log(serialNumber + ' - set JetFocus to ' + value + ': ' + JSON.stringify({ fdir: value ? 'ON' : 'OFF' }));
+        device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
           msg: 'STATE-SET', 
           time: new Date().toISOString(), 
           data: { fdir: value ? 'ON' : 'OFF' }
@@ -914,43 +897,14 @@ DysonPureCoolPlatform.prototype.configureAccessory = function (accessory) {
 }
 
 /**
- * Removes an accessory from the platform.
- * @param serialNumber The serial number of the device for which the accessory is to be removed.
+ * Shuts down the device by ending the MQTT connection.
  */
-DysonPureCoolPlatform.prototype.removeAccessory = function (serialNumber) {
-  const platform = this;
+DysonPureCoolDevice.prototype.shutdown = function() {
+  const device = this;
 
-  // Initializes the lists for remaining and removed accessories
-  platform.log('Removing accessory with serial number ' + serialNumber);
-  var remainingAccessories = [];
-  var removedAccessories = [];
-
-  // Adds the accessories to the two lists
-  for (var i = 0; i < platform.accessories.length; i++) {
-    if (platform.accessories[i].context.serialNumber == serialNumber) {
-      removedAccessories.push(platform.accessories[i]);
-    } else {
-      remainingAccessories.push(platform.accessories[i]);
-    }
-  }
-
-  // Removes the accessories
-  if (removedAccessories.length > 0) {
-    platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, removedAccessories);
-    platform.accessories = remainingAccessories;
-    platform.log(removedAccessories.length + ' accessories removed.');
-  }
-}
-
-/**
- * Closes all connections to MQTT clients.
- */
-DysonPureCoolPlatform.prototype.shutdown = function () {
-  const platform = this;
-
-  // Ends all MQTT clients
-  for (var i = 0; i < platform.mqttClients.length; i++) {
-    platform.mqttClients[i].mqttClient.end(true);
-    platform.log(platform.mqttClients[i].serialNumber + ' - MQTT connection ended.');
+  // Ends the MQTT connection
+  if (device.mqttClient) {
+    device.mqttClient.end(true);
+    device.platform.log(device.serialNumber + ' - MQTT connection ended.');
   }
 }
