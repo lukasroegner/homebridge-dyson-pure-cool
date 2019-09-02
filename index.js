@@ -538,7 +538,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
   // Updates the night mode
   let nightModeSwitchService = null;
-  if (switchAccessory) {
+  if (switchAccessory && config.isNightModeEnabled) {
     nightModeSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'NightMode');
     if (!nightModeSwitchService) {
       nightModeSwitchService = switchAccessory.addService(Service.Switch, 'Night Mode', 'NightMode');
@@ -549,7 +549,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
   // Updates the jet focus mode
   let jetFocusSwitchService = null;
-  if (switchAccessory) {
+  if (switchAccessory && config.isJetFocusEnabled && hasJetFocus) {
     jetFocusSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'JetFocus');
     if (!jetFocusSwitchService) {
       jetFocusSwitchService = switchAccessory.addService(Service.Switch, 'Jet Focus', 'JetFocus');
