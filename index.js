@@ -16,7 +16,7 @@ module.exports = function (homebridge) {
   // Gets the classes required for implementation of the plugin
   homebridgeObj = homebridge;
 
-  // Registers the dynamic Dyson Pure Cool platform, as the locks are read from the API and created dynamically
+  // Registers the dynamic Dyson Pure Cool platform, as the devices are read from the API and created dynamically
   homebridge.registerPlatform(pluginName, platformName, DysonPureCoolPlatform, true);
 }
 
@@ -74,7 +74,7 @@ function DysonPureCoolPlatform(log, config, api) {
     return;
   }
 
-  // Saves the API object to register new locks later on
+  // Saves the API object to register new devices later on
   log('Homebridge API available.');
   platform.api = api;
 
@@ -201,13 +201,13 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
       let config = null;
       for (let j = 0; j < platform.config.devices.length; j++) {
         if (platform.config.devices[j].serialNumber === body[i].Serial) {
-          config = platform.config.devices[i];
+          config = platform.config.devices[j];
           break;
         }
       }
       if (!config) {
         platform.log('No IP address provided for device with ' + body[i].Serial + '.');
-        return;
+        continue;
       }
 
       // Gets the MQTT credentials from the device (see https://github.com/CharlesBlonde/libpurecoollink/blob/master/libpurecoollink/utils.py)
