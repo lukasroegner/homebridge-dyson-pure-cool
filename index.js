@@ -867,15 +867,22 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   if (nightModeSwitchService) {
     nightModeSwitchService
       .getCharacteristic(Characteristic.On).on('set', function (value, callback) {
-        platform.log(serialNumber + ' - set NightMode to ' + value + ': ' + JSON.stringify({ nmod: value ? 'ON' : 'OFF', fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
+
+        // Builds the command data, if night mode is set to ON, the device has to be ON
+        // If night mode is set to OFF, the device status is not changed
+        const commandData = {};
+        if (value) {
+          commandData = { fpwr: 'ON', fmod: 'FAN', nmod: 'ON' };
+        } else {
+          commandData = { nmod: 'OFF' };
+        }
+
+        // Sends the command
+        platform.log(serialNumber + ' - set NightMode to ' + value + ': ' + JSON.stringify(commandData));
         device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
           msg: 'STATE-SET', 
           time: new Date().toISOString(), 
-          data: { 
-            fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', 
-            fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN',
-            nmod: value ? 'ON' : 'OFF' 
-          }
+          data: commandData
         }));
         callback(null);
       });
