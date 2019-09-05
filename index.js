@@ -870,7 +870,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
         // Builds the command data, if night mode is set to ON, the device has to be ON
         // If night mode is set to OFF, the device status is not changed
-        const commandData = {};
+        let commandData = {};
         if (value) {
           commandData = { fpwr: 'ON', fmod: 'FAN', nmod: 'ON' };
         } else {
