@@ -872,7 +872,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         // If night mode is set to OFF, the device status is not changed
         let commandData = {};
         if (value) {
-          commandData = { fpwr: 'ON', fmod: 'FAN', nmod: 'ON' };
+          if (airPurifierService.getCharacteristic(Characteristic.Active).value) {
+            commandData = { nmod: 'ON' };
+          } else {
+            commandData = { fpwr: 'ON', fmod: 'FAN', nmod: 'ON' };
+          }
         } else {
           commandData = { nmod: 'OFF' };
         }
