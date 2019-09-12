@@ -70,17 +70,17 @@ function DysonPureCoolPlatform(log, config, api) {
 
   // Checks whether the API object is available
   if (!api) {
-    log('Homebridge API not available, please update your homebridge version!');
+    log.warn('Homebridge API not available, please update your homebridge version!');
     return;
   }
 
   // Saves the API object to register new devices later on
-  log('Homebridge API available.');
+  log.debug('Homebridge API available.');
   platform.api = api;
 
   // Subscribes to the event that is raised when homebridge finished loading cached accessories
   platform.api.on('didFinishLaunching', function () {
-    platform.log('Cached accessories loaded.');
+    platform.log.debug('Cached accessories loaded.');
 
     // Initially gets the devices from the Dyson API
     platform.getDevicesFromApi(function() { });
@@ -96,20 +96,20 @@ DysonPureCoolPlatform.prototype.signIn = function (callback) {
 
   // Validates the configuration
   if (!platform.config.apiUri) {
-    platform.log('No API URI provided.');
+    platform.log.warn('No API URI provided.');
     return callback(false);
   }
   if (!platform.config.countryCode) {
-    platform.log('No country code provided.');
+    platform.log.warn('No country code provided.');
     return false;
   }
   if (!platform.config.username || !platform.config.password) {
-    platform.log('No username and/or password provided.');
+    platform.log.warn('No username and/or password provided.');
     return false;
   }
 
   // Sends the login request to the API
-  platform.log('Signing in.');
+  platform.log.info('Signing in.');
   platform.authorizationHeader = null;
   request({
     uri: platform.config.apiUri + '/v1/userregistration/authenticate?country=' + platform.config.countryCode,
@@ -124,18 +124,18 @@ DysonPureCoolPlatform.prototype.signIn = function (callback) {
     // Checks if the API returned a positive result
     if (error || response.statusCode != 200 || !body || !body.Account || !body.Password) {
       if (error) {
-        platform.log('Error while signing in. Error: ' + error);
+        platform.log.warn('Error while signing in. Error: ' + error);
       } else if (response.statusCode != 200) {
-        platform.log('Error while signing in. Status Code: ' + response.statusCode);
+        platform.log.warn('Error while signing in. Status Code: ' + response.statusCode);
       } else if (!body || !body.Account || !body.Password) {
-        platform.log('Error while signing in. Could not get Account/Password parameter from response: ' + JSON.stringify(body));
+        platform.log.warn('Error while signing in. Could not get Account/Password parameter from response: ' + JSON.stringify(body));
       }
       return callback(false);
     }
 
     // Creates the authorization header for further use
     platform.authorizationHeader = 'Basic ' + Buffer.from(body.Account + ':' + body.Password).toString('base64');
-    platform.log('Signed in.');
+    platform.log.info('Signed in.');
     return callback(true);
   });
 };
@@ -172,11 +172,11 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
     // Checks if the API returned a positive result
     if (error || response.statusCode != 200 || !body) {
       if (error) {
-        platform.log('Error while retrieving the devices from the API. Error: ' + error);
+        platform.log.warn('Error while retrieving the devices from the API. Error: ' + error);
       } else if (response.statusCode != 200) {
-        platform.log('Error while retrieving the devices from the API. Status Code: ' + response.statusCode);
+        platform.log.warn('Error while retrieving the devices from the API. Status Code: ' + response.statusCode);
       } else if (!body) {
-        platform.log('Error while retrieving the devices from the API. Could not get devices from response: ' + JSON.stringify(body));
+        platform.log.warn('Error while retrieving the devices from the API. Could not get devices from response: ' + JSON.stringify(body));
       }
       return callback(false);
     }
@@ -193,7 +193,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
         }
       }
       if (!isSupported) {
-        platform.log('Device with serial number ' + body[i].Serial + ' not added, as it is not supported by this plugin.');
+        platform.log.info('Device with serial number ' + body[i].Serial + ' not added, as it is not supported by this plugin.');
         continue;
       }
 
@@ -206,7 +206,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
         }
       }
       if (!config) {
-        platform.log('No IP address provided for device with ' + body[i].Serial + '.');
+        platform.log.warn('No IP address provided for device with ' + body[i].Serial + '.');
         continue;
       }
 
@@ -239,7 +239,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
       }
 
       // Removes the accessory
-      platform.log('Removing accessory with serial number ' + platform.accessories[i].context.serialNumber + ' and kind ' + platform.accessories[i].context.kind + '.');
+      platform.log.info('Removing accessory with serial number ' + platform.accessories[i].context.serialNumber + ' and kind ' + platform.accessories[i].context.kind + '.');
       accessoriesToRemove.push(accessory);
       platform.accessories.splice(i, 1);
     }
@@ -248,7 +248,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
     platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, accessoriesToRemove);
 
     // Returns a positive result
-    platform.log('Got devices from the Dyson API.');
+    platform.log.info('Got devices from the Dyson API.');
     return callback(true);
   });
 }
@@ -329,7 +329,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
   // Creates a new one if it has not been cached
   if (!airPurifierAccessory) {
-    platform.log('Adding new accessory with serial number ' + serialNumber + ' and kind AirPurifierAccessory.');
+    platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind AirPurifierAccessory.');
     airPurifierAccessory = new Accessory(name, UUIDGen.generate(serialNumber + 'AirPurifierAccessory'));
     airPurifierAccessory.context.serialNumber = serialNumber;
     airPurifierAccessory.context.kind = 'AirPurifierAccessory';
@@ -350,7 +350,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Creates a new one if it has not been cached
     if (!temperatureAccessory) {
-      platform.log('Adding new accessory with serial number ' + serialNumber + ' and kind TemperatureAccessory.');
+      platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind TemperatureAccessory.');
       temperatureAccessory = new Accessory(name + ' Temperature', UUIDGen.generate(serialNumber + 'TemperatureAccessory'));
       temperatureAccessory.context.serialNumber = serialNumber;
       temperatureAccessory.context.kind = 'TemperatureAccessory';
@@ -372,7 +372,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Creates a new one if it has not been cached
     if (!humidityAccessory) {
-      platform.log('Adding new accessory with serial number ' + serialNumber + ' and kind HumidityAccessory.');
+      platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind HumidityAccessory.');
       humidityAccessory = new Accessory(name + ' Humidity', UUIDGen.generate(serialNumber + 'HumidityAccessory'));
       humidityAccessory.context.serialNumber = serialNumber;
       humidityAccessory.context.kind = 'HumidityAccessory';
@@ -394,7 +394,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Creates a new one if it has not been cached
     if (!airQualityAccessory) {
-      platform.log('Adding new accessory with serial number ' + serialNumber + ' and kind AirQualityAccessory.');
+      platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind AirQualityAccessory.');
       airQualityAccessory = new Accessory(name + ' Air Quality', UUIDGen.generate(serialNumber + 'AirQualityAccessory'));
       airQualityAccessory.context.serialNumber = serialNumber;
       airQualityAccessory.context.kind = 'AirQualityAccessory';
@@ -416,7 +416,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Creates a new one if it has not been cached
     if (!switchAccessory) {
-      platform.log('Adding new accessory with serial number ' + serialNumber + ' and kind SwitchAccessory.');
+      platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind SwitchAccessory.');
       switchAccessory = new Accessory(name + ' Settings', UUIDGen.generate(serialNumber + 'SwitchAccessory'));
       switchAccessory.context.serialNumber = serialNumber;
       switchAccessory.context.kind = 'SwitchAccessory';
@@ -430,7 +430,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
   // Removes all unused accessories
   for (let i = 0; i < unusedDeviceAccessories.length; i++) {
-    platform.log('Removing unused accessory with serial number ' + serialNumber + ' and kind ' + unusedDeviceAccessories[i].context.kind + '.');
+    platform.log.info('Removing unused accessory with serial number ' + serialNumber + ' and kind ' + unusedDeviceAccessories[i].context.kind + '.');
     platform.accessories.splice(platform.accessories.indexOf(unusedDeviceAccessories[i]), 1);
   }
   platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, unusedDeviceAccessories);
@@ -565,11 +565,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     protocolVersion: 3,
     protocolId: 'MQIsdp'
   });
-  platform.log(serialNumber + ' - MQTT connection requested for ' + config.ipAddress + '.');
+  platform.log.debug(serialNumber + ' - MQTT connection requested for ' + config.ipAddress + '.');
 
   // Subscribes for events of the MQTT client
   device.mqttClient.on('connect', function() {
-    platform.log(serialNumber + ' - MQTT connection established.');
+    platform.log.debug(serialNumber + ' - MQTT connection established.');
 
     // Subscribes to the status topic to receive updates
     device.mqttClient.subscribe(productType + '/' + serialNumber + '/status/current', function() {
@@ -582,22 +582,22 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     });
   });
   device.mqttClient.on('error', function(error) {
-    platform.log(serialNumber + ' - MQTT error: ' + error);
+    platform.log.debug(serialNumber + ' - MQTT error: ' + error);
   });
   device.mqttClient.on('reconnect', function() {
-    platform.log(serialNumber + ' - MQTT reconnecting.');
+    platform.log.debug(serialNumber + ' - MQTT reconnecting.');
   });
   device.mqttClient.on('close', function() {
-    platform.log(serialNumber + ' - MQTT disconnected.');
+    platform.log.debug(serialNumber + ' - MQTT disconnected.');
   });
   device.mqttClient.on('offline', function() {
-    platform.log(serialNumber + ' - MQTT offline.');
+    platform.log.debug(serialNumber + ' - MQTT offline.');
   });
   device.mqttClient.on('end', function() {
-    platform.log(serialNumber + ' - MQTT ended.');
+    platform.log.debug(serialNumber + ' - MQTT ended.');
   });
   device.mqttClient.on('message', function(_, payload) {
-    platform.log(serialNumber + ' - MQTT message received: ' + payload.toString());
+    platform.log.debug(serialNumber + ' - MQTT message received: ' + payload.toString());
 
     // Parses the payload
     const content = JSON.parse(payload);
@@ -802,13 +802,13 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
       // Checks if a timeout has been set, which has to be cleared
       if (timeoutHandle) {
-        platform.log(serialNumber + ' - set Active to ' + value + ': setting TargetAirPurifierState cancelled');
+        platform.log.info(serialNumber + ' - set Active to ' + value + ': setting TargetAirPurifierState cancelled');
         clearTimeout(timeoutHandle);
         timeoutHandle = null;
       }
 
       // Executes the actual change of the active state
-      platform.log(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
+      platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
       device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
         time: new Date().toISOString(), 
@@ -823,9 +823,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   // Subscribes for changes of the target state characteristic
   airPurifierService
     .getCharacteristic(Characteristic.TargetAirPurifierState).on('set', function (value, callback) {
-      platform.log(serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
+      platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
       timeoutHandle = setTimeout(function() {
-        platform.log(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
+        platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
         device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
           msg: 'STATE-SET', 
           time: new Date().toISOString(), 
@@ -842,7 +842,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   // Subscribes for changes of the swing mode characteristic
   airPurifierService
     .getCharacteristic(Characteristic.SwingMode).on('set', function (value, callback) {
-      platform.log(serialNumber + ' - set SwingMode to ' + value + ': ' + JSON.stringify({ oson: value === Characteristic.SwingMode.SWING_DISABLED ? 'OFF' : 'ON' }));
+      platform.log.info(serialNumber + ' - set SwingMode to ' + value + ': ' + JSON.stringify({ oson: value === Characteristic.SwingMode.SWING_DISABLED ? 'OFF' : 'ON' }));
       device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
         time: new Date().toISOString(), 
@@ -854,7 +854,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   // Subscribes for changes of the rotation speed characteristic
   airPurifierService
     .getCharacteristic(Characteristic.RotationSpeed).on('set', function (value, callback) {
-      platform.log(serialNumber + ' - set RotationSpeed to ' + value + ': ' + JSON.stringify({ fnsp: ('0000' + Math.round(value / 10.0).toString()).slice(-4) }));
+      platform.log.info(serialNumber + ' - set RotationSpeed to ' + value + ': ' + JSON.stringify({ fnsp: ('0000' + Math.round(value / 10.0).toString()).slice(-4) }));
       device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
         time: new Date().toISOString(), 
@@ -872,13 +872,17 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         // If night mode is set to OFF, the device status is not changed
         let commandData = {};
         if (value) {
-          commandData = { fpwr: 'ON', fmod: 'FAN', nmod: 'ON' };
+          if (airPurifierService.getCharacteristic(Characteristic.Active).value) {
+            commandData = { nmod: 'ON' };
+          } else {
+            commandData = { fpwr: 'ON', fmod: 'FAN', nmod: 'ON' };
+          }
         } else {
           commandData = { nmod: 'OFF' };
         }
 
         // Sends the command
-        platform.log(serialNumber + ' - set NightMode to ' + value + ': ' + JSON.stringify(commandData));
+        platform.log.info(serialNumber + ' - set NightMode to ' + value + ': ' + JSON.stringify(commandData));
         device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
           msg: 'STATE-SET', 
           time: new Date().toISOString(), 
@@ -892,7 +896,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   if (jetFocusSwitchService) {
     jetFocusSwitchService
       .getCharacteristic(Characteristic.On).on('set', function (value, callback) {
-        platform.log(serialNumber + ' - set JetFocus to ' + value + ': ' + JSON.stringify({ fdir: value ? 'ON' : 'OFF' }));
+        platform.log.info(serialNumber + ' - set JetFocus to ' + value + ': ' + JSON.stringify({ fdir: value ? 'ON' : 'OFF' }));
         device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
           msg: 'STATE-SET', 
           time: new Date().toISOString(), 
@@ -912,6 +916,6 @@ DysonPureCoolDevice.prototype.shutdown = function() {
   // Ends the MQTT connection
   if (device.mqttClient) {
     device.mqttClient.end(true);
-    device.platform.log(device.serialNumber + ' - MQTT connection ended.');
+    device.platform.log.debug(device.serialNumber + ' - MQTT connection ended.');
   }
 }
