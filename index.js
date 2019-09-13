@@ -641,7 +641,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
       const noxlQuality = 0;
 
       // Maps the values of the sensors to the relative values, these operations are copied from the newer devices as the app does not specify the correct values
-      const pQuality = p <= 35 ? 1 : (p <= 53 ? 2 : (p <= 70 ? 3 : (p <= 150 ? 4 : 5)));
+      const pQuality = p <= 2 ? 1 : (p <= 4 ? 2 : (p <= 7 ? 3 : (p <= 9 ? 4 : 5)));
       const vQuality = (v * 0.125) <= 3 ? 1 : ((v * 0.125) <= 6 ? 2 : ((v * 0.125) <= 8 ? 3 : 4));
 
       // Sets the sensor data for air quality (the poorest sensor result wins)
