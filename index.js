@@ -240,7 +240,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
 
       // Removes the accessory
       platform.log.info('Removing accessory with serial number ' + platform.accessories[i].context.serialNumber + ' and kind ' + platform.accessories[i].context.kind + '.');
-      accessoriesToRemove.push(accessory);
+      accessoriesToRemove.push(platform.accessories[i]);
       platform.accessories.splice(i, 1);
     }
 
