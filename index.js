@@ -606,12 +606,16 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (content.msg === 'ENVIRONMENTAL-CURRENT-SENSOR-DATA') {
       
       // Sets the sensor data for temperature
-      temperatureService
-        .updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
+      if (content['data']['tact'] !== "OFF") {
+        temperatureService
+          .updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
+      }
 
       // Sets the sensor data for humidity
-      humidityService
-        .updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']));
+      if (content['data']['hact'] !== "OFF") {
+        humidityService
+          .updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']));
+      }
 
       // Parses the air quality sensor data
       let pm25 = 0;
