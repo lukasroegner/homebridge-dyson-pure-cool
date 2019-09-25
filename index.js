@@ -454,14 +454,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   if (!airPurifierService) {
     airPurifierService = airPurifierAccessory.addService(Service.AirPurifier);
   }
-  airPurifierService
-    .setCharacteristic(Characteristic.Active, Characteristic.Active.INACTIVE)
-    .setCharacteristic(Characteristic.CurrentAirPurifierState, Characteristic.CurrentAirPurifierState.INACTIVE)
-    .setCharacteristic(Characteristic.TargetAirPurifierState, Characteristic.TargetAirPurifierState.MANUAL)
-    .setCharacteristic(Characteristic.SwingMode, Characteristic.SwingMode.SWING_DISABLED)
-    .setCharacteristic(Characteristic.RotationSpeed, 10)
-    .setCharacteristic(Characteristic.FilterChangeIndication, Characteristic.FilterChangeIndication.FILTER_OK)
-    .setCharacteristic(Characteristic.FilterLifeLevel, 100);
 
   // Updates the filter life level unit
   airPurifierService
@@ -489,11 +481,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
       temperatureService = temperatureAccessory.addService(Service.TemperatureSensor);
     }
   }
-  temperatureService
-    .setCharacteristic(Characteristic.CurrentTemperature, 0);
 
   // Updates the temperature steps
-  airPurifierService
+  temperatureService
     .getCharacteristic(Characteristic.CurrentTemperature)
     .setProps({ 
       minValue: -50, 
@@ -511,8 +501,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
       humidityService = humidityAccessory.addService(Service.HumiditySensor);
     }
   }
-  humidityService
-    .setCharacteristic(Characteristic.CurrentRelativeHumidity, 0);
 
   // Updates the air quality sensor
   let airQualityService = null;
@@ -524,17 +512,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
       airQualityService = airQualityAccessory.addService(Service.AirQualitySensor);
     }
   }
-  airQualityService
-    .setCharacteristic(Characteristic.AirQuality, Characteristic.AirQuality.UNKNOWN);
-
-  // Sets The air quality properties
-  if (hasAdvancedAirQualitySensors) {
-    airQualityService
-      .setCharacteristic(Characteristic.PM2_5Density, 0)
-      .setCharacteristic(Characteristic.PM10Density, 0)
-      .setCharacteristic(Characteristic.VOCDensity, 0)
-      .setCharacteristic(Characteristic.NitrogenDioxideDensity, 0);
-  }
 
   // Updates the night mode
   let nightModeSwitchService = null;
@@ -543,8 +520,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (!nightModeSwitchService) {
       nightModeSwitchService = switchAccessory.addService(Service.Switch, 'Night Mode', 'NightMode');
     }
-    nightModeSwitchService
-      .setCharacteristic(Characteristic.On, false);
   }
 
   // Updates the jet focus mode
@@ -554,8 +529,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (!jetFocusSwitchService) {
       jetFocusSwitchService = switchAccessory.addService(Service.Switch, 'Jet Focus', 'JetFocus');
     }
-    jetFocusSwitchService
-      .setCharacteristic(Characteristic.On, false);
   }
 
   // Initializes the MQTT client for local communication with the device
