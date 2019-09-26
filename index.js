@@ -490,6 +490,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
       maxValue: 100, 
       unit: "celsius" 
     });
+  
+  // Loads the value from cache
+  if (airPurifierAccessory.context.lastTemperature) {
+    temperatureService
+      .setCharacteristic(Characteristic.CurrentTemperature, airPurifierAccessory.context.lastTemperature);
+  }
 
   // Updates the humidity sensor
   let humidityService = null;
@@ -501,6 +507,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
       humidityService = humidityAccessory.addService(Service.HumiditySensor);
     }
   }
+  
+  // Loads the value from cache
+  if (airPurifierAccessory.context.lastHumidity) {
+    humidityService
+      .setCharacteristic(Characteristic.CurrentRelativeHumidity, airPurifierAccessory.context.lastHumidity);
+  }
 
   // Updates the air quality sensor
   let airQualityService = null;
@@ -510,6 +522,30 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     airQualityService = airQualityAccessory.getService(Service.AirQualitySensor);
     if (!airQualityService) {
       airQualityService = airQualityAccessory.addService(Service.AirQualitySensor);
+    }
+  }
+  
+  // Loads the value from cache
+  if (airPurifierAccessory.context.lastAirQuality) {
+    airQualityService
+      .setCharacteristic(Characteristic.AirQuality, airPurifierAccessory.context.lastAirQuality);
+  }
+  if (hasAdvancedAirQualitySensors) {
+    if (airPurifierAccessory.context.lastPm25Density) {
+      airQualityService
+        .setCharacteristic(Characteristic.PM2_5Density, airPurifierAccessory.context.lastPm25Density);
+    }
+    if (airPurifierAccessory.context.lastPm10Density) {
+      airQualityService
+        .setCharacteristic(Characteristic.PM10Density, airPurifierAccessory.context.lastPm10Density);
+    }
+    if (airPurifierAccessory.context.lastVocDensity) {
+      airQualityService
+        .setCharacteristic(Characteristic.VOCDensity, airPurifierAccessory.context.lastVocDensity);
+    }
+    if (airPurifierAccessory.context.lastNitrogenDioxideDensity) {
+      airQualityService
+        .setCharacteristic(Characteristic.NitrogenDioxideDensity, airPurifierAccessory.context.lastNitrogenDioxideDensity);
     }
   }
 
@@ -582,12 +618,18 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
       if (content['data']['tact'] !== "OFF") {
         temperatureService
           .updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
+        
+        // Caches the value
+        airPurifierAccessory.context.lastTemperature = (Number.parseInt(content['data']['tact']) / 10.0) - 273.0;
       }
 
       // Sets the sensor data for humidity
       if (content['data']['hact'] !== "OFF") {
         humidityService
           .updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']));
+        
+          // Caches the value
+          airPurifierAccessory.context.lastHumidity =  Number.parseInt(content['data']['hact']);
       }
 
       // Parses the air quality sensor data
@@ -629,9 +671,19 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
           .updateCharacteristic(Characteristic.PM10Density, pm10)
           .updateCharacteristic(Characteristic.VOCDensity, va10)
           .updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
+        
+          // Caches the values
+          airPurifierAccessory.context.lastAirQuality = Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality);
+          airPurifierAccessory.context.lastPm25Density = pm25;
+          airPurifierAccessory.context.lastPm10Density = pm10;
+          airPurifierAccessory.context.lastVocDensity = va10;
+          airPurifierAccessory.context.lastNitrogenDioxideDensity = noxl;
       } else {
         airQualityService
           .updateCharacteristic(Characteristic.AirQuality, Math.max(pQuality, vQuality));
+        
+          // Caches the value
+          airPurifierAccessory.context.lastAirQuality = Math.max(pQuality, vQuality);
       }
 
       return;
