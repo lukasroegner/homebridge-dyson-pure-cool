@@ -493,6 +493,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   
   // Loads the value from cache
   if (airPurifierAccessory.context.lastTemperature) {
+    platform.log.debug(serialNumber + ' - Loading cached value for temperature: ' + airPurifierAccessory.context.lastTemperature);
     temperatureService
       .setCharacteristic(Characteristic.CurrentTemperature, airPurifierAccessory.context.lastTemperature);
   }
@@ -510,6 +511,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   
   // Loads the value from cache
   if (airPurifierAccessory.context.lastHumidity) {
+    platform.log.debug(serialNumber + ' - Loading cached value for humidity: ' + airPurifierAccessory.context.lastHumidity);
     humidityService
       .setCharacteristic(Characteristic.CurrentRelativeHumidity, airPurifierAccessory.context.lastHumidity);
   }
@@ -527,23 +529,28 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   
   // Loads the value from cache
   if (airPurifierAccessory.context.lastAirQuality) {
+    platform.log.debug(serialNumber + ' - Loading cached value for air quality: ' + airPurifierAccessory.context.lastAirQuality);
     airQualityService
       .setCharacteristic(Characteristic.AirQuality, airPurifierAccessory.context.lastAirQuality);
   }
   if (hasAdvancedAirQualitySensors) {
     if (airPurifierAccessory.context.lastPm25Density) {
+      platform.log.debug(serialNumber + ' - Loading cached value for air quality (PM 2.5): ' + airPurifierAccessory.context.lastPm25Density);
       airQualityService
         .setCharacteristic(Characteristic.PM2_5Density, airPurifierAccessory.context.lastPm25Density);
     }
     if (airPurifierAccessory.context.lastPm10Density) {
+      platform.log.debug(serialNumber + ' - Loading cached value for air quality (PM 10): ' + airPurifierAccessory.context.lastPm10Density);
       airQualityService
         .setCharacteristic(Characteristic.PM10Density, airPurifierAccessory.context.lastPm10Density);
     }
     if (airPurifierAccessory.context.lastVocDensity) {
+      platform.log.debug(serialNumber + ' - Loading cached value for air quality (VOC): ' + airPurifierAccessory.context.lastVocDensity);
       airQualityService
         .setCharacteristic(Characteristic.VOCDensity, airPurifierAccessory.context.lastVocDensity);
     }
     if (airPurifierAccessory.context.lastNitrogenDioxideDensity) {
+      platform.log.debug(serialNumber + ' - Loading cached value for air quality (NO2): ' + airPurifierAccessory.context.lastNitrogenDioxideDensity);
       airQualityService
         .setCharacteristic(Characteristic.NitrogenDioxideDensity, airPurifierAccessory.context.lastNitrogenDioxideDensity);
     }
@@ -620,6 +627,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
           .updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
         
         // Caches the value
+        platform.log.debug(serialNumber + ' - Saving temperature to cache.');
         airPurifierAccessory.context.lastTemperature = (Number.parseInt(content['data']['tact']) / 10.0) - 273.0;
       }
 
@@ -629,6 +637,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
           .updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']));
         
           // Caches the value
+          platform.log.debug(serialNumber + ' - Saving humidity to cache.');
           airPurifierAccessory.context.lastHumidity =  Number.parseInt(content['data']['hact']);
       }
 
@@ -673,6 +682,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
           .updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
         
           // Caches the values
+          platform.log.debug(serialNumber + ' - Saving air quality to cache.');
           airPurifierAccessory.context.lastAirQuality = Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality);
           airPurifierAccessory.context.lastPm25Density = pm25;
           airPurifierAccessory.context.lastPm10Density = pm10;
@@ -683,6 +693,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
           .updateCharacteristic(Characteristic.AirQuality, Math.max(pQuality, vQuality));
         
           // Caches the value
+          platform.log.debug(serialNumber + ' - Saving air quality to cache.');
           airPurifierAccessory.context.lastAirQuality = Math.max(pQuality, vQuality);
       }
 
