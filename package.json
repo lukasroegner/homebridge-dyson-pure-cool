@@ -1,6 +1,6 @@
 {
   "name": "homebridge-dyson-pure-cool",
-  "version": "1.0.8",
+  "version": "1.1.2",
   "description": "Plugin for using the Dyson Pure Cool fans in homebridge.",
   "license": "MIT",
   "keywords": [
