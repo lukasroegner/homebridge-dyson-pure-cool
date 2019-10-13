@@ -800,8 +800,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   // Subscribes for changes of the target state characteristic
   airPurifierService
     .getCharacteristic(Characteristic.TargetAirPurifierState).on('set', function (value, callback) {
-      platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
-      timeoutHandle = setTimeout(function() {
+
+      // Checks if AUTO mode can be enabled when activating the device
+      if (config.enableAutoModeWhenActivating) {
+
+        // Directly sets the target state
         platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
         device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
           msg: 'STATE-SET', 
@@ -811,8 +814,23 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' 
           }
         }));
-        timeoutHandle = null;
-      }, 250);
+      } else {
+
+        // Sets a timeout that can be cancelled by the Active characteristic handler
+        platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
+        timeoutHandle = setTimeout(function() {
+          platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
+          device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
+            msg: 'STATE-SET', 
+            time: new Date().toISOString(), 
+            data: { 
+              auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON',
+              fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' 
+            }
+          }));
+          timeoutHandle = null;
+        }, 250);
+      }
       callback(null);
     });
 

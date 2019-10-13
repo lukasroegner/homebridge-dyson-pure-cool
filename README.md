@@ -47,6 +47,7 @@ npm install homebridge-dyson-pure-cool -g
                 {
                     "ipAddress": "XXX.XXX.XXX.XXX",
                     "serialNumber": "XXX-EU-XXXXXXXX",
+                    "enableAutoModeWhenActivating": false,
                     "isNightModeEnabled": false,
                     "isJetFocusEnabled": false,
                     "isTemperatureSensorEnabled": false,
@@ -70,6 +71,8 @@ npm install homebridge-dyson-pure-cool -g
 **ipAddress**: Local IP address of the device.
 
 **serialNumber**: Serial number of the device.
+
+**enableAutoModeWhenActivating**: If set to true, the Auto mode is enabled when you activate the device in the Home app.
 
 **isNightModeEnabled**: If set to true, a switch is exposed for the night mode.
 
