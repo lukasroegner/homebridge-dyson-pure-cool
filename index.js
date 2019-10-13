@@ -193,7 +193,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
         }
       }
       if (!isSupported) {
-        platform.log.info('Device with serial number ' + body[i].Serial + ' not added, as it is not supported by this plugin.');
+        platform.log.info('Device with serial number ' + body[i].Serial + ' not added, as it is not supported by this plugin. Product type: ' + body[i].ProductType);
         continue;
       }
 
