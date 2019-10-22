@@ -193,7 +193,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
         }
       }
       if (!isSupported) {
-        platform.log.info('Device with serial number ' + body[i].Serial + ' not added, as it is not supported by this plugin.');
+        platform.log.info('Device with serial number ' + body[i].Serial + ' not added, as it is not supported by this plugin. Product type: ' + body[i].ProductType);
         continue;
       }
 
@@ -784,14 +784,17 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         timeoutHandle = null;
       }
 
+      // Gets the active mode based on the configuration
+      const activeMode = config.enableAutoModeWhenActivating ? 'AUTO' : 'FAN';
+
       // Executes the actual change of the active state
-      platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
+      platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode }));
       device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
         time: new Date().toISOString(), 
         data: { 
           fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', 
-          fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN'
+          fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode
         }
       }));
       callback(null);
@@ -800,8 +803,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
   // Subscribes for changes of the target state characteristic
   airPurifierService
     .getCharacteristic(Characteristic.TargetAirPurifierState).on('set', function (value, callback) {
-      platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
-      timeoutHandle = setTimeout(function() {
+
+      // Checks if AUTO mode can be enabled when activating the device
+      if (config.enableAutoModeWhenActivating) {
+
+        // Directly sets the target state
         platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
         device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
           msg: 'STATE-SET', 
@@ -811,8 +817,23 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' 
           }
         }));
-        timeoutHandle = null;
-      }, 250);
+      } else {
+
+        // Sets a timeout that can be cancelled by the Active characteristic handler
+        platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
+        timeoutHandle = setTimeout(function() {
+          platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
+          device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
+            msg: 'STATE-SET', 
+            time: new Date().toISOString(), 
+            data: { 
+              auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON',
+              fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' 
+            }
+          }));
+          timeoutHandle = null;
+        }, 250);
+      }
       callback(null);
     });
 
@@ -845,6 +866,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     nightModeSwitchService
       .getCharacteristic(Characteristic.On).on('set', function (value, callback) {
 
+        // Gets the active mode based on the configuration
+        const activeMode = config.enableAutoModeWhenActivating ? 'AUTO' : 'FAN';
+
         // Builds the command data, if night mode is set to ON, the device has to be ON
         // If night mode is set to OFF, the device status is not changed
         let commandData = {};
@@ -852,7 +876,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
           if (airPurifierService.getCharacteristic(Characteristic.Active).value) {
             commandData = { nmod: 'ON' };
           } else {
-            commandData = { fpwr: 'ON', fmod: 'FAN', nmod: 'ON' };
+            commandData = { fpwr: 'ON', fmod: activeMode, nmod: 'ON' };
           }
         } else {
           commandData = { nmod: 'OFF' };
