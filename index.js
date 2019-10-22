@@ -784,14 +784,17 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         timeoutHandle = null;
       }
 
+      // Gets the active mode based on the configuration
+      const activeMode = config.enableAutoModeWhenActivating ? 'AUTO' : 'FAN';
+
       // Executes the actual change of the active state
-      platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN' }));
+      platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode }));
       device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({ 
         msg: 'STATE-SET', 
         time: new Date().toISOString(), 
         data: { 
           fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', 
-          fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : 'FAN'
+          fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode
         }
       }));
       callback(null);
@@ -863,6 +866,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     nightModeSwitchService
       .getCharacteristic(Characteristic.On).on('set', function (value, callback) {
 
+        // Gets the active mode based on the configuration
+        const activeMode = config.enableAutoModeWhenActivating ? 'AUTO' : 'FAN';
+
         // Builds the command data, if night mode is set to ON, the device has to be ON
         // If night mode is set to OFF, the device status is not changed
         let commandData = {};
@@ -870,7 +876,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
           if (airPurifierService.getCharacteristic(Characteristic.Active).value) {
             commandData = { nmod: 'ON' };
           } else {
-            commandData = { fpwr: 'ON', fmod: 'FAN', nmod: 'ON' };
+            commandData = { fpwr: 'ON', fmod: activeMode, nmod: 'ON' };
           }
         } else {
           commandData = { nmod: 'OFF' };
