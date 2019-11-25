@@ -4,8 +4,6 @@ const crypto = require('crypto');
 const mqtt = require('mqtt');
 
 var homebridgeObj = null;
-var pluginName = 'homebridge-dyson-pure-cool';
-var platformName = 'DysonPureCoolPlatform';
 
 /**
  * Defines the export of the platform module.
@@ -17,7 +15,7 @@ module.exports = function (homebridge) {
   homebridgeObj = homebridge;
 
   // Registers the dynamic Dyson Pure Cool platform, as the devices are read from the API and created dynamically
-  homebridge.registerPlatform(pluginName, platformName, DysonPureCoolPlatform, true);
+  homebridge.registerPlatform('homebridge-dyson-pure-cool', 'DysonPureCoolPlatform', DysonPureCoolPlatform, true);
 }
 
 /**
@@ -36,8 +34,8 @@ function DysonPureCoolPlatform(log, config, api) {
   platform.Characteristic = homebridgeObj.hap.Characteristic;
   platform.UUIDGen = homebridgeObj.hap.uuid;
   platform.hap = homebridgeObj.hap;
-  platform.pluginName = pluginName;
-  platform.platformName = platformName;
+  platform.pluginName = 'homebridge-dyson-pure-cool';
+  platform.platformName = 'DysonPureCoolPlatform';
 
   // Checks whether a configuration is provided, otherwise the plugin should not be initialized
   if (!config) {
