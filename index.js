@@ -3,18 +3,11 @@ const request = require('request');
 const crypto = require('crypto');
 const mqtt = require('mqtt');
 
-var homebridgeObj = null;
-
 /**
  * Defines the export of the platform module.
  * @param homebridge The homebridge object that contains all classes, objects and functions for communicating with HomeKit.
  */
 module.exports = function (homebridge) {
-
-  // Gets the classes required for implementation of the plugin
-  homebridgeObj = homebridge;
-
-  // Registers the dynamic Dyson Pure Cool platform, as the devices are read from the API and created dynamically
   homebridge.registerPlatform('homebridge-dyson-pure-cool', 'DysonPureCoolPlatform', DysonPureCoolPlatform, true);
 }
 
@@ -28,12 +21,12 @@ function DysonPureCoolPlatform(log, config, api) {
   const platform = this;
 
   // Saves objects for functions
-  platform.Accessory = homebridgeObj.platformAccessory;
-  platform.Categories = homebridgeObj.hap.Accessory.Categories;
-  platform.Service = homebridgeObj.hap.Service;
-  platform.Characteristic = homebridgeObj.hap.Characteristic;
-  platform.UUIDGen = homebridgeObj.hap.uuid;
-  platform.hap = homebridgeObj.hap;
+  platform.Accessory = api.platformAccessory;
+  platform.Categories = api.hap.Accessory.Categories;
+  platform.Service = api.hap.Service;
+  platform.Characteristic = api.hap.Characteristic;
+  platform.UUIDGen = api.hap.uuid;
+  platform.hap = api.hap;
   platform.pluginName = 'homebridge-dyson-pure-cool';
   platform.platformName = 'DysonPureCoolPlatform';
 
@@ -50,7 +43,7 @@ function DysonPureCoolPlatform(log, config, api) {
   platform.accessories = [];
 
   // Registers the shutdown event
-  homebridgeObj.on('shutdown', function() {
+  api.on('shutdown', function() {
     
     // Shuts down all devices
     for (let i = 0; i < platform.devices.length; i++) {
