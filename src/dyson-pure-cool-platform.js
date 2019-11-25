@@ -40,7 +40,8 @@ function DysonPureCoolPlatform(log, config, api) {
 
         // Shuts down all devices
         for (let i = 0; i < platform.devices.length; i++) {
-            platform.devices[i].shutdown();
+            const device = devices[i];
+            device.shutdown();
         }
     });
 
@@ -167,30 +168,18 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
 
         // Initializes a device for each device from the API
         for (let i = 0; i < body.length; i++) {
+            const apiConfig = body[i];
 
             // Checks if the device is supported by this plugin
-            let isSupported = false;
-            for (let j = 0; j < platform.config.supportedProductTypes.length; j++) {
-                if (platform.config.supportedProductTypes[j] === body[i].ProductType) {
-                    isSupported = true;
-                    break;
-                }
-            }
-            if (!isSupported) {
-                platform.log.info('Device with serial number ' + body[i].Serial + ' not added, as it is not supported by this plugin. Product type: ' + body[i].ProductType);
+            if (!platform.config.supportedProductTypes.some(function(t) { return t === apiConfig.ProductType; })) {
+                platform.log.info('Device with serial number ' + apiConfig.Serial + ' not added, as it is not supported by this plugin. Product type: ' + apiConfig.ProductType);
                 continue;
             }
 
-            // Gets the corresponding IP address
-            let config = null;
-            for (let j = 0; j < platform.config.devices.length; j++) {
-                if (platform.config.devices[j].serialNumber === body[i].Serial) {
-                    config = platform.config.devices[j];
-                    break;
-                }
-            }
+            // Gets the corresponding device configuration
+            let config = platform.config.devices.find(function(d) { return d.serialNumber === apiConfig.Serial; });
             if (!config) {
-                platform.log.warn('No IP address provided for device with ' + body[i].Serial + '.');
+                platform.log.warn('No IP address provided for device with ' + apiConfig.Serial + '.');
                 continue;
             }
 
@@ -198,38 +187,22 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
             const key = Uint8Array.from(Array(32), (_, index) => index + 1);
             const initializationVector = new Uint8Array(16);
             const decipher = crypto.createDecipheriv('aes-256-cbc', key, initializationVector);
-            const decryptedPasswordString = decipher.update(body[i].LocalCredentials, 'base64', 'utf8') + decipher.final('utf8');
+            const decryptedPasswordString = decipher.update(apiConfig.LocalCredentials, 'base64', 'utf8') + decipher.final('utf8');
             const decryptedPasswordJson = JSON.parse(decryptedPasswordString);
             const password = decryptedPasswordJson.apPasswordHash;
 
             // Creates the device instance and adds it to the list of all devices
-            platform.devices.push(new DysonPureCoolDevice(platform, body[i].Name, body[i].Serial, body[i].ProductType, body[i].Version, password, config));
+            platform.devices.push(new DysonPureCoolDevice(platform, apiConfig.Name, apiConfig.Serial, apiConfig.ProductType, apiConfig.Version, password, config));
         }
 
         // Removes the accessories that are not bound to a device
-        let accessoriesToRemove = [];
-        for (let i = 0; i < platform.accessories.length; i++) {
-
-            // Checks if the device exists
-            let deviceExists = false;
-            for (let j = 0; j < platform.devices.length; j++) {
-                if (platform.devices[j].serialNumber === platform.accessories[i].context.serialNumber) {
-                    deviceExists = true;
-                    break;
-                }
-            }
-            if (deviceExists) {
-                continue;
-            }
-
-            // Removes the accessory
-            platform.log.info('Removing accessory with serial number ' + platform.accessories[i].context.serialNumber + ' and kind ' + platform.accessories[i].context.kind + '.');
-            accessoriesToRemove.push(platform.accessories[i]);
-            platform.accessories.splice(i, 1);
+        let unusedAccessories = platform.accessories.filter(function(a) { return !platform.devices.some(function(d) { return d.serialNumber === a.context.serialNumber; }); });
+        for (let i = 0; i < unusedAccessories.length; i++) {
+            const unusedAccessory = unusedAccessories[i];
+            platform.log.info('Removing accessory with serial number ' + unusedAccessory.context.serialNumber + ' and kind ' + unusedAccessory.context.kind + '.');
+            platform.accessories.splice(platform.accessories.indexOf(unusedAccessory), 1);
         }
-
-        // Actually removes the accessories from the platform
-        platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, accessoriesToRemove);
+        platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, unusedAccessories);
 
         // Returns a positive result
         platform.log.info('Got devices from the Dyson API.');
