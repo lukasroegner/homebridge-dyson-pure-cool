@@ -138,9 +138,9 @@ function DysonPureHotCoolDevice(platform, name, serialNumber, productType, versi
 
     // Sets the target temperature range
     thermostatService.getCharacteristic(Characteristic.TargetTemperature).setProps({
-        maxValue: 25, // TODO: maximum value for target temperature from Dyson app
-        minValue: 5, // TODO: minimum value for target temperature from Dyson app
-        minStep: 0.1 // TODO: step for target temperature from Dyson app
+        maxValue: 37,
+        minValue: 0,
+        minStep: 0.1
     });
 
     // Updates the filter life level unit
