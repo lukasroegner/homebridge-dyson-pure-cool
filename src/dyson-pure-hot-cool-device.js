@@ -248,7 +248,7 @@ function DysonPureHotCoolDevice(platform, name, serialNumber, productType, versi
 
             // Sets the sensor data for temperature
             if (content['data']['tact'] !== "OFF") {
-                temperatureService.updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
+                thermostatService.updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
             }
 
             // Sets the sensor data for humidity
