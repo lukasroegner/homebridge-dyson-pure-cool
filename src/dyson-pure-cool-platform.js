@@ -40,7 +40,7 @@ function DysonPureCoolPlatform(log, config, api) {
 
         // Shuts down all devices
         for (let i = 0; i < platform.devices.length; i++) {
-            const device = devices[i];
+            const device = platform.devices[i];
             device.shutdown();
         }
     });
