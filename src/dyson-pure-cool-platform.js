@@ -40,7 +40,7 @@ function DysonPureCoolPlatform(log, config, api) {
 
         // Shuts down all devices
         for (let i = 0; i < platform.devices.length; i++) {
-            const device = devices[i];
+            const device = platform.devices[i];
             device.shutdown();
         }
     });
@@ -51,7 +51,7 @@ function DysonPureCoolPlatform(log, config, api) {
     platform.config.countryCode = platform.config.countryCode || 'US';
     platform.config.devices = platform.config.devices || [];
     platform.config.apiUri = 'https://api.cp.dyson.com';
-    platform.config.supportedProductTypes = ['438', '475', '520'];
+    platform.config.supportedProductTypes = ['438', '469', '475', '520'];
 
     // Checks whether the API object is available
     if (!api) {

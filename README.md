@@ -5,6 +5,7 @@ This project is a homebridge plugin for the Dyson air purifiers. Supported devic
 - 2018 Dyson Pure Cool Tower (TP04)
 - 2018 Dyson Pure Cool Desk (DP04)
 - Dyson Pure Cool Link Tower (TP02)
+- Dyson Pure Cool Link Desk (DP01)
 
 If your device is not supported, please open an issue, I'll try to add support for it.
 
