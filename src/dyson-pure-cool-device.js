@@ -32,6 +32,10 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             hasJetFocus = true;
             hasAdvancedAirQualitySensors = true;
             break;
+        case '469':
+            model = 'Dyson Pure Cool Link Desk';
+            hardwareRevision = 'DP01';
+            break;
         case '475':
             model = 'Dyson Pure Cool Link Tower';
             hardwareRevision = 'TP02';
