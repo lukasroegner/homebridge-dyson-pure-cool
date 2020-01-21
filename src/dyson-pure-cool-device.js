@@ -23,6 +23,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Creates the device information from the API results
     let model = 'Pure Cool';
     let hardwareRevision = '';
+    let hasHeating = false;
     let hasJetFocus = false;
     let hasAdvancedAirQualitySensors = false;
     switch (productType) {
@@ -31,6 +32,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             hardwareRevision = 'TP04';
             hasJetFocus = true;
             hasAdvancedAirQualitySensors = true;
+            break;
+        case '455':
+            model = 'Dyson Pure Hot+Cool Link';
+            hardwareRevision = 'HP02';
+            hasHeating = true;
             break;
         case '469':
             model = 'Dyson Pure Cool Link Desk';
@@ -45,6 +51,13 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             hardwareRevision = 'DP04';
             hasJetFocus = true;
             hasAdvancedAirQualitySensors = true;
+            break;
+        case '527':
+            model = 'Dyson Pure Hot+Cool';
+            hardwareRevision = 'HP04';
+            hasJetFocus = true;
+            hasAdvancedAirQualitySensors = true;
+            hasHeating = true;
             break;
     }
 
@@ -68,7 +81,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Gets the temperature accessory
     let temperatureAccessory = null;
-    if (config.isTemperatureSensorEnabled) {
+    if (hasHeating || config.isTemperatureSensorEnabled) {
         temperatureAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'TemperatureAccessory'; });
         if (temperatureAccessory) {
             unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(temperatureAccessory), 1);
@@ -178,14 +191,45 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             maxValue: 100
         });
 
-    // Updates the temperature sensor
+    // Updates the temperature service
     let temperatureService = null;
     if (!temperatureAccessory) {
         temperatureService = airPurifierService;
     } else {
-        temperatureService = temperatureAccessory.getService(Service.TemperatureSensor);
-        if (!temperatureService) {
-            temperatureService = temperatureAccessory.addService(Service.TemperatureSensor);
+        if (hasHeating) {
+
+            // Uses a thermostat service
+            temperatureService = temperatureAccessory.getService(Service.Thermostat);
+            if (!temperatureService) {
+                temperatureService = temperatureAccessory.addService(Service.Thermostat);
+            }
+
+            // Disables cooling
+            temperatureService.getCharacteristic(Characteristic.CurrentHeatingCoolingState).setProps({
+                maxValue: 1,
+                minValue: 0,
+                validValues: [0, 1]
+            });
+            temperatureService.getCharacteristic(Characteristic.TargetHeatingCoolingState).setProps({
+                maxValue: 1,
+                minValue: 0,
+                validValues: [0, 1]
+            });
+    
+            // Updates the target temperature for heating
+            temperatureService.getCharacteristic(Characteristic.TargetTemperature).setProps({
+                maxValue: 37,
+                minValue: 0,
+                minStep: 0.1,
+                unit: 'celsius'
+            });
+        } else {
+
+            // Uses a temperature sensor
+            temperatureService = temperatureAccessory.getService(Service.TemperatureSensor);
+            if (!temperatureService) {
+                temperatureService = temperatureAccessory.addService(Service.TemperatureSensor);
+            }
         }
     }
 
@@ -195,7 +239,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         .setProps({
             minValue: -50,
             maxValue: 100,
-            unit: "celsius"
+            unit: 'celsius'
         });
 
     // Updates the humidity sensor
@@ -286,12 +330,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         if (content.msg === 'ENVIRONMENTAL-CURRENT-SENSOR-DATA') {
 
             // Sets the sensor data for temperature
-            if (content['data']['tact'] !== "OFF") {
+            if (content['data']['tact'] !== 'OFF') {
                 temperatureService.updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
             }
 
             // Sets the sensor data for humidity
-            if (content['data']['hact'] !== "OFF") {
+            if (content['data']['hact'] !== 'OFF') {
                 humidityService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']));
             }
 
@@ -351,6 +395,17 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 airPurifierService.updateCharacteristic(Characteristic.Active, content['product-state']['fmod'] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
             }
 
+            // Sets the heating mode and target temperature
+            if (hasHeating) {
+                if (content['product-state']['hmod']) {
+                    temperatureService.updateCharacteristic(Characteristic.CurrentHeatingCoolingState, content['product-state']['hmod'] === 'OFF' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT);
+                    temperatureService.updateCharacteristic(Characteristic.TargetHeatingCoolingState, content['product-state']['hmod'] === 'OFF' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT);
+                }
+                if (content['product-state']['hmax']) {
+                    temperatureService.updateCharacteristic(Characteristic.TargetTemperature, (Number.parseInt(content['product-state']['hmax']) / 10.0) - 273.0);
+                }
+            }
+
             // Sets the operation mode
             if (content['product-state']['fpwr'] && content['product-state']['fnst'] && content['product-state']['auto']) {
                 airPurifierService.updateCharacteristic(Characteristic.CurrentAirPurifierState, content['product-state']['fpwr'] === 'OFF' ? Characteristic.CurrentAirPurifierState.INACTIVE : (content['product-state']['fnst'] === 'OFF' ? Characteristic.CurrentAirPurifierState.IDLE : Characteristic.CurrentAirPurifierState.PURIFYING_AIR));
@@ -406,6 +461,17 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 airPurifierService.updateCharacteristic(Characteristic.Active, content['product-state']['fmod'][1] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
             }
 
+            // Sets the heating mode and target temperature
+            if (hasHeating) {
+                if (content['product-state']['hmod']) {
+                    temperatureService.updateCharacteristic(Characteristic.CurrentHeatingCoolingState, content['product-state']['hmod'][1] === 'OFF' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT);
+                    temperatureService.updateCharacteristic(Characteristic.TargetHeatingCoolingState, content['product-state']['hmod'][1] === 'OFF' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT);
+                }
+                if (content['product-state']['hmax']) {
+                    temperatureService.updateCharacteristic(Characteristic.TargetTemperature, (Number.parseInt(content['product-state']['hmax'][1]) / 10.0) - 273.0);
+                }
+            }
+
             // Sets the operation mode
             if (content['product-state']['fpwr'] && content['product-state']['fnst'] && content['product-state']['auto']) {
                 airPurifierService.updateCharacteristic(Characteristic.CurrentAirPurifierState, content['product-state']['fpwr'][1] === 'OFF' ? Characteristic.CurrentAirPurifierState.INACTIVE : (content['product-state']['fnst'][1] === 'OFF' ? Characteristic.CurrentAirPurifierState.IDLE : Characteristic.CurrentAirPurifierState.PURIFYING_AIR));
@@ -417,8 +483,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             }
 
             // Sets the rotation status
-            airPurifierService
-                .updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'][1] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED);
+            airPurifierService.updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'][1] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED);
 
             // Sets the filter life
             if (content['product-state']['cflr'] && content['product-state']['hflr']) {
@@ -540,6 +605,28 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         }));
         callback(null);
     });
+
+    // Subscribes for changes of the heating mode and target temperature
+    if (hasHeating) {
+        temperatureService.getCharacteristic(Characteristic.TargetHeatingCoolingState).on('set', function (value, callback) {
+            platform.log.info(serialNumber + ' - set TargetHeatingCoolingState to ' + value + ': ' + JSON.stringify({ hmod: value === Characteristic.TargetHeatingCoolingState.OFF ? 'OFF' : 'ON' }));
+            device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+                msg: 'STATE-SET',
+                time: new Date().toISOString(),
+                data: { hmod: value === Characteristic.TargetHeatingCoolingState.OFF ? 'OFF' : 'ON' }
+            }));
+            callback(null);
+        });
+        temperatureService.getCharacteristic(Characteristic.TargetTemperature).on('set', function (value, callback) {
+            platform.log.info(serialNumber + ' - set TargetTemperature to ' + value + ': ' + JSON.stringify({ hmax: ('0000' + Math.round((value + 273.0) * 10.0).toString()).slice(-4) }));
+            device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+                msg: 'STATE-SET',
+                time: new Date().toISOString(),
+                data: { hmax: ('0000' + Math.round((value + 273.0) * 10.0).toString()).slice(-4) }
+            }));
+            callback(null);
+        });
+    }
 
     // Subscribes for changes of the night mode
     if (nightModeSwitchService) {
