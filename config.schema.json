@@ -1,0 +1,97 @@
+{
+  "pluginAlias": "DysonPureCoolPlatform",
+  "pluginType": "platform",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name ",
+        "type": "string",
+        "required": true,
+        "default": "DysonPureCool",
+        "placeholder": "DysonPureCool"
+      },
+      "platform": {
+        "title": "Platform",
+        "type": "string",
+        "required": true,
+        "default": "DysonPureCoolPlatform"
+      },
+        "username": {
+        "title": "Username",
+        "type": "string",
+        "required": true,
+        "placeholder": "YOUR-DYSON-EMAIL",
+        "pattern": "^\\S+@\\S+.\\S+$"
+      },
+        "password": {
+        "title": "Password",
+        "type": "string",
+        "placeholder": "YOUR-DYSON-PASSWORD",
+        "required": true
+      },
+      
+        "countryCode": {
+        "title": "Country Code",
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 2,
+        "placeholder": "EU",
+        "required": true
+      },
+      "devices": {
+        "title": "Devices",
+        "type": "object",
+        "properties": {
+            "ipAddress": {
+                "type": "string",
+                "required": true,
+                "placeholder": "XXX.XXX.XXX.XXX",
+                "format": "ipv4"
+            },
+            "serialNumber": {
+                "type": "string",
+                "required": true,
+                "default": "XXX-EU-XXXXXXXX"
+            },
+            "enableAutoModeWhenActivating": {
+                "title": "Enable Auto Mode",
+                "type": "boolean",
+                "default": false,
+                "required": true
+            },
+            "isNightModeEnabled": {
+                "title": "Enable Night Mode",
+                "type": "boolean",
+                "default": false,
+                "required": true
+            },
+            "isJetFocusEnabled": {
+                "title": "Enable Jet Focus",
+                "type": "boolean",
+                "default": false,
+                "required": true
+            },
+            "isTemperatureSensorEnabled": {
+                "title": "Enable Temperature Sensor",
+                "type": "boolean",
+                "default": false,
+                "required": true
+            },
+            "isHumiditySensorEnabled": {
+                "title": "Enable Humidity Sensor",
+                "type": "boolean",
+                "default": false,
+                "required": true
+            },
+            "isAirQualitySensorEnabled": {
+                "title": "Enable Air Quality Sensor",
+                "type": "boolean",
+                "default": false,
+                "required": true
+            }
+        }
+      }
+    }
+  }
+}
