@@ -609,11 +609,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Subscribes for changes of the heating mode and target temperature
     if (hasHeating) {
         temperatureService.getCharacteristic(Characteristic.TargetHeatingCoolingState).on('set', function (value, callback) {
-            platform.log.info(serialNumber + ' - set TargetHeatingCoolingState to ' + value + ': ' + JSON.stringify({ hmod: value === Characteristic.TargetHeatingCoolingState.OFF ? 'OFF' : 'ON' }));
+            platform.log.info(serialNumber + ' - set TargetHeatingCoolingState to ' + value + ': ' + JSON.stringify({ hmod: value === Characteristic.TargetHeatingCoolingState.OFF ? 'OFF' : 'HEAT' }));
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
-                data: { hmod: value === Characteristic.TargetHeatingCoolingState.OFF ? 'OFF' : 'ON' }
+                data: { hmod: value === Characteristic.TargetHeatingCoolingState.OFF ? 'OFF' : 'HEAT' }
             }));
             callback(null);
         });
