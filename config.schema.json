@@ -1,0 +1,101 @@
+{
+    "pluginAlias": "DysonPureCoolPlatform",
+    "pluginType": "platform",
+    "headerDisplay": "This plugin supports the 2018 Dyson Pure Cool (DP04, TP04) and Dyson Pure Cool Link (DP01, TP02) devices.",
+    "footerDisplay": "For help please visit the [GitHub repository](https://github.com/lukasroegner/homebridge-dyson-pure-cool).",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "username": {
+                "title": "Username",
+                "type": "string",
+                "required": true,
+                "placeholder": "YOUR-DYSON-EMAIL",
+                "format": "email",
+                "description": "Your email address of the Dyson account you used to register the device with in the Dyson app."
+            },
+            "password": {
+                "title": "Password",
+                "type": "string",
+                "placeholder": "YOUR-DYSON-PASSWORD",
+                "required": true,
+                "description": "Your password of the Dyson account you used to register the device with in the Dyson app."
+            },
+            "countryCode": {
+                "title": "Country Code",
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2,
+                "placeholder": "EU",
+                "required": true,
+                "description": "Two-letter ISO code of your country, e.g. US, DE, EN..."
+            },
+            "devices": {
+                "type": "array",
+                "items": {
+                    "title": "Device",
+                    "type": "object",
+                    "properties": {
+                        "ipAddress": {
+                            "title": "IP Address",
+                            "type": "string",
+                            "required": true,
+                            "placeholder": "XXX.XXX.XXX.XXX",
+                            "format": "ipv4",
+                            "description": "Local IP address of the device."
+                        },
+                        "serialNumber": {
+                            "title": "Serial",
+                            "type": "string",
+                            "required": true,
+                            "default": "XXX-EU-XXXXXXXX",
+                            "description": "Serial number of the device."
+                        },
+                        "enableAutoModeWhenActivating": {
+                            "title": "Enable Auto Mode",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, the Auto mode is enabled when you activate the device in the Home app."
+                        },
+                        "isNightModeEnabled": {
+                            "title": "Enable Night Mode",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, a switch is exposed for the night mode."
+                        },
+                        "isJetFocusEnabled": {
+                            "title": "Enable Jet Focus",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, a switch is exposed for the jet focus. Only used for 2018 devices."
+                        },
+                        "isTemperatureSensorEnabled": {
+                            "title": "Enable Temperature Sensor",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, a separate temperature sensor is exposed. If set to false, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app)."
+                        },
+                        "isHumiditySensorEnabled": {
+                            "title": "Enable Humidity Sensor",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, a separate humidity sensor is exposed. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app)."
+                        },
+                        "isAirQualitySensorEnabled": {
+                            "title": "Enable Air Quality Sensor",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, a separate air quality sensor is exposed. If set to false, the air quality is added as characteristic to the air purifier (supported in the Apple Home app)."
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
