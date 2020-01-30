@@ -1,7 +1,7 @@
 {
     "pluginAlias": "DysonPureCoolPlatform",
     "pluginType": "platform",
-    "headerDisplay": "This plugin supports the 2018 Dyson Pure Cool (DP04, TP04) and Dyson Pure Cool Link (DP01, TP02) devices.",
+    "headerDisplay": "This plugin supports the 2018 Dyson Pure Cool (DP04, TP04), Dyson Pure Cool Link (DP01, TP02) and Dyson Hot+Cool (HP02, HP04) devices.",
     "footerDisplay": "For help please visit the [GitHub repository](https://github.com/lukasroegner/homebridge-dyson-pure-cool).",
     "schema": {
         "type": "object",
@@ -77,7 +77,7 @@
                             "type": "boolean",
                             "default": false,
                             "required": true,
-                            "description": "If set to true, a separate temperature sensor is exposed. If set to false, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app)."
+                            "description": "If set to true, a separate temperature sensor is exposed. Only used for non-heating devices. If set to false, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app)."
                         },
                         "isHumiditySensorEnabled": {
                             "title": "Enable Humidity Sensor",
