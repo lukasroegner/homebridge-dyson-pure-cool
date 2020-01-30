@@ -1,4 +1,8 @@
 # homebridge-dyson-pure-cool
+[![npm](https://img.shields.io/npm/v/homebridge-dyson-pure-cool.svg)](https://www.npmjs.com/package/homebridge-dyson-pure-cool)
+[![npm](https://img.shields.io/npm/dt/homebridge-dyson-pure-cool.svg)](https://www.npmjs.com/package/homebridge-dyson-pure-cool)
+[![GitHub issues](https://img.shields.io/github/issues/lukasroegner/homebridge-dyson-pure-cool.svg)](https://github.com/lukasroegner/homebridge-dyson-pure-cool/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/lukasroegner/homebridge-dyson-pure-cool.svg)](https://github.com/lukasroegner/homebridge-dyson-pure-cool/pulls)
 
 This project is a homebridge plugin for the Dyson air purifiers. Supported devices are:
 
@@ -28,7 +32,17 @@ The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode
 
 ## Installation
 
-Install the plugin via npm:
+* Option 1: Install the plugin via [config-ui-x](https://github.com/oznu/homebridge-config-ui-x)
+   
+   * Search for Dyson on config-ui-x plugin screen
+   
+   * Click Install on Homebridge Dyson Pure Cool plugin
+   
+   * Once installed you will be prompted to set the config
+   
+   * Restart Homebridge Service and plugin should be loaded with accessories.
+
+* Option 2: Install the plugin via npm:
 
 ```bash
 npm install homebridge-dyson-pure-cool -g
