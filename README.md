@@ -1,7 +1,5 @@
 # homebridge-dyson-pure-cool
-[![npm](https://img.shields.io/npm/v/homebridge-dyson-pure-cool.svg)](https://www.npmjs.com/package/homebridge-dyson-pure-cool)
-[![npm](https://img.shields.io/npm/dt/homebridge-dyson-pure-cool.svg)](https://www.npmjs.com/package/homebridge-dyson-pure-cool)
-[![GitHub issues](https://img.shields.io/github/issues/lukasroegner/homebridge-dyson-pure-cool.svg)](https://github.com/lukasroegner/homebridge-dyson-pure-cool/issues)
+
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/lukasroegner/homebridge-dyson-pure-cool.svg)](https://github.com/lukasroegner/homebridge-dyson-pure-cool/pulls)
 
 This project is a homebridge plugin for the Dyson air purifiers. Supported devices are:
