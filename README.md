@@ -32,7 +32,13 @@ The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode
 
 ## Installation
 
-Install the plugin via npm:
+Option 1: Install the plugin via [config-ui-x](https://github.com/oznu/homebridge-config-ui-x):
+- Search for Dyson on config-ui-x plugin screen
+- Click Install on homebridge Dyson Pure Cool plugin
+- Once installed you will be prompted to set the config
+- Restart homebridge service and plugin should be loaded with accessories
+
+Option 2: Install the plugin via npm:
 
 ```bash
 npm install homebridge-dyson-pure-cool -g
