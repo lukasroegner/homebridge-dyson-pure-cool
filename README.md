@@ -4,10 +4,10 @@ This project is a homebridge plugin for the Dyson air purifiers. Supported devic
 
 - 2018 Dyson Pure Cool Tower (TP04)
 - 2018 Dyson Pure Cool Desk (DP04)
+- 2018 Dyson Pure Hot+Cool (HP04)
 - Dyson Pure Cool Link Tower (TP02)
 - Dyson Pure Cool Link Desk (DP01)
-
-If your device is not supported, please open an issue, I'll try to add support for it.
+- Dyson Pure Hot+Cool Link (HP02)
 
 The device information is downloaded from your Dyson account. You just have to provide the IP addresses of the devices in the local network.
 
@@ -20,6 +20,10 @@ All your devices are exposed as air purifiers in HomeKit, with support (also in 
 - Current temperature (in Apple Home app only supported as separate sensor)
 - Air quality (incl. PM2.5, PM10, VOC and NO2 data for 2018 devices)
 
+For heating devices, a thermostat is also exposes to HomeKit with support for:
+- On/Off
+- Target temperature
+
 Optionally, the following switches are exposed:
 - Night mode (on/off)
 - Jet Focus (on/off for 2018 devices)
@@ -28,7 +32,13 @@ The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode
 
 ## Installation
 
-Install the plugin via npm:
+Option 1: Install the plugin via [config-ui-x](https://github.com/oznu/homebridge-config-ui-x):
+- Search for Dyson on config-ui-x plugin screen
+- Click Install on homebridge Dyson Pure Cool plugin
+- Once installed you will be prompted to set the config
+- Restart homebridge service and plugin should be loaded with accessories
+
+Option 2: Install the plugin via npm:
 
 ```bash
 npm install homebridge-dyson-pure-cool -g
@@ -73,13 +83,13 @@ npm install homebridge-dyson-pure-cool -g
 
 **serialNumber**: Serial number of the device.
 
-**enableAutoModeWhenActivating**: If set to true, the Auto mode is enabled when you activate the device in the Home app.
+**enableAutoModeWhenActivating**: If set to true, the Auto mode is enabled when you activate the device in the Home app. Defaults to `false`.
 
-**isNightModeEnabled**: If set to true, a switch is exposed for the night mode.
+**isNightModeEnabled**: If set to true, a switch is exposed for the night mode. Defaults to `false`.
 
-**isJetFocusEnabled**: If set to true, a switch is exposed for the jet focus. Only used for 2018 devices.
+**isJetFocusEnabled**: If set to true, a switch is exposed for the jet focus. Only used for 2018 devices. Defaults to `false`.
 
-**isTemperatureSensorEnabled**: If set to true, a separate temperature sensor is exposed. If set to false, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app).
+**isTemperatureSensorEnabled**: If set to true, a separate temperature sensor is exposed. Only used for non-heating devices. If set to false, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app).
 
 **isHumiditySensorEnabled**: If set to true, a separate humidity sensor is exposed. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app).
 

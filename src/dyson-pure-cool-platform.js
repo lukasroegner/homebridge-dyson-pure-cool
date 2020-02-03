@@ -51,7 +51,7 @@ function DysonPureCoolPlatform(log, config, api) {
     platform.config.countryCode = platform.config.countryCode || 'US';
     platform.config.devices = platform.config.devices || [];
     platform.config.apiUri = 'https://api.cp.dyson.com';
-    platform.config.supportedProductTypes = ['438', '469', '475', '520'];
+    platform.config.supportedProductTypes = ['438', '455', '469', '475', '520', '527'];
 
     // Checks whether the API object is available
     if (!api) {
@@ -179,7 +179,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
             // Gets the corresponding device configuration
             let config = platform.config.devices.find(function(d) { return d.serialNumber === apiConfig.Serial; });
             if (!config) {
-                platform.log.warn('No IP address provided for device with ' + apiConfig.Serial + '.');
+                platform.log.warn('No IP address provided for device with serial number ' + apiConfig.Serial + '.');
                 continue;
             }
 
@@ -192,7 +192,9 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
             const password = decryptedPasswordJson.apPasswordHash;
 
             // Creates the device instance and adds it to the list of all devices
-            platform.devices.push(new DysonPureCoolDevice(platform, apiConfig.Name, apiConfig.Serial, apiConfig.ProductType, apiConfig.Version, password, config));
+            if (platform.config.supportedProductTypes.some(function(t) { return t === apiConfig.ProductType; })) {
+                platform.devices.push(new DysonPureCoolDevice(platform, apiConfig.Name, apiConfig.Serial, apiConfig.ProductType, apiConfig.Version, password, config));
+            }
         }
 
         // Removes the accessories that are not bound to a device
