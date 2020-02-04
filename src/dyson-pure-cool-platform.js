@@ -50,7 +50,7 @@ function DysonPureCoolPlatform(log, config, api) {
     platform.config.password = platform.config.password || null;
     platform.config.countryCode = platform.config.countryCode || 'US';
     platform.config.devices = platform.config.devices || [];
-    platform.config.apiUri = 'https://api.cp.dyson.com';
+    platform.config.apiUri = 'https://appapi.cp.dyson.com';
     platform.config.supportedProductTypes = ['438', '455', '469', '475', '520', '527'];
 
     // Checks whether the API object is available
