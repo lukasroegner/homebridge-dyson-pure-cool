@@ -363,8 +363,8 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             // Maps the VOC values to a self-created scale (as described values in the app don't fit)
             const va10Quality = (va10 * 0.125) <= 3 ? 1 : ((va10 * 0.125) <= 6 ? 2 : ((va10 * 0.125) <= 8 ? 3 : 4));
 
-            // NO2 seems to be ignored when calculating the overall air quality in the app
-            const noxlQuality = 0;
+            // Maps the NO2 value ti a self-created scale
+            const noxlQuality = noxl <= 30 ? 1 : (noxl <= 60 ? 2 : (noxl <= 80 ? 3 : (noxl <= 90 ? 4 : 5)));
 
             // Maps the values of the sensors to the relative values, these operations are copied from the newer devices as the app does not specify the correct values
             const pQuality = p <= 2 ? 1 : (p <= 4 ? 2 : (p <= 7 ? 3 : (p <= 9 ? 4 : 5)));
