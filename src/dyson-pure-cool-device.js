@@ -292,6 +292,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     platform.log.debug(serialNumber + ' - MQTT connection requested for ' + config.ipAddress + '.');
 
     // Subscribes for events of the MQTT client
+    let updateIntervalHandle = null;
     device.mqttClient.on('connect', function () {
         platform.log.debug(serialNumber + ' - MQTT connection established.');
 
@@ -303,6 +304,18 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 msg: 'REQUEST-CURRENT-STATE',
                 time: new Date().toISOString()
             }));
+
+            // Sets the interval for status updates
+            updateIntervalHandle = setInterval(function() {
+                try {
+                    device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+                        msg: 'REQUEST-CURRENT-STATE',
+                        time: new Date().toISOString()
+                    }));
+                } catch (error) {
+                    platform.log.debug(serialNumber + ' - MQTT interval error: ' + error);
+                }
+            }, device.platform.options.updateInterval);
         });
     });
     device.mqttClient.on('error', function (error) {
@@ -313,12 +326,24 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     });
     device.mqttClient.on('close', function () {
         platform.log.debug(serialNumber + ' - MQTT disconnected.');
+        if (updateIntervalHandle) {
+            clearInterval(updateIntervalHandle);
+            updateIntervalHandle = null;
+        }
     });
     device.mqttClient.on('offline', function () {
         platform.log.debug(serialNumber + ' - MQTT offline.');
+        if (updateIntervalHandle) {
+            clearInterval(updateIntervalHandle);
+            updateIntervalHandle = null;
+        }
     });
     device.mqttClient.on('end', function () {
         platform.log.debug(serialNumber + ' - MQTT ended.');
+        if (updateIntervalHandle) {
+            clearInterval(updateIntervalHandle);
+            updateIntervalHandle = null;
+        }
     });
     device.mqttClient.on('message', function (_, payload) {
         platform.log.debug(serialNumber + ' - MQTT message received: ' + payload.toString());
