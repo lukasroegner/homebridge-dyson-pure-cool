@@ -315,7 +315,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 } catch (error) {
                     platform.log.debug(serialNumber + ' - MQTT interval error: ' + error);
                 }
-            }, device.platform.options.updateInterval);
+            }, device.platform.config.updateInterval);
         });
     });
     device.mqttClient.on('error', function (error) {
