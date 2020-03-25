@@ -69,7 +69,15 @@ function DysonPureCoolPlatform(log, config, api) {
         platform.log.debug('Cached accessories loaded.');
 
         // Initially gets the devices from the Dyson API
-        platform.getDevicesFromApi(function () { });
+        const getDevicesFunction = function() {
+            platform.getDevicesFromApi(function (success) {
+                if (!success) {
+                    platform.log.warn('API could not be reached. Trying again soon...');
+                    setTimeout(function() { getDevicesFunction(); }, 5000);
+                }
+            });
+        };
+        getDevicesFunction();
     });
 }
 
