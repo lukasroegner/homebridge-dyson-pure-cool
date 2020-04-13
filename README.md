@@ -58,6 +58,7 @@ npm install homebridge-dyson-pure-cool -g
                 {
                     "ipAddress": "XXX.XXX.XXX.XXX",
                     "serialNumber": "XXX-EU-XXXXXXXX",
+                    "credentials": null,
                     "enableAutoModeWhenActivating": false,
                     "isNightModeEnabled": false,
                     "isJetFocusEnabled": false,
@@ -84,6 +85,8 @@ npm install homebridge-dyson-pure-cool -g
 **ipAddress**: Local IP address of the device.
 
 **serialNumber**: Serial number of the device.
+
+**credentials** (optional): By default, the Dyson API is contacted to retrieve required information of the devices. However, you can also store credentials of each device in this property. If you do that for ALL of the devices, the Dyson API is no longer used, the connection can be directly established with the credentials. To retrieve the credentials, run the plugin without credentials. The credentials will then be printed out in the logs for each device.
 
 **enableAutoModeWhenActivating**: If set to true, the Auto mode is enabled when you activate the device in the Home app. Defaults to `false`.
 

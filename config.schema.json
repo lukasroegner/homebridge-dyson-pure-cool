@@ -51,6 +51,11 @@
                             "default": "XXX-EU-XXXXXXXX",
                             "description": "Serial number of the device."
                         },
+                        "credentials": {
+                            "title": "Credentials",
+                            "type": "string",
+                            "description": "By default, the Dyson API is contacted to retrieve required information of the devices. However, you can also store credentials of each device in this property. If you do that for ALL of the devices, the Dyson API is no longer used, the connection can be directly established with the credentials. To get the credentials, run the plugin without credentials. The credentials will then be printed out in the logs for each device."
+                        },
                         "enableAutoModeWhenActivating": {
                             "title": "Enable Auto Mode",
                             "type": "boolean",

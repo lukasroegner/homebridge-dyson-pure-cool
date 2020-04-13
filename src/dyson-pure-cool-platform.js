@@ -68,6 +68,11 @@ function DysonPureCoolPlatform(log, config, api) {
     platform.api.on('didFinishLaunching', function () {
         platform.log.debug('Cached accessories loaded.');
 
+        // Checks if devices can be loaded from config
+        if (platform.getDevicesFromConfig()) {
+            return;
+        }
+
         // Initially gets the devices from the Dyson API
         const getDevicesFunction = function() {
             platform.getDevicesFromApi(function (success) {
@@ -206,6 +211,12 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
 
             // Creates the device instance and adds it to the list of all devices
             if (platform.config.supportedProductTypes.some(function(t) { return t === apiConfig.ProductType; })) {
+                apiConfig.password = password;
+
+                // Prints out the credentials hint
+                platform.log.info('Credentials for device with serial number ' + apiConfig.Serial + ' are: ' + Buffer.from(JSON.stringify(apiConfig)).toString('base64'));
+
+                // Creates the device
                 platform.devices.push(new DysonPureCoolDevice(platform, apiConfig.Name, apiConfig.Serial, apiConfig.ProductType, apiConfig.Version, password, config));
             }
         }
@@ -223,6 +234,49 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
         platform.log.info('Got devices from the Dyson API.');
         return callback(true);
     });
+}
+
+/**
+ * Gets the devices of the user from the config.json.
+ */
+DysonPureCoolPlatform.prototype.getDevicesFromConfig = function () {
+    const platform = this;
+
+    // Checks if there are credentials for all devices
+    if (platform.config.devices.some(function(d) { return !d.credentials; })) {
+        platform.log.info('Device credentials not stored, asking Dyson API. If you want to prevent communication with the Dyson API, copy the credentials for each device from the coming log entries to the config.json.');
+        return false;
+    }
+
+    // Cycles over all devices from the config and creates them
+    for (let i = 0; i < platform.config.devices.length; i++) {
+        const config = platform.config.devices[i];
+
+        // Decodes the API configuration that has been stored
+        let apiConfig = {};
+        try {
+            apiConfig = JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('ascii'));
+        } catch (e) {
+            platform.log.warn('Invalid device credentials for device with serial number ' + config.serialNumber + '. Make sure you copied it correctly.');
+            return false;
+        }
+
+        // Creates the device instance and adds it to the list of all devices
+        platform.devices.push(new DysonPureCoolDevice(platform, apiConfig.Name, apiConfig.Serial, apiConfig.ProductType, apiConfig.Version, apiConfig.password, config));
+    }
+
+    // Removes the accessories that are not bound to a device
+    let unusedAccessories = platform.accessories.filter(function(a) { return !platform.devices.some(function(d) { return d.serialNumber === a.context.serialNumber; }); });
+    for (let i = 0; i < unusedAccessories.length; i++) {
+        const unusedAccessory = unusedAccessories[i];
+        platform.log.info('Removing accessory with serial number ' + unusedAccessory.context.serialNumber + ' and kind ' + unusedAccessory.context.kind + '.');
+        platform.accessories.splice(platform.accessories.indexOf(unusedAccessory), 1);
+    }
+    platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, unusedAccessories);
+
+    // Returns a positive result
+    platform.log.info('Got devices from config.');
+    return true;
 }
 
 /**
