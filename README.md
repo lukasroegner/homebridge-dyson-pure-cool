@@ -66,7 +66,8 @@ npm install homebridge-dyson-pure-cool -g
                     "isAirQualitySensorEnabled": false
                 }
             ],
-            "updateInterval": 60000
+            "updateInterval": 60000,
+            "retrySignInInterval": 0
         }
     ]
 }
@@ -97,3 +98,5 @@ npm install homebridge-dyson-pure-cool -g
 **isAirQualitySensorEnabled**: If set to true, a separate air quality sensor is exposed. If set to false, the air quality is added as characteristic to the air purifier (supported in the Apple Home app).
 
 **updateInterval** (optional): The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices. Defaults to 60 seconds.
+
+**retrySignInInterval** (optional): The interval (in milliseconds) at which the plugin tries to communicate with the Dyson API at plugin startup. Set the value to `5000` (5 seconds) or more if you have internet connectivity issue. Defaults to `0`, which means retry is disabled.

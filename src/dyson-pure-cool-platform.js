@@ -72,8 +72,12 @@ function DysonPureCoolPlatform(log, config, api) {
         const getDevicesFunction = function() {
             platform.getDevicesFromApi(function (success) {
                 if (!success) {
-                    platform.log.warn('API could not be reached. Trying again soon...');
-                    setTimeout(function() { getDevicesFunction(); }, 5000);
+                    if (platform.config.retrySignInInterval > 0) {
+                        platform.log.warn('API could not be reached. Trying again soon...');
+                        setTimeout(function() { getDevicesFunction(); }, platform.config.retrySignInInterval);
+                    } else {
+                        platform.log.warn('API could not be reached. Retry is disabled.');
+                    }
                 }
             });
         };

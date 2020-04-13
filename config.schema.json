@@ -95,6 +95,18 @@
                         }
                     }
                 }
+            },
+            "updateInterval": {
+                "title": "Update Interval",
+                "type": "integer",
+                "placeholder": "60000",
+                "description": "The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices."
+            },
+            "retrySignInInterval": {
+                "title": "Retry Sign-In Interval",
+                "type": "integer",
+                "placeholder": "0",
+                "description": "The interval (in milliseconds) at which the plugin tries to communicate with the Dyson API at plugin startup. Disabled by default."
             }
         }
     }
