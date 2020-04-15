@@ -68,6 +68,12 @@ function DysonPureCoolPlatform(log, config, api) {
     platform.api.on('didFinishLaunching', function () {
         platform.log.debug('Cached accessories loaded.');
 
+        // Checks if the devices array is properly formed
+        if (!platform.config.devices || !Array.isArray(platform.config.devices)) {
+            platform.log.warn('Check the devices property, it has to be a valid array.');
+            return;
+        }
+
         // Checks if devices can be loaded from config
         if (platform.getDevicesFromConfig()) {
             return;
