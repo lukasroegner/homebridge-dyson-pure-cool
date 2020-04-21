@@ -2,6 +2,7 @@
 
 This project is a homebridge plugin for the Dyson air purifiers. Supported devices are:
 
+- Dyson Pure Humidify+Cool (PH01)
 - 2018 Dyson Pure Cool Tower (TP04)
 - 2018 Dyson Pure Cool Desk (DP04)
 - 2018 Dyson Pure Hot+Cool (HP04)

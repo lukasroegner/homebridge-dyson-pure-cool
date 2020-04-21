@@ -27,6 +27,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     let hasJetFocus = false;
     let hasAdvancedAirQualitySensors = false;
     switch (productType) {
+        case '358':
+            model = 'Dyson Pure Humidify+Cool';
+            hardwareRevision = 'PH01';
+            hasJetFocus = false;
+            hasAdvancedAirQualitySensors = true;
+            break;
         case '438':
             model = 'Dyson Pure Cool Tower';
             hardwareRevision = 'TP04';
