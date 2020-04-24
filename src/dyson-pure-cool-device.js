@@ -418,6 +418,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         // Updates the state data
         if (content.msg === 'CURRENT-STATE') {
 
+            // TODO: DEBUG CODE
+            platform.log.warn(serialNumber + ' - STATE:');
+            for (let property in content['product-state']) {
+                platform.log.warn(serialNumber + '       ' + property + ' -> ' + content['product-state'][property]);
+            }
+
             // Sets the power state
             if (content['product-state']['fpwr']) {
                 airPurifierService.updateCharacteristic(Characteristic.Active, content['product-state']['fpwr'] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
@@ -485,6 +491,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
         // Starts a new request as the state should be updated
         if (content.msg === 'STATE-CHANGE') {
+
+            // TODO: DEBUG CODE
+            platform.log.warn(serialNumber + ' - STATE:');
+            for (let property in content['product-state']) {
+                platform.log.warn(serialNumber + '       ' + property + ' -> ' + content['product-state'][property][1]);
+            }
 
             // Sets the power state
             if (content['product-state']['fpwr']) {
