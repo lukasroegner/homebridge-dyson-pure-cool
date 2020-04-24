@@ -20,6 +20,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     device.platform = platform;
     device.mqttClient = null;
 
+    // Makes sure that a name is set
+    if (!name) {
+        name = 'Dyson';
+    }
+
     // Creates the device information from the API results
     let model = 'Pure Cool';
     let hardwareRevision = '';
@@ -37,6 +42,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             model = 'Dyson Pure Hot+Cool Link';
             hardwareRevision = 'HP02';
             hasHeating = true;
+            hasJetFocus = true;
             break;
         case '469':
             model = 'Dyson Pure Cool Link Desk';
@@ -471,7 +477,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
             // Sets the state of the jet focus switch
             if (jetFocusSwitchService) {
-                jetFocusSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['fdir'] !== 'OFF');
+                if (content['product-state']['fdir']) {
+                    jetFocusSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['fdir'] !== 'OFF');
+                }
+                if (content['product-state']['ffoc']) {
+                    jetFocusSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['ffoc'] !== 'OFF');
+                }
             }
 
             return;
@@ -539,7 +550,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
             // Sets the state of the jet focus switch
             if (jetFocusSwitchService) {
-                jetFocusSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['fdir'][1] !== 'OFF');
+                if (content['product-state']['fdir']) {
+                    jetFocusSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['fdir'][1] !== 'OFF');
+                }
+                if (content['product-state']['ffoc']) {
+                    jetFocusSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['ffoc'][1] !== 'OFF');
+                }
             }
 
             return;
@@ -691,11 +707,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Subscribes for changes of the jet focus
     if (jetFocusSwitchService) {
         jetFocusSwitchService.getCharacteristic(Characteristic.On).on('set', function (value, callback) {
-            platform.log.info(serialNumber + ' - set JetFocus to ' + value + ': ' + JSON.stringify({ fdir: value ? 'ON' : 'OFF' }));
+            platform.log.info(serialNumber + ' - set JetFocus to ' + value + ': ' + JSON.stringify({ fdir: value ? 'ON' : 'OFF', ffoc: value ? 'ON' : 'OFF' }));
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
-                data: { fdir: value ? 'ON' : 'OFF' }
+                data: { fdir: value ? 'ON' : 'OFF', ffoc: value ? 'ON' : 'OFF' }
             }));
             callback(null);
         });
