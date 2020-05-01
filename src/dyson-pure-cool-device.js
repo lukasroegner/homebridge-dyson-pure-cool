@@ -232,7 +232,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             temperatureService.getCharacteristic(Characteristic.TargetTemperature).setProps({
                 maxValue: 37,
                 minValue: 0,
-                minStep: 0.1,
+                minStep: 1,
                 unit: 'celsius'
             });
         } else {
