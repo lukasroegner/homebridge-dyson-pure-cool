@@ -29,14 +29,16 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     let model = 'Pure Cool';
     let hardwareRevision = '';
     let hasHeating = false;
+    let hasHumidifier = false;
     let hasJetFocus = false;
     let hasAdvancedAirQualitySensors = false;
     switch (productType) {
         case '358':
             model = 'Dyson Pure Humidify+Cool';
             hardwareRevision = 'PH01';
-            hasJetFocus = false;
             hasAdvancedAirQualitySensors = true;
+            hasHumidifier = true;
+            hasJetFocus = true;
             break;
         case '438':
             model = 'Dyson Pure Cool Tower';
@@ -109,7 +111,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Gets the humidity accessory
     let humidityAccessory = null;
-    if (config.isHumiditySensorEnabled) {
+    if (hasHumidifier || config.isHumiditySensorEnabled) {
         humidityAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'HumidityAccessory'; });
         if (humidityAccessory) {
             unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(humidityAccessory), 1);
@@ -259,9 +261,39 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (!humidityAccessory) {
         humidityService = airPurifierService;
     } else {
-        humidityService = humidityAccessory.getService(Service.HumiditySensor);
-        if (!humidityService) {
-            humidityService = humidityAccessory.addService(Service.HumiditySensor);
+        if (hasHumidifier) {
+
+            // Uses a humidifier service
+            humidityService = humidityAccessory.getService(Service.HumidifierDehumidifier);
+            if (!humidityService) {
+                humidityService = humidityAccessory.addService(Service.HumidifierDehumidifier);
+            }
+
+            // Disables dehumififying
+            humidityService.getCharacteristic(Characteristic.CurrentHumidifierDehumidifierState).setProps({
+                maxValue: 2,
+                minValue: 0,
+                validValues: [0, 1, 2]
+            });
+            humidityService.getCharacteristic(Characteristic.TargetHumidifierDehumidifierState).setProps({
+                maxValue: 1,
+                minValue: 0,
+                validValues: [0, 1]
+            });
+    
+            // Updates the humidity threshold
+            humidityService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).setProps({
+                maxValue: 70,
+                minValue: 40,
+                minStep: 10
+            });
+        } else {
+
+            // Uses a humidify sensor
+            humidityService = humidityAccessory.getService(Service.HumiditySensor);
+            if (!humidityService) {
+                humidityService = humidityAccessory.addService(Service.HumiditySensor);
+            }
         }
     }
 
@@ -424,12 +456,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         // Updates the state data
         if (content.msg === 'CURRENT-STATE') {
 
-            // TODO: DEBUG CODE
-            platform.log.warn(serialNumber + ' - STATE:');
-            for (let property in content['product-state']) {
-                platform.log.warn(serialNumber + '       ' + property + ' -> ' + content['product-state'][property]);
-            }
-
             // Sets the power state
             if (content['product-state']['fpwr']) {
                 airPurifierService.updateCharacteristic(Characteristic.Active, content['product-state']['fpwr'] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
@@ -446,6 +472,22 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 }
                 if (content['product-state']['hmax']) {
                     temperatureService.updateCharacteristic(Characteristic.TargetTemperature, (Number.parseInt(content['product-state']['hmax']) / 10.0) - 273.0);
+                }
+            }
+
+            // Sets the humidifier mode and threshold
+            if (hasHumidifier) {
+                if (content['product-state']['hume']) {
+                    humidityService.updateCharacteristic(Characteristic.Active, content['product-state']['hume'] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
+                }
+                if (content['product-state']['hume'] && content['product-state']['msta']) {
+                    humidityService.updateCharacteristic(Characteristic.CurrentHumidifierDehumidifierState, content['product-state']['hume'] === 'OFF' ? Characteristic.CurrentHumidifierDehumidifierState.INACTIVE : (content['product-state']['msta'] === 'OFF' ? Characteristic.CurrentHumidifierDehumidifierState.IDLE : Characteristic.CurrentHumidifierDehumidifierState.HUMIDIFYING));
+                }
+                if (content['product-state']['haut']) {
+                    humidityService.updateCharacteristic(Characteristic.TargetHumidifierDehumidifierState, content['product-state']['haut'] === 'OFF' ? Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER : Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER_OR_DEHUMIDIFIER);
+                }
+                if (content['product-state']['humt']) {
+                    humidityService.updateCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold, Number.parseInt(content['product-state']['humt']));
                 }
             }
 
@@ -503,12 +545,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         // Starts a new request as the state should be updated
         if (content.msg === 'STATE-CHANGE') {
 
-            // TODO: DEBUG CODE
-            platform.log.warn(serialNumber + ' - STATE:');
-            for (let property in content['product-state']) {
-                platform.log.warn(serialNumber + '       ' + property + ' -> ' + content['product-state'][property][1]);
-            }
-
             // Sets the power state
             if (content['product-state']['fpwr']) {
                 airPurifierService.updateCharacteristic(Characteristic.Active, content['product-state']['fpwr'][1] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
@@ -525,6 +561,22 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 }
                 if (content['product-state']['hmax']) {
                     temperatureService.updateCharacteristic(Characteristic.TargetTemperature, (Number.parseInt(content['product-state']['hmax'][1]) / 10.0) - 273.0);
+                }
+            }
+
+            // Sets the humidifier mode and threshold
+            if (hasHumidifier) {
+                if (content['product-state']['hume']) {
+                    humidityService.updateCharacteristic(Characteristic.Active, content['product-state']['hume'][1] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
+                }
+                if (content['product-state']['hume'] && content['product-state']['msta']) {
+                    humidityService.updateCharacteristic(Characteristic.CurrentHumidifierDehumidifierState, content['product-state']['hume'][1] === 'OFF' ? Characteristic.CurrentHumidifierDehumidifierState.INACTIVE : (content['product-state']['msta'][1] === 'OFF' ? Characteristic.CurrentHumidifierDehumidifierState.IDLE : Characteristic.CurrentHumidifierDehumidifierState.HUMIDIFYING));
+                }
+                if (content['product-state']['haut']) {
+                    humidityService.updateCharacteristic(Characteristic.TargetHumidifierDehumidifierState, content['product-state']['haut'][1] === 'OFF' ? Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER : Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER_OR_DEHUMIDIFIER);
+                }
+                if (content['product-state']['humt']) {
+                    humidityService.updateCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold, Number.parseInt(content['product-state']['humt'][1]));
                 }
             }
 
@@ -686,6 +738,37 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
                 data: { hmax: ('0000' + Math.round((value + 273.0) * 10.0).toString()).slice(-4) }
+            }));
+            callback(null);
+        });
+    }
+
+    // Subscribes for changes of the humidifier mode and threshold
+    if (hasHumidifier) {
+        humidityService.getCharacteristic(Characteristic.Active).on('set', function (value, callback) {
+            platform.log.info(serialNumber + ' - set Humidifier Active to ' + value + ': ' + JSON.stringify({ hume: value === Characteristic.Active.ACTIVE ? 'ON' : 'OFF' }));
+            device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+                msg: 'STATE-SET',
+                time: new Date().toISOString(),
+                data: { hume: value === Characteristic.Active.ACTIVE ? 'ON' : 'OFF' }
+            }));
+            callback(null);
+        });
+        humidityService.getCharacteristic(Characteristic.TargetHumidifierDehumidifierState).on('set', function (value, callback) {
+            platform.log.info(serialNumber + ' - set TargetHumidifierDehumidifierState to ' + value + ': ' + JSON.stringify({ haut: value === Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER_OR_DEHUMIDIFIER ? 'ON' : 'OFF' }));
+            device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+                msg: 'STATE-SET',
+                time: new Date().toISOString(),
+                data: { haut: value === Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER_OR_DEHUMIDIFIER ? 'ON' : 'OFF' }
+            }));
+            callback(null);
+        });
+        humidityService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).on('set', function (value, callback) {
+            platform.log.info(serialNumber + ' - set RelativeHumidityHumidifierThreshold to ' + value + ': ' + JSON.stringify({ humt: ('0000' + value.toString()).slice(-4) }));
+            device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+                msg: 'STATE-SET',
+                time: new Date().toISOString(),
+                data: { humt: ('0000' + value.toString()).slice(-4) }
             }));
             callback(null);
         });
