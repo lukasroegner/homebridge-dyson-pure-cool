@@ -25,6 +25,11 @@ For heating devices, a thermostat is also exposes to HomeKit with support for:
 - On/Off
 - Target temperature
 
+For humidifier devices, a humidifier is also exposes to HomeKit with support for:
+- On/Off
+- Auto/manual
+- Target relative humidity
+
 Optionally, the following switches are exposed:
 - Night mode (on/off)
 - Jet Focus (on/off for 2018 devices)
