@@ -1,7 +1,7 @@
 {
     "pluginAlias": "DysonPureCoolPlatform",
     "pluginType": "platform",
-    "headerDisplay": "This plugin supports the 2018 Dyson Pure Cool (DP04, TP04), Dyson Pure Cool Link (DP01, TP02) and Dyson Hot+Cool (HP02, HP04) devices.",
+    "headerDisplay": "This plugin supports the 2018 Dyson Pure Cool (DP04, TP04), Dyson Pure Cool Link (DP01, TP02), Dyson Hot+Cool (HP02, HP04) and Dyson Pure Humidify+Cool (PH01) devices.",
     "footerDisplay": "For help please visit the [GitHub repository](https://github.com/lukasroegner/homebridge-dyson-pure-cool).",
     "schema": {
         "type": "object",

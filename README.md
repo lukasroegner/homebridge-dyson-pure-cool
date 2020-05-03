@@ -2,6 +2,7 @@
 
 This project is a homebridge plugin for the Dyson air purifiers. Supported devices are:
 
+- Dyson Pure Humidify+Cool (PH01)
 - 2018 Dyson Pure Cool Tower (TP04)
 - 2018 Dyson Pure Cool Desk (DP04)
 - 2018 Dyson Pure Hot+Cool (HP04)
@@ -23,6 +24,11 @@ All your devices are exposed as air purifiers in HomeKit, with support (also in 
 For heating devices, a thermostat is also exposes to HomeKit with support for:
 - On/Off
 - Target temperature
+
+For humidifier devices, a humidifier is also exposes to HomeKit with support for:
+- On/Off
+- Auto/manual
+- Target relative humidity
 
 Optionally, the following switches are exposed:
 - Night mode (on/off)

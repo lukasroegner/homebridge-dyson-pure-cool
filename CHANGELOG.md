@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.7.3] - 2020-05-03
+### Changes
+- Finished implementtion for support of the Pure Cool+Humidify (PH01)
+
+## [1.7.2] - 2020-05-01
+### Changes
+- Initial support for Pure Cool+Humidify (PH01)
+
+## [1.7.1] - 2020-04-24
+### Changes
+- Added debug code for the Pure Cool+Humidify (PH01)
+
 ## [1.6.5] - 2020-04-25
 ### Changes
 - Changed the temperature step to integers for HP02 and HP04
