@@ -254,18 +254,25 @@ DysonPureCoolPlatform.prototype.getDevicesFromConfig = function () {
         return false;
     }
 
+    // Cycles over all devices from the config and tests whether the credentials can be parsed
+    for (let i = 0; i < platform.config.devices.length; i++) {
+        const config = platform.config.devices[i];
+
+        // Decodes the API configuration that has been stored
+        try {
+            JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('ascii'));
+        } catch (e) {
+            platform.log.warn('Invalid device credentials for device with serial number ' + config.serialNumber + '. Make sure you copied it correctly.');
+            return false;
+        }
+    }
+
     // Cycles over all devices from the config and creates them
     for (let i = 0; i < platform.config.devices.length; i++) {
         const config = platform.config.devices[i];
 
         // Decodes the API configuration that has been stored
-        let apiConfig = {};
-        try {
-            apiConfig = JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('ascii'));
-        } catch (e) {
-            platform.log.warn('Invalid device credentials for device with serial number ' + config.serialNumber + '. Make sure you copied it correctly.');
-            return false;
-        }
+        let apiConfig = JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('ascii'));
 
         // Creates the device instance and adds it to the list of all devices
         platform.devices.push(new DysonPureCoolDevice(platform, apiConfig.Name, apiConfig.Serial, apiConfig.ProductType, apiConfig.Version, apiConfig.password, config));
