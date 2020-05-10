@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.7.5] - 2020-05-10
+### Changes
+- Added a single accessory mode
+
 ## [1.7.4] - 2020-05-03
 ### Changes
 - Enhanced checks for issues in the stored credentials when multiple devices are configured

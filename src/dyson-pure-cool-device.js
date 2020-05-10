@@ -96,65 +96,81 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Gets the temperature accessory
     let temperatureAccessory = null;
     if (hasHeating || config.isTemperatureSensorEnabled) {
-        temperatureAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'TemperatureAccessory'; });
-        if (temperatureAccessory) {
-            unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(temperatureAccessory), 1);
+        if (config.isSingleAccessoryModeEnabled) {
+            temperatureAccessory = airPurifierAccessory;
         } else {
-            platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind TemperatureAccessory.');
-            temperatureAccessory = new Accessory(name + ' Temperature', UUIDGen.generate(serialNumber + 'TemperatureAccessory'));
-            temperatureAccessory.context.serialNumber = serialNumber;
-            temperatureAccessory.context.kind = 'TemperatureAccessory';
-            newDeviceAccessories.push(temperatureAccessory);
+            temperatureAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'TemperatureAccessory'; });
+            if (temperatureAccessory) {
+                unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(temperatureAccessory), 1);
+            } else {
+                platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind TemperatureAccessory.');
+                temperatureAccessory = new Accessory(name + ' Temperature', UUIDGen.generate(serialNumber + 'TemperatureAccessory'));
+                temperatureAccessory.context.serialNumber = serialNumber;
+                temperatureAccessory.context.kind = 'TemperatureAccessory';
+                newDeviceAccessories.push(temperatureAccessory);
+            }
+            deviceAccessories.push(temperatureAccessory);
         }
-        deviceAccessories.push(temperatureAccessory);
     }
 
     // Gets the humidity accessory
     let humidityAccessory = null;
     if (hasHumidifier || config.isHumiditySensorEnabled) {
-        humidityAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'HumidityAccessory'; });
-        if (humidityAccessory) {
-            unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(humidityAccessory), 1);
+        if (config.isSingleAccessoryModeEnabled) {
+            humidityAccessory = airPurifierAccessory;
         } else {
-            platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind HumidityAccessory.');
-            humidityAccessory = new Accessory(name + ' Humidity', UUIDGen.generate(serialNumber + 'HumidityAccessory'));
-            humidityAccessory.context.serialNumber = serialNumber;
-            humidityAccessory.context.kind = 'HumidityAccessory';
-            newDeviceAccessories.push(humidityAccessory);
+            humidityAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'HumidityAccessory'; });
+            if (humidityAccessory) {
+                unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(humidityAccessory), 1);
+            } else {
+                platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind HumidityAccessory.');
+                humidityAccessory = new Accessory(name + ' Humidity', UUIDGen.generate(serialNumber + 'HumidityAccessory'));
+                humidityAccessory.context.serialNumber = serialNumber;
+                humidityAccessory.context.kind = 'HumidityAccessory';
+                newDeviceAccessories.push(humidityAccessory);
+            }
+            deviceAccessories.push(humidityAccessory);
         }
-        deviceAccessories.push(humidityAccessory);
     }
 
     // Gets the air quality accessory
     let airQualityAccessory = null;
     if (config.isAirQualitySensorEnabled) {
-        airQualityAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'AirQualityAccessory'; });
-        if (airQualityAccessory) {
-            unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(airQualityAccessory), 1);
+        if (config.isSingleAccessoryModeEnabled) {
+            airQualityAccessory = airPurifierAccessory;
         } else {
-            platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind AirQualityAccessory.');
-            airQualityAccessory = new Accessory(name + ' Air Quality', UUIDGen.generate(serialNumber + 'AirQualityAccessory'));
-            airQualityAccessory.context.serialNumber = serialNumber;
-            airQualityAccessory.context.kind = 'AirQualityAccessory';
-            newDeviceAccessories.push(airQualityAccessory);
+            airQualityAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'AirQualityAccessory'; });
+            if (airQualityAccessory) {
+                unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(airQualityAccessory), 1);
+            } else {
+                platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind AirQualityAccessory.');
+                airQualityAccessory = new Accessory(name + ' Air Quality', UUIDGen.generate(serialNumber + 'AirQualityAccessory'));
+                airQualityAccessory.context.serialNumber = serialNumber;
+                airQualityAccessory.context.kind = 'AirQualityAccessory';
+                newDeviceAccessories.push(airQualityAccessory);
+            }
+            deviceAccessories.push(airQualityAccessory);
         }
-        deviceAccessories.push(airQualityAccessory);
     }
 
     // Gets the switch accessory
     let switchAccessory = null;
     if (config.isNightModeEnabled || (config.isJetFocusEnabled && hasJetFocus)) {
-        switchAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'SwitchAccessory'; });
-        if (switchAccessory) {
-            unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(switchAccessory), 1);
+        if (config.isSingleAccessoryModeEnabled) {
+            switchAccessory = airPurifierAccessory;
         } else {
-            platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind SwitchAccessory.');
-            switchAccessory = new Accessory(name + ' Settings', UUIDGen.generate(serialNumber + 'SwitchAccessory'));
-            switchAccessory.context.serialNumber = serialNumber;
-            switchAccessory.context.kind = 'SwitchAccessory';
-            newDeviceAccessories.push(switchAccessory);
+            switchAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'SwitchAccessory'; });
+            if (switchAccessory) {
+                unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(switchAccessory), 1);
+            } else {
+                platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind SwitchAccessory.');
+                switchAccessory = new Accessory(name + ' Settings', UUIDGen.generate(serialNumber + 'SwitchAccessory'));
+                switchAccessory.context.serialNumber = serialNumber;
+                switchAccessory.context.kind = 'SwitchAccessory';
+                newDeviceAccessories.push(switchAccessory);
+            }
+            deviceAccessories.push(switchAccessory);
         }
-        deviceAccessories.push(switchAccessory);
     }
 
     // Registers the newly created accessories
