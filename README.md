@@ -34,7 +34,7 @@ Optionally, the following switches are exposed:
 - Night mode (on/off)
 - Jet Focus (on/off for 2018 devices)
 
-The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode and jet focus switches are combined in a separate settings accessory.
+The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode and jet focus switches are combined in a separate settings accessory. This can be changed in the config.
 
 ## Installation
 
@@ -70,7 +70,8 @@ npm install homebridge-dyson-pure-cool -g
                     "isJetFocusEnabled": false,
                     "isTemperatureSensorEnabled": false,
                     "isHumiditySensorEnabled": false,
-                    "isAirQualitySensorEnabled": false
+                    "isAirQualitySensorEnabled": false,
+                    "isSingleAccessoryModeEnabled": false
                 }
             ],
             "updateInterval": 60000,
@@ -105,6 +106,8 @@ npm install homebridge-dyson-pure-cool -g
 **isHumiditySensorEnabled**: If set to true, a separate humidity sensor is exposed. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app).
 
 **isAirQualitySensorEnabled**: If set to true, a separate air quality sensor is exposed. If set to false, the air quality is added as characteristic to the air purifier (supported in the Apple Home app).
+
+**isSingleAccessoryModeEnabled**: If set to true, all services are exposed to HomeKit in a single accessory instead of multiple accessories. Use this mode if you are using a third-party HomeKit app and want all services grouped into a single accessory.
 
 **updateInterval** (optional): The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices. Defaults to 60 seconds.
 

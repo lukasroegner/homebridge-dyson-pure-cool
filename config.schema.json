@@ -97,6 +97,12 @@
                             "default": false,
                             "required": true,
                             "description": "If set to true, a separate air quality sensor is exposed. If set to false, the air quality is added as characteristic to the air purifier (supported in the Apple Home app)."
+                        },
+                        "isSingleAccessoryModeEnabled": {
+                            "title": "Single Accessory Mode",
+                            "type": "boolean",
+                            "default": false,
+                            "description": "If set to true, all services are exposed to HomeKit in a single accessory instead of multiple accessories. Use this mode if you are using a third-party HomeKit app and want all services grouped into a single accessory."
                         }
                     }
                 }
