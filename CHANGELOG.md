@@ -1,9 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.7.7] - 2020-05-15
+### Changes
+- Added a single sensor accessory mode
+
 ## [1.7.6] - 2020-05-15
 ### Changes
-- Fixed a bug that occurred when enableAutoModeWhenActivating was set to true and rotation speed changed in the Home app.
+- Fixed a bug that occurred when enableAutoModeWhenActivating was set to true and rotation speed changed in the Home app
 
 ## [1.7.5] - 2020-05-10
 ### Changes

@@ -95,19 +95,21 @@ npm install homebridge-dyson-pure-cool -g
 
 **credentials** (optional): By default, the Dyson API is contacted to retrieve required information of the devices. However, you can also store credentials of each device in this property. If you do that for ALL of the devices, the Dyson API is no longer used, the connection can be directly established with the credentials. To retrieve the credentials, run the plugin without credentials. The credentials will then be printed out in the logs for each device.
 
-**enableAutoModeWhenActivating**: If set to true, the Auto mode is enabled when you activate the device in the Home app. Defaults to `false`.
+**enableAutoModeWhenActivating**: If set to `true`, the Auto mode is enabled when you activate the device in the Home app. Defaults to `false`.
 
-**isNightModeEnabled**: If set to true, a switch is exposed for the night mode. Defaults to `false`.
+**isNightModeEnabled**: If set to `true`, a switch is exposed for the night mode. Defaults to `false`.
 
-**isJetFocusEnabled**: If set to true, a switch is exposed for the jet focus. Only used for 2018 devices. Defaults to `false`.
+**isJetFocusEnabled**: If set to `true`, a switch is exposed for the jet focus. Only used for 2018 devices. Defaults to `false`.
 
-**isTemperatureSensorEnabled**: If set to true, a separate temperature sensor is exposed. Only used for non-heating devices. If set to false, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app).
+**isTemperatureSensorEnabled**: If set to `true`, a separate temperature sensor is exposed. Only used for non-heating devices. If set to `false`, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app). Defaults to `false`.
 
-**isHumiditySensorEnabled**: If set to true, a separate humidity sensor is exposed. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app).
+**isHumiditySensorEnabled**: If set to `true`, a separate humidity sensor is exposed. Only used for non-humidifier devices. If set to `false`, the humidity is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
 
-**isAirQualitySensorEnabled**: If set to true, a separate air quality sensor is exposed. If set to false, the air quality is added as characteristic to the air purifier (supported in the Apple Home app).
+**isAirQualitySensorEnabled**: If set to `true`, a separate air quality sensor is exposed. If set to `false`, the air quality is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
 
-**isSingleAccessoryModeEnabled**: If set to true, all services are exposed to HomeKit in a single accessory instead of multiple accessories. Use this mode if you are using a third-party HomeKit app and want all services grouped into a single accessory.
+**isSingleSensorAccessoryModeEnabled**: If set to `true`, all sensors are exposed to HomeKit in a single accessory instead of multiple accessories. Only has an effect if the previous settings for enabling sensors are set to `true`. Defaults to `false`.
+
+**isSingleAccessoryModeEnabled**: If set to `true`, all services are exposed to HomeKit in a single accessory instead of multiple accessories. If set to `true`, the single sensor accessory mode has no effect. Use this mode if you are using a third-party HomeKit app and want all services grouped into a single accessory. Defaults to `false`.
 
 **updateInterval** (optional): The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices. Defaults to 60 seconds.
 

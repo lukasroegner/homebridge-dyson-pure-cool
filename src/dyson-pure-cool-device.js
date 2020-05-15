@@ -93,11 +93,33 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     }
     deviceAccessories.push(airPurifierAccessory);
 
+    // Gets the air quality accessory
+    let airQualityAccessory = null;
+    if (config.isAirQualitySensorEnabled) {
+        if (config.isSingleAccessoryModeEnabled) {
+            airQualityAccessory = airPurifierAccessory;
+        } else {
+            airQualityAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'AirQualityAccessory'; });
+            if (airQualityAccessory) {
+                unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(airQualityAccessory), 1);
+            } else {
+                platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind AirQualityAccessory.');
+                airQualityAccessory = new Accessory(name + ' Air Quality', UUIDGen.generate(serialNumber + 'AirQualityAccessory'));
+                airQualityAccessory.context.serialNumber = serialNumber;
+                airQualityAccessory.context.kind = 'AirQualityAccessory';
+                newDeviceAccessories.push(airQualityAccessory);
+            }
+            deviceAccessories.push(airQualityAccessory);
+        }
+    }
+
     // Gets the temperature accessory
     let temperatureAccessory = null;
     if (hasHeating || config.isTemperatureSensorEnabled) {
         if (config.isSingleAccessoryModeEnabled) {
             temperatureAccessory = airPurifierAccessory;
+        } else if (!hasHeating && config.isAirQualitySensorEnabled && config.isSingleSensorAccessoryModeEnabled) {
+            temperatureAccessory = airQualityAccessory;
         } else {
             temperatureAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'TemperatureAccessory'; });
             if (temperatureAccessory) {
@@ -118,6 +140,8 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (hasHumidifier || config.isHumiditySensorEnabled) {
         if (config.isSingleAccessoryModeEnabled) {
             humidityAccessory = airPurifierAccessory;
+        } else if (!hasHumidifier && config.isAirQualitySensorEnabled && config.isSingleSensorAccessoryModeEnabled) {
+            humidityAccessory = airQualityAccessory;
         } else {
             humidityAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'HumidityAccessory'; });
             if (humidityAccessory) {
@@ -130,26 +154,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 newDeviceAccessories.push(humidityAccessory);
             }
             deviceAccessories.push(humidityAccessory);
-        }
-    }
-
-    // Gets the air quality accessory
-    let airQualityAccessory = null;
-    if (config.isAirQualitySensorEnabled) {
-        if (config.isSingleAccessoryModeEnabled) {
-            airQualityAccessory = airPurifierAccessory;
-        } else {
-            airQualityAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'AirQualityAccessory'; });
-            if (airQualityAccessory) {
-                unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(airQualityAccessory), 1);
-            } else {
-                platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind AirQualityAccessory.');
-                airQualityAccessory = new Accessory(name + ' Air Quality', UUIDGen.generate(serialNumber + 'AirQualityAccessory'));
-                airQualityAccessory.context.serialNumber = serialNumber;
-                airQualityAccessory.context.kind = 'AirQualityAccessory';
-                newDeviceAccessories.push(airQualityAccessory);
-            }
-            deviceAccessories.push(airQualityAccessory);
         }
     }
 

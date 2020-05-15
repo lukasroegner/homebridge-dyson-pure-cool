@@ -89,7 +89,7 @@
                             "type": "boolean",
                             "default": false,
                             "required": true,
-                            "description": "If set to true, a separate humidity sensor is exposed. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app)."
+                            "description": "If set to true, a separate humidity sensor is exposed. Only used for non-humidifier devices. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app)."
                         },
                         "isAirQualitySensorEnabled": {
                             "title": "Enable Air Quality Sensor",
@@ -98,11 +98,17 @@
                             "required": true,
                             "description": "If set to true, a separate air quality sensor is exposed. If set to false, the air quality is added as characteristic to the air purifier (supported in the Apple Home app)."
                         },
+                        "isSingleSensorAccessoryModeEnabled": {
+                            "title": "Single Sensor Accessory Mode",
+                            "type": "boolean",
+                            "default": false,
+                            "description": "If set to true, all sensors are exposed to HomeKit in a single accessory instead of multiple accessories. Only has an effect if the previous settings for enabling sensors are set to true."
+                        },
                         "isSingleAccessoryModeEnabled": {
                             "title": "Single Accessory Mode",
                             "type": "boolean",
                             "default": false,
-                            "description": "If set to true, all services are exposed to HomeKit in a single accessory instead of multiple accessories. Use this mode if you are using a third-party HomeKit app and want all services grouped into a single accessory."
+                            "description": "If set to true, all services are exposed to HomeKit in a single accessory instead of multiple accessories. If set to true, the single sensor accessory mode has no effect. Use this mode if you are using a third-party HomeKit app and want all services grouped into a single accessory."
                         }
                     }
                 }
