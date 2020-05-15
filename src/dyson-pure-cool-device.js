@@ -663,8 +663,13 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             timeoutHandle = null;
         }
 
+        // Checks if the device is already in the target mode
+        if (airPurifierService.getCharacteristic(Characteristic.Active).value === value) {
+            return callback(null);
+        }
+
         // Gets the active mode based on the configuration
-        const activeMode = config.enableAutoModeWhenActivating ? 'AUTO' : 'FAN';
+        let activeMode = config.enableAutoModeWhenActivating ? 'AUTO' : 'FAN';
 
         // Executes the actual change of the active state
         platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode }));
