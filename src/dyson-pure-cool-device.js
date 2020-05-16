@@ -771,11 +771,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Subscribes for changes of the humidifier mode and threshold
     if (hasHumidifier) {
         humidityService.getCharacteristic(Characteristic.Active).on('set', function (value, callback) {
-            platform.log.info(serialNumber + ' - set Humidifier Active to ' + value + ': ' + JSON.stringify({ hume: value === Characteristic.Active.ACTIVE ? 'ON' : 'OFF' }));
+            platform.log.info(serialNumber + ' - set Humidifier Active to ' + value + ': ' + JSON.stringify({ hume: value === Characteristic.Active.ACTIVE ? 'HUMD' : 'OFF' }));
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
-                data: { hume: value === Characteristic.Active.ACTIVE ? 'ON' : 'OFF' }
+                data: { hume: value === Characteristic.Active.ACTIVE ? 'HUMD' : 'OFF' }
             }));
             callback(null);
         });

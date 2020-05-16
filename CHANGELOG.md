@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.7.8] - 2020-05-16
+### Changes
+- Fixed a bug that prevented turning on the humidifier (PH01)
+
 ## [1.7.7] - 2020-05-15
 ### Changes
 - Added a single sensor accessory mode
