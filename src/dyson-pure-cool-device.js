@@ -302,11 +302,19 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             });
     
             // Updates the humidity threshold
-            humidityService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).setProps({
-                maxValue: 70,
-                minValue: 40,
-                minStep: 10
-            });
+            if (config.isFullRangeHumidity) {
+                humidityService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).setProps({
+                    maxValue: 100,
+                    minValue: 0,
+                    minStep: 1
+                });
+            } else {
+                humidityService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).setProps({
+                    maxValue: 70,
+                    minValue: 30,
+                    minStep: 10
+                });
+            }
         } else {
 
             // Uses a humidify sensor
@@ -436,10 +444,10 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             let p = 0;
             let v = 0;
             if (hasAdvancedAirQualitySensors) {
-                pm25 = Number.parseInt(content['data']['pm25']);
-                pm10 = Number.parseInt(content['data']['pm10']);
-                va10 = Number.parseInt(content['data']['va10']);
-                noxl = Number.parseInt(content['data']['noxl']);
+                pm25 = content['data']['pm25'] === 'INIT' ? 0 : Number.parseInt(content['data']['pm25']);
+                pm10 = content['data']['pm10'] === 'INIT' ? 0 : Number.parseInt(content['data']['pm10']);
+                va10 = content['data']['va10'] === 'INIT' ? 0 : Number.parseInt(content['data']['va10']);
+                noxl = content['data']['noxl'] === 'INIT' ? 0 : Number.parseInt(content['data']['noxl']);
             } else {
                 p = Number.parseInt(content['data']['pact']);
                 v = Number.parseInt(content['data']['vact']);
@@ -789,11 +797,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             callback(null);
         });
         humidityService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).on('set', function (value, callback) {
-            platform.log.info(serialNumber + ' - set RelativeHumidityHumidifierThreshold to ' + value + ': ' + JSON.stringify({ humt: ('0000' + value.toString()).slice(-4) }));
+            platform.log.info(serialNumber + ' - set RelativeHumidityHumidifierThreshold to ' + value + ': ' + JSON.stringify({ humt: ('0000' + Math.min(70, Math.max(30, value)).toString()).slice(-4) }));
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
-                data: { humt: ('0000' + value.toString()).slice(-4) }
+                data: { humt: ('0000' +  Math.min(70, Math.max(30, value)).toString()).slice(-4) }
             }));
             callback(null);
         });

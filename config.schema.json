@@ -109,6 +109,12 @@
                             "type": "boolean",
                             "default": false,
                             "description": "If set to true, all services are exposed to HomeKit in a single accessory instead of multiple accessories. If set to true, the single sensor accessory mode has no effect. Use this mode if you are using a third-party HomeKit app and want all services grouped into a single accessory."
+                        },
+                        "isFullRangeHumidity": {
+                            "title": "Full Range Humidity",
+                            "type": "boolean",
+                            "default": false,
+                            "description": "Only for PH01. If set to true, the range of the target humidity control will be from 0% to 100% instead of translating it to the allowed range (30% to 70%) of the Dyson."
                         }
                     }
                 }

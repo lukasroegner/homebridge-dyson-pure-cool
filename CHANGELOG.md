@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.7.9] - 2020-07-01
+### Changes
+- Added a new option to expose the full humidity range to HomeKit instead of the allowed range (PH01)
+
 ## [1.7.8] - 2020-05-16
 ### Changes
 - Fixed a bug that prevented turning on the humidifier (PH01)
