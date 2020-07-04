@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.7.10] - 2020-07-04
+### Changes
+- Added a new option to expose a switch for continous monitoring
+
 ## [1.7.9] - 2020-07-01
 ### Changes
 - Added a new option to expose the full humidity range to HomeKit instead of the allowed range (PH01)

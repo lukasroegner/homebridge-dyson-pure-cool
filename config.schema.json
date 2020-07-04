@@ -77,6 +77,13 @@
                             "required": true,
                             "description": "If set to true, a switch is exposed for the jet focus. Only used for 2018 devices."
                         },
+                        "isContinuousMonitoringEnabled": {
+                            "title": "Enable Continuous Monitoring",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, a switch is exposed for the continuous monitoring."
+                        },
                         "isTemperatureSensorEnabled": {
                             "title": "Enable Temperature Sensor",
                             "type": "boolean",

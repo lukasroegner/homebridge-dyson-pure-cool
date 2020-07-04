@@ -33,6 +33,7 @@ For humidifier devices, a humidifier is also exposes to HomeKit with support for
 Optionally, the following switches are exposed:
 - Night mode (on/off)
 - Jet Focus (on/off for 2018 devices)
+- Continuous Monitoring (on/off)
 
 The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode and jet focus switches are combined in a separate settings accessory. This can be changed in the config.
 
@@ -68,6 +69,7 @@ npm install homebridge-dyson-pure-cool -g
                     "enableAutoModeWhenActivating": false,
                     "isNightModeEnabled": false,
                     "isJetFocusEnabled": false,
+                    "isContinuousMonitoringEnabled": false,
                     "isTemperatureSensorEnabled": false,
                     "isHumiditySensorEnabled": false,
                     "isAirQualitySensorEnabled": false,
@@ -101,6 +103,8 @@ npm install homebridge-dyson-pure-cool -g
 **isNightModeEnabled**: If set to `true`, a switch is exposed for the night mode. Defaults to `false`.
 
 **isJetFocusEnabled**: If set to `true`, a switch is exposed for the jet focus. Only used for 2018 devices. Defaults to `false`.
+
+**isContinuousMonitoringEnabled**: If set to `true`, a switch is exposed for the continuous monitoring. Defaults to `false`.
 
 **isTemperatureSensorEnabled**: If set to `true`, a separate temperature sensor is exposed. Only used for non-heating devices. If set to `false`, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app). Defaults to `false`.
 

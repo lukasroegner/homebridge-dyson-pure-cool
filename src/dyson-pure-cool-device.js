@@ -159,7 +159,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Gets the switch accessory
     let switchAccessory = null;
-    if (config.isNightModeEnabled || (config.isJetFocusEnabled && hasJetFocus)) {
+    if (config.isNightModeEnabled || config.isContinuousMonitoringEnabled || (config.isJetFocusEnabled && hasJetFocus)) {
         if (config.isSingleAccessoryModeEnabled) {
             switchAccessory = airPurifierAccessory;
         } else {
@@ -351,6 +351,15 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         jetFocusSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'JetFocus');
         if (!jetFocusSwitchService) {
             jetFocusSwitchService = switchAccessory.addService(Service.Switch, 'Jet Focus', 'JetFocus');
+        }
+    }
+
+    // Updates the continuous monitoring
+    let continuousMonitoringSwitchService = null;
+    if (switchAccessory && config.isContinuousMonitoringEnabled) {
+        continuousMonitoringSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'ContinuousMonitoring');
+        if (!continuousMonitoringSwitchService) {
+            continuousMonitoringSwitchService = switchAccessory.addService(Service.Switch, 'Continuous Monitoring', 'ContinuousMonitoring');
         }
     }
 
@@ -567,6 +576,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 }
             }
 
+            // Sets the state of the continuous monitoring switch
+            if (continuousMonitoringSwitchService) {
+                continuousMonitoringSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['rhtm'] !== 'OFF');
+            }
+
             return;
         }
 
@@ -654,6 +668,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 if (content['product-state']['ffoc']) {
                     jetFocusSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['ffoc'][1] !== 'OFF');
                 }
+            }
+
+            // Sets the state of the continuous monitoring switch
+            if (continuousMonitoringSwitchService) {
+                continuousMonitoringSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['rhtm'][1] !== 'OFF');
             }
 
             return;
@@ -846,6 +865,19 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
                 data: { fdir: value ? 'ON' : 'OFF', ffoc: value ? 'ON' : 'OFF' }
+            }));
+            callback(null);
+        });
+    }
+
+    // Subscribes for changes of the continuous monitoring
+    if (continuousMonitoringSwitchService) {
+        continuousMonitoringSwitchService.getCharacteristic(Characteristic.On).on('set', function (value, callback) {
+            platform.log.info(serialNumber + ' - set ContinuousMonitoring to ' + value + ': ' + JSON.stringify(value ? { rhtm: 'ON' } : { rhtm: 'OFF', fmod: 'OFF' }));
+            device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+                msg: 'STATE-SET',
+                time: new Date().toISOString(),
+                data: value ? { rhtm: 'ON' } : { rhtm: 'OFF', fmod: 'OFF' }
             }));
             callback(null);
         });
