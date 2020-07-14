@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.7.11] - 2020-07-14
+### Changes
+- Changed the default names for Jet Focus, Night Mode and Continuous Monitoring (added the device name)
+
 ## [1.7.10] - 2020-07-04
 ### Changes
 - Added a new option to expose a switch for continous monitoring

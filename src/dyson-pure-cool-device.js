@@ -341,7 +341,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (switchAccessory && config.isNightModeEnabled) {
         nightModeSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'NightMode');
         if (!nightModeSwitchService) {
-            nightModeSwitchService = switchAccessory.addService(Service.Switch, 'Night Mode', 'NightMode');
+            nightModeSwitchService = switchAccessory.addService(Service.Switch, name + ' Night Mode', 'NightMode');
         }
     }
 
@@ -350,7 +350,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (switchAccessory && config.isJetFocusEnabled && hasJetFocus) {
         jetFocusSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'JetFocus');
         if (!jetFocusSwitchService) {
-            jetFocusSwitchService = switchAccessory.addService(Service.Switch, 'Jet Focus', 'JetFocus');
+            jetFocusSwitchService = switchAccessory.addService(Service.Switch, name + ' Jet Focus', 'JetFocus');
         }
     }
 
@@ -359,7 +359,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (switchAccessory && config.isContinuousMonitoringEnabled) {
         continuousMonitoringSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'ContinuousMonitoring');
         if (!continuousMonitoringSwitchService) {
-            continuousMonitoringSwitchService = switchAccessory.addService(Service.Switch, 'Continuous Monitoring', 'ContinuousMonitoring');
+            continuousMonitoringSwitchService = switchAccessory.addService(Service.Switch, name + ' Continuous Monitoring', 'ContinuousMonitoring');
         }
     }
 
