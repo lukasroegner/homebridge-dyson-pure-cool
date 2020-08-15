@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.7.12] - 2020-08-15
+### Changes
+- Fixed the sample country code for GB
+
 ## [1.7.11] - 2020-07-14
 ### Changes
 - Changed the default names for Jet Focus, Night Mode and Continuous Monitoring (added the device name)

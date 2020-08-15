@@ -28,7 +28,7 @@
                 "maxLength": 2,
                 "placeholder": "EU",
                 "required": true,
-                "description": "Two-letter ISO code of your country, e.g. US, DE, EN..."
+                "description": "Two-letter ISO code of your country, e.g. US, DE, GB..."
             },
             "devices": {
                 "type": "array",

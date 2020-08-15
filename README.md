@@ -88,7 +88,7 @@ npm install homebridge-dyson-pure-cool -g
 
 **password**: Your password of the Dyson account you used to register the device with in the Dyson app.
 
-**countryCode**: Two-letter ISO code of your country, e.g. US, DE, EN...
+**countryCode**: Two-letter ISO code of your country, e.g. US, DE, GB...
 
 **devices**: Array of all your Dyson devices.
 
