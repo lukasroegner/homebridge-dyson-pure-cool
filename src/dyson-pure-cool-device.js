@@ -702,15 +702,21 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         // Gets the active mode based on the configuration
         let activeMode = config.enableAutoModeWhenActivating ? 'AUTO' : 'FAN';
 
+        // Builds the command data, which contains the active state and (optionally) the oscillation mode
+        let commandData = {
+            fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON',
+            fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode
+        };
+        if (config.enableOscillationWhenActivating) {
+            commandData['oson'] = 'ON';
+        }
+    
         // Executes the actual change of the active state
-        platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify({ fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON', fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode }));
+        platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify(commandData));
         device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
             msg: 'STATE-SET',
             time: new Date().toISOString(),
-            data: {
-                fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON',
-                fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode
-            }
+            data: commandData
         }));
         callback(null);
     });

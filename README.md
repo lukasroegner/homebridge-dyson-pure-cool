@@ -67,6 +67,7 @@ npm install homebridge-dyson-pure-cool -g
                     "serialNumber": "XXX-EU-XXXXXXXX",
                     "credentials": null,
                     "enableAutoModeWhenActivating": false,
+                    "enableOscillationWhenActivating": false,
                     "isNightModeEnabled": false,
                     "isJetFocusEnabled": false,
                     "isContinuousMonitoringEnabled": false,
@@ -99,6 +100,8 @@ npm install homebridge-dyson-pure-cool -g
 **credentials** (optional): By default, the Dyson API is contacted to retrieve required information of the devices. However, you can also store credentials of each device in this property. If you do that for ALL of the devices, the Dyson API is no longer used, the connection can be directly established with the credentials. To retrieve the credentials, run the plugin without credentials. The credentials will then be printed out in the logs for each device.
 
 **enableAutoModeWhenActivating**: If set to `true`, the Auto mode is enabled when you activate the device in the Home app. Defaults to `false`.
+
+**enableOscillationWhenActivating**: If set to `true`, oscillation is enabled when you active the device. Defaults to `false`.
 
 **isNightModeEnabled**: If set to `true`, a switch is exposed for the night mode. Defaults to `false`.
 

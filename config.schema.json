@@ -63,6 +63,13 @@
                             "required": true,
                             "description": "If set to true, the Auto mode is enabled when you activate the device in the Home app."
                         },
+                        "enableOscillationWhenActivating": {
+                            "title": "Enable Auto Oscillation",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, oscillation is enabled when you active the device."
+                        },
                         "isNightModeEnabled": {
                             "title": "Enable Night Mode",
                             "type": "boolean",

@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2020-09-27
+### Changes
+- Added a new option to enable oscillation when the device is activated
+
 ## [1.7.12] - 2020-08-15
 ### Changes
 - Fixed the sample country code for GB
