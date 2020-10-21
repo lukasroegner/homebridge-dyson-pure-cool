@@ -260,7 +260,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromConfig = function () {
 
         // Decodes the API configuration that has been stored
         try {
-            JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('ascii'));
+            JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('utf8'));
         } catch (e) {
             platform.log.warn('Invalid device credentials for device with serial number ' + config.serialNumber + '. Make sure you copied it correctly.');
             return false;
@@ -272,7 +272,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromConfig = function () {
         const config = platform.config.devices[i];
 
         // Decodes the API configuration that has been stored
-        let apiConfig = JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('ascii'));
+        let apiConfig = JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('utf8'));
 
         // Creates the device instance and adds it to the list of all devices
         platform.devices.push(new DysonPureCoolDevice(platform, apiConfig.Name, apiConfig.Serial, apiConfig.ProductType, apiConfig.Version, apiConfig.password, config));
