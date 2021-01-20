@@ -78,7 +78,8 @@ npm install homebridge-dyson-pure-cool -g
                     "isHumiditySensorEnabled": false,
                     "isAirQualitySensorEnabled": false,
                     "isSingleAccessoryModeEnabled": false,
-                    "isFullRangeHumidity": false
+                    "isFullRangeHumidity": false,
+                    "isHeatingDisabled": false
                 }
             ],
             "updateInterval": 60000,
@@ -123,6 +124,8 @@ npm install homebridge-dyson-pure-cool -g
 **isSingleAccessoryModeEnabled**: If set to `true`, all services are exposed to HomeKit in a single accessory instead of multiple accessories. If set to `true`, the single sensor accessory mode has no effect. Use this mode if you are using a third-party HomeKit app and want all services grouped into a single accessory. Defaults to `false`.
 
 **isFullRangeHumidity**: Only for PH01/PH02. If set to `true`, the range of the target humidity control will be from 0% to 100% instead of translating it to the allowed range (30% to 70%) of the Dyson. Defaults to `false`.
+
+**isHeatingDisabled**: Only for HP02/HP04/HP06. If set to `true`, the heating controls are not exposed to HomeKit. Defaults to `false`.
 
 **updateInterval** (optional): The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices. Defaults to 60 seconds.
 

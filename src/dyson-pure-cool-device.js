@@ -75,6 +75,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             break;
     }
 
+    // Checks if heating is disabled by the configuration
+    if (config.isHeatingDisabled) {
+        hasHeating = false;
+    }
+
     // Gets all accessories from the platform that match the serial number
     let unusedDeviceAccessories = platform.accessories.filter(function(a) { return a.context.serialNumber === serialNumber; });
     let newDeviceAccessories = [];

@@ -129,6 +129,12 @@
                             "type": "boolean",
                             "default": false,
                             "description": "Only for PH01/PH02. If set to true, the range of the target humidity control will be from 0% to 100% instead of translating it to the allowed range (30% to 70%) of the Dyson."
+                        },
+                        "isHeatingDisabled": {
+                            "title": "Disable Heating",
+                            "type": "boolean",
+                            "default": false,
+                            "description": "Only for HP02/HP04/HP06. If set to true, the heating controls are not exposed to HomeKit."
                         }
                     }
                 }

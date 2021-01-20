@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.8.4] - 2021-01-20
+### Changes
+- Added an option to hide heating controls on HP02/HP04/HP06
+
 ## [1.8.3] - 2021-01-20
 ### Changes
 - Added the PH02, HP06 and TP06 to the list of supported devices (has already been supported)
