@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.8.3] - 2021-01-20
+### Changes
+- Added the PH02, HP06 and TP06 to the list of supported devices (has already been supported)
+
 ## [1.8.2] - 2021-01-14
 ### Changes
 - Fixed a bug due to Dyson changing their API (special thanks to brian-su for the solution)

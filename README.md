@@ -3,9 +3,12 @@
 This project is a homebridge plugin for the Dyson air purifiers. Supported devices are:
 
 - Dyson Pure Humidify+Cool (PH01)
-- 2018 Dyson Pure Cool Tower (TP04)
-- 2018 Dyson Pure Cool Desk (DP04)
-- 2018 Dyson Pure Hot+Cool (HP04)
+- Dyson Pure Humidify+Cool Cryptomic (PH02)
+- Dyson Pure Cool Tower (TP04)
+- Dyson Pure Cool Tower Cryptomic (TP06)
+- Dyson Pure Cool Desk (DP04)
+- Dyson Pure Hot+Cool (HP04)
+- Dyson Pure Hot+Cool Cryptomic (HP06)
 - Dyson Pure Cool Link Tower (TP02)
 - Dyson Pure Cool Link Desk (DP01)
 - Dyson Pure Hot+Cool Link (HP02)
@@ -19,7 +22,7 @@ All your devices are exposed as air purifiers in HomeKit, with support (also in 
 - Oscillation on/off
 - Relative humidity
 - Current temperature (in Apple Home app only supported as separate sensor)
-- Air quality (incl. PM2.5, PM10, VOC and NO2 data for 2018 devices)
+- Air quality (incl. PM2.5, PM10, VOC and NO2 data for devices other than DP01, TP02 and HP02)
 
 For heating devices, a thermostat is also exposes to HomeKit with support for:
 - On/Off
@@ -32,7 +35,7 @@ For humidifier devices, a humidifier is also exposes to HomeKit with support for
 
 Optionally, the following switches are exposed:
 - Night mode (on/off)
-- Jet Focus (on/off for 2018 devices)
+- Jet Focus (on/off; DP01, TP02 and HP02 are not supported)
 - Continuous Monitoring (on/off)
 
 The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode and jet focus switches are combined in a separate settings accessory. This can be changed in the config.
@@ -105,7 +108,7 @@ npm install homebridge-dyson-pure-cool -g
 
 **isNightModeEnabled**: If set to `true`, a switch is exposed for the night mode. Defaults to `false`.
 
-**isJetFocusEnabled**: If set to `true`, a switch is exposed for the jet focus. Only used for 2018 devices. Defaults to `false`.
+**isJetFocusEnabled**: If set to `true`, a switch is exposed for the jet focus. DP01, TP02 and HP02 are not supported. Defaults to `false`.
 
 **isContinuousMonitoringEnabled**: If set to `true`, a switch is exposed for the continuous monitoring. Defaults to `false`.
 
@@ -119,7 +122,7 @@ npm install homebridge-dyson-pure-cool -g
 
 **isSingleAccessoryModeEnabled**: If set to `true`, all services are exposed to HomeKit in a single accessory instead of multiple accessories. If set to `true`, the single sensor accessory mode has no effect. Use this mode if you are using a third-party HomeKit app and want all services grouped into a single accessory. Defaults to `false`.
 
-**isFullRangeHumidity**: Only for PH01. If set to `true`, the range of the target humidity control will be from 0% to 100% instead of translating it to the allowed range (30% to 70%) of the Dyson. Defaults to `false`.
+**isFullRangeHumidity**: Only for PH01/PH02. If set to `true`, the range of the target humidity control will be from 0% to 100% instead of translating it to the allowed range (30% to 70%) of the Dyson. Defaults to `false`.
 
 **updateInterval** (optional): The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices. Defaults to 60 seconds.
 

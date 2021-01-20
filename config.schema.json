@@ -1,7 +1,7 @@
 {
     "pluginAlias": "DysonPureCoolPlatform",
     "pluginType": "platform",
-    "headerDisplay": "This plugin supports the 2018 Dyson Pure Cool (DP04, TP04), Dyson Pure Cool Link (DP01, TP02), Dyson Hot+Cool (HP02, HP04) and Dyson Pure Humidify+Cool (PH01) devices.",
+    "headerDisplay": "This plugin supports the Dyson Pure Cool (DP04, TP04, TP06), Dyson Pure Cool Link (DP01, TP02), Dyson Hot+Cool (HP02, HP04, HP06) and Dyson Pure Humidify+Cool (PH01, PH02) devices.",
     "footerDisplay": "For help please visit the [GitHub repository](https://github.com/lukasroegner/homebridge-dyson-pure-cool).",
     "schema": {
         "type": "object",
@@ -82,7 +82,7 @@
                             "type": "boolean",
                             "default": false,
                             "required": true,
-                            "description": "If set to true, a switch is exposed for the jet focus. Only used for 2018 devices."
+                            "description": "If set to true, a switch is exposed for the jet focus. DP01, TP02 and HP02 are not supported."
                         },
                         "isContinuousMonitoringEnabled": {
                             "title": "Enable Continuous Monitoring",
@@ -128,7 +128,7 @@
                             "title": "Full Range Humidity",
                             "type": "boolean",
                             "default": false,
-                            "description": "Only for PH01. If set to true, the range of the target humidity control will be from 0% to 100% instead of translating it to the allowed range (30% to 70%) of the Dyson."
+                            "description": "Only for PH01/PH02. If set to true, the range of the target humidity control will be from 0% to 100% instead of translating it to the allowed range (30% to 70%) of the Dyson."
                         }
                     }
                 }
