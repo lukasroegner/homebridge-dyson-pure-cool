@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.8.5] - 2021-01-20
+### Changes
+- Enhanced the wording of error messages
+
 ## [1.8.4] - 2021-01-20
 ### Changes
 - Added an option to hide heating controls on HP02/HP04/HP06

@@ -205,7 +205,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
             // Gets the corresponding device configuration
             let config = platform.config.devices.find(function(d) { return d.serialNumber === apiConfig.Serial; });
             if (!config) {
-                platform.log.warn('No IP address provided for device with serial number ' + apiConfig.Serial + '.');
+                platform.log.warn('No configuration provided for device with serial number ' + apiConfig.Serial + '.');
                 continue;
             }
 
