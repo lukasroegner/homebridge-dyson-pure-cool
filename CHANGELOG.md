@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.8.6] - 2021-01-29
+### Changes
+- Fixed a bug due to Dyson changing their API (special thanks to jasonrig for the solution)
+
 ## [1.8.5] - 2021-01-20
 ### Changes
 - Enhanced the wording of error messages
