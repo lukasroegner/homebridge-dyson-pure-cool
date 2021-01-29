@@ -123,7 +123,7 @@ DysonPureCoolPlatform.prototype.signIn = function (callback) {
     request({
         uri: platform.config.apiUri + '/v1/userregistration/authenticate?country=' + platform.config.countryCode,
         method: 'POST',
-        headers: { 'User-Agent': 'Mozilla/5.0' },
+        headers: { 'User-Agent': 'android client' },
         json: {
             Email: platform.config.username,
             Password: platform.config.password
@@ -174,7 +174,7 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
         method: 'GET',
         headers: {
             'Authorization': platform.authorizationHeader,
-            'User-Agent': 'Mozilla/5.0'
+            'User-Agent': 'android client'
         },
         json: true,
         rejectUnauthorized: false
