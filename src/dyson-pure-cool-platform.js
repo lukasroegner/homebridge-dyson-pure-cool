@@ -31,6 +31,7 @@ function DysonPureCoolPlatform(log, config, api) {
     // Defines the variables that are used throughout the platform
     platform.log = log;
     platform.config = config;
+    platform.checkedUserAccount = false;
     platform.authorizationHeader = null;
     platform.devices = [];
     platform.accessories = [];
@@ -95,6 +96,41 @@ function DysonPureCoolPlatform(log, config, api) {
         getDevicesFunction();
     });
 }
+/**
+ * Checks the status of the user account. This is required by Dyson before signing in.
+ * @param callback The callback function that indicates that the user account has been checked.
+ */
+DysonPureCoolPlatform.prototype.checkUserAccount = function (callback) {
+    const platform = this;
+
+    // Validates the configuration
+    if (!platform.config.apiUri) {
+        platform.log.warn('No API URI provided.');
+        return callback(false);
+    }
+    if (!platform.config.countryCode) {
+        platform.log.warn('No country code provided.');
+        return false;
+    }
+    if (!platform.config.username) {
+        platform.log.warn('No username provided.');
+        return false;
+    }
+
+    // Sends the check account request to the API
+    platform.log.info('Checking user account.');
+    platform.checkedUserAccount = false;
+    request({
+        uri: platform.config.apiUri + '/v1/userregistration/userstatus?country=' + platform.config.countryCode + '&email=' + platform.config.username,
+        method: 'GET',
+        headers: { 'User-Agent': 'android client' },
+        rejectUnauthorized: false
+    }, function () {
+        platform.log.info('Checked user account.');
+        platform.checkedUserAccount = true;
+        return callback();
+    });
+};
 
 /**
  * Signs the user in with the credentials provided in the configuration.
@@ -102,6 +138,13 @@ function DysonPureCoolPlatform(log, config, api) {
  */
 DysonPureCoolPlatform.prototype.signIn = function (callback) {
     const platform = this;
+
+    // Checks if the user account has been checked
+    if (!platform.checkedUserAccount) {
+        return platform.checkUserAccount(function () {
+            return platform.signIn(callback);
+        });
+    }
 
     // Validates the configuration
     if (!platform.config.apiUri) {
