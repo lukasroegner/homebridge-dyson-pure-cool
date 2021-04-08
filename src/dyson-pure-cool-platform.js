@@ -32,6 +32,7 @@ function DysonPureCoolPlatform(log, config, api) {
     platform.log = log;
     platform.config = config;
     platform.checkedUserAccount = false;
+    platform.use2fa = false;
     platform.authorizationHeader = null;
     platform.devices = [];
     platform.accessories = [];
@@ -49,6 +50,9 @@ function DysonPureCoolPlatform(log, config, api) {
     // Initializes the configuration
     platform.config.username = platform.config.username || null;
     platform.config.password = platform.config.password || null;
+    platform.config.challengeId = platform.config.challengeId || null;
+    platform.config.otpCode = platform.config.otpCode || null;
+    platform.config.token = platform.config.token || null;
     platform.config.countryCode = platform.config.countryCode || 'US';
     platform.config.devices = platform.config.devices || [];
     platform.config.apiUri = 'https://appapi.cp.dyson.com';
@@ -120,15 +124,40 @@ DysonPureCoolPlatform.prototype.checkUserAccount = function (callback) {
     // Sends the check account request to the API
     platform.log.info('Checking user account.');
     platform.checkedUserAccount = false;
+    platform.use2fa = false;
     request({
-        uri: platform.config.apiUri + '/v1/userregistration/userstatus?country=' + platform.config.countryCode + '&email=' + platform.config.username,
-        method: 'GET',
+        uri: platform.config.apiUri + '/v3/userregistration/email/userstatus?country=' + platform.config.countryCode,
+        method: 'POST',
         headers: { 'User-Agent': 'android client' },
+        json: {
+            Email: platform.config.username
+        },
         rejectUnauthorized: false
-    }, function () {
-        platform.log.info('Checked user account.');
+    }, function (error, response, body) {
+
+        // Checks if the API returned a positive result
+        if (error || response.statusCode != 200 || !body || !body.accountStatus || !body.authenticationMethod) {
+            if (error) {
+                platform.log.warn('Error while checking user account. Error: ' + error);
+            } else if (response.statusCode != 200) {
+                platform.log.warn('Error while checking user account. Status Code: ' + response.statusCode);
+                if (response.statusCode === 429) {
+                    platform.log.warn('Too many API requests.');
+                    if (body) {platform.log.warn(body);}
+                }
+            } else if (!body || !body.accountStatus || !body.authenticationMethod) {
+                platform.log.warn('Error while checking user account. Could not get account status and authentication method from response: ' + JSON.stringify(body));
+            }
+            return callback(false);
+        }
+        platform.log.info('Successfully checked user account. Authentication method is ' + body.authenticationMethod);
+        
+        // Set flag if 2FA mode is active for account
+        if (body.authenticationMethod === 'EMAIL_PWD_2FA') {
+            platform.use2fa = true
+        }
         platform.checkedUserAccount = true;
-        return callback();
+        return callback(true);
     });
 };
 
@@ -141,8 +170,12 @@ DysonPureCoolPlatform.prototype.signIn = function (callback) {
 
     // Checks if the user account has been checked
     if (!platform.checkedUserAccount) {
-        return platform.checkUserAccount(function () {
-            return platform.signIn(callback);
+        return platform.checkUserAccount(function (result) {
+            if (result) {
+                return platform.signIn(callback);
+            } else {
+                return callback(false);
+            }
         });
     }
 
@@ -153,44 +186,147 @@ DysonPureCoolPlatform.prototype.signIn = function (callback) {
     }
     if (!platform.config.countryCode) {
         platform.log.warn('No country code provided.');
-        return false;
+        return callback(false);
     }
     if (!platform.config.username || !platform.config.password) {
         platform.log.warn('No username and/or password provided.');
-        return false;
+        return callback(false);
     }
 
     // Sends the login request to the API
     platform.log.info('Signing in.');
     platform.authorizationHeader = null;
-    request({
-        uri: platform.config.apiUri + '/v1/userregistration/authenticate?country=' + platform.config.countryCode,
-        method: 'POST',
-        headers: { 'User-Agent': 'android client' },
-        json: {
-            Email: platform.config.username,
-            Password: platform.config.password
-        },
-        rejectUnauthorized: false
-    }, function (error, response, body) {
 
-        // Checks if the API returned a positive result
-        if (error || response.statusCode != 200 || !body || !body.Account || !body.Password) {
-            if (error) {
-                platform.log.warn('Error while signing in. Error: ' + error);
-            } else if (response.statusCode != 200) {
-                platform.log.warn('Error while signing in. Status Code: ' + response.statusCode);
-            } else if (!body || !body.Account || !body.Password) {
-                platform.log.warn('Error while signing in. Could not get Account/Password parameter from response: ' + JSON.stringify(body));
-            }
+    // If 2FA is active, use new API
+    if (platform.use2fa) {
+        // Token available, no login needed. Just generating login header
+        if (platform.config.token) {
+            // Creates the authorization header for further use
+            platform.authorizationHeader = 'Bearer ' + platform.config.token;
+            platform.log.info('Using token in config for authentication.');
+            return callback(true);
+        }
+        // Challenge ID is available but no accompanying one time password
+        else if (platform.config.challengeId && !platform.config.otpCode) {
+            platform.log.warn('Challenge ID found but no one time password. Please check eMail and copy 6 digit one time password into the homebridge-dyson-pure-cool config. Then restart homebridge. To reset 2FA, just delete the challenge ID from the homebridge-dyson-pure-cool config and restart homebridge.')
             return callback(false);
         }
-
-        // Creates the authorization header for further use
-        platform.authorizationHeader = 'Basic ' + Buffer.from(body.Account + ':' + body.Password).toString('base64');
-        platform.log.info('Signed in.');
-        return callback(true);
-    });
+        // Challenge ID is not available though one time password found in config
+        else if (!platform.config.challengeId && platform.config.otpCode) {
+            platform.log.warn('one time password but no challenge ID found. Please check log for accompanying challenge ID and copy it into the homebridge-dyson-pure-cool config. Then restart homebridge. To reset 2FA, just delete the one time password from the homebridge-dyson-pure-cool config and restart homebridge')
+            return callback(false);
+        }
+        // Get challenge ID since neither token nor challenge ID is available
+        else if (!platform.config.challengeId) {
+            platform.log.info('No token or challenge ID found. Triggering 2FA one time password eMail and getting challenge ID...');
+            request({
+                uri: platform.config.apiUri + '/v3/userregistration/email/auth?country=' + platform.config.countryCode,
+                method: 'POST',
+                headers: { 'User-Agent': 'android client' },
+                json: {
+                    Email: platform.config.username,
+                    Password: platform.config.password
+                },
+                rejectUnauthorized: false
+            }, function (error, response, body) {
+        
+                // Checks if the API returned a positive result
+                if (error || response.statusCode != 200 || !body || !body.challengeId) {
+                    if (error) {
+                        platform.log.warn('Error while receiving 2FA challenge ID. Error: ' + error);
+                    } else if (response.statusCode != 200) {
+                        platform.log.warn('Error while receiving 2FA challenge ID. Status Code: ' + response.statusCode);
+                        if (response.statusCode === 429) {
+                            platform.log.warn('Too many API requests.');
+                            if (body) {platform.log.warn(body);}
+                        }
+                    } else if (!body || !body.challengeId) {
+                        platform.log.warn('Error while receiving 2FA challenge ID. Could not get challenge ID from response: ' + JSON.stringify(body));
+                    }
+                    return callback(false);
+                }
+                // For the authorization header, only the token is used
+                platform.config.challengeId = body.challengeId;
+                platform.log.info('Challenge ID for 2FA received: ' + platform.config.challengeId);
+                platform.log.info('Please check your eMail for the one time password sent by Dyson. Copy the challenge ID "' + platform.config.challengeId + '" (without quotes) and your 6 digit one time password from the email into the homebridge-dyson-pure-cool config. Then restart homebridge.');
+                // Abort sign in, since challenge ID and one time password have to be set in config first
+                return callback(false);
+           });
+        }
+        // Verify one time password with challenge ID to receive token
+        else {
+            request({
+                uri: platform.config.apiUri + '/v3/userregistration/email/verify?country=' + platform.config.countryCode,
+                method: 'POST',
+                headers: { 'User-Agent': 'android client' },
+                json: {
+                    Email: platform.config.username,
+                    Password: platform.config.password,
+                    challengeId: platform.config.challengeId,
+                    otpCode: platform.config.otpCode
+                },
+                rejectUnauthorized: false
+            }, function (error, response, body) {
+        
+                // Checks if the API returned a positive result
+                if (error || response.statusCode != 200 || !body || !body.account || !body.token || !body.tokenType) {
+                    if (error) {
+                        platform.log.warn('Error while retrieving token. Error: ' + error);
+                    } else if (response.statusCode != 200) {
+                        platform.log.warn('Error while retrieving token. Status Code: ' + response.statusCode);
+                        if (response.statusCode === 401) {
+                            platform.log.warn('Check if account password is correct.');
+                        } else if (response.statusCode === 429) {
+                            platform.log.warn('Too many API requests.');
+                            if (body) {platform.log.warn(body);}
+                        }
+                    } else if (!body || !body.account || !body.token || !body.tokenType) {
+                        platform.log.warn('Error while retrieving token. Could not get account/token parameter from response: ' + JSON.stringify(body));
+                    }
+                    return callback(false);
+                }
+                // For the authorization header, only the token is used, account ID not yet needed
+                platform.config.token = body.token;
+                // Creates the authorization header for further use
+                platform.authorizationHeader = body.tokenType + ' ' + platform.config.token;
+                platform.log.info('Received token of type ' + body.tokenType + ': ' + body.token);
+                return callback(true);
+            });
+        }
+    } else {
+        request({
+            uri: platform.config.apiUri + '/v1/userregistration/authenticate?country=' + platform.config.countryCode,
+            method: 'POST',
+            headers: { 'User-Agent': 'android client' },
+            json: {
+                Email: platform.config.username,
+                Password: platform.config.password
+            },
+            rejectUnauthorized: false
+        }, function (error, response, body) {
+    
+            // Checks if the API returned a positive result
+            if (error || response.statusCode != 200 || !body || !body.Account || !body.Password) {
+                if (error) {
+                    platform.log.warn('Error while signing in. Error: ' + error);
+                } else if (response.statusCode != 200) {
+                    platform.log.warn('Error while signing in. Status Code: ' + response.statusCode);
+                    if (response.statusCode === 429) {
+                        platform.log.warn('Too many API requests.');
+                        if (body) {platform.log.warn(body);}
+                    }
+                } else if (!body || !body.Account || !body.Password) {
+                    platform.log.warn('Error while signing in. Could not get Account/Password parameter from response: ' + JSON.stringify(body));
+                }
+                return callback(false);
+            }
+    
+            // Creates the authorization header for further use
+            platform.authorizationHeader = 'Basic ' + Buffer.from(body.Account + ':' + body.Password).toString('base64');
+            platform.log.info('Signed in.');
+            return callback(true);
+        });
+    }
 };
 
 /**
@@ -229,6 +365,12 @@ DysonPureCoolPlatform.prototype.getDevicesFromApi = function (callback) {
                 platform.log.warn('Error while retrieving the devices from the API. Error: ' + error);
             } else if (response.statusCode != 200) {
                 platform.log.warn('Error while retrieving the devices from the API. Status Code: ' + response.statusCode);
+                if (response.statusCode === 401) {
+                    platform.log.warn('Check if account password/token is correct.');
+                } else if (response.statusCode === 429) {
+                    platform.log.warn('Too many API requests.');
+                    if (body) {platform.log.warn(body);}
+                }
             } else if (!body) {
                 platform.log.warn('Error while retrieving the devices from the API. Could not get devices from response: ' + JSON.stringify(body));
             }

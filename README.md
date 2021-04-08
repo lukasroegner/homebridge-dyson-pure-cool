@@ -63,6 +63,9 @@ npm install homebridge-dyson-pure-cool -g
             "platform": "DysonPureCoolPlatform",
             "username": "<YOUR-EMAIL-ADDRESS>",
             "password": "<YOUR-PASSWORD>",
+            "challengeId": "<CHALLENGE ID FROM LOG: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX>",
+            "otpCode": "<ONE TIME PASSWORD CODE FROM EMAIL: 000000>",
+            "token": "<TOKEN FROM LOG AFTER 2FA AUTHENTICATION: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX>",
             "countryCode": "<COUNTRY-CODE>",
             "devices": [
                 {
@@ -92,6 +95,12 @@ npm install homebridge-dyson-pure-cool -g
 **username**: Your email address of the Dyson account you used to register the device with in the Dyson app.
 
 **password**: Your password of the Dyson account you used to register the device with in the Dyson app.
+
+**challengeId**: The challange ID is generated when requesting authentication login via two factor authentication (2FA). Get this from the homebridge log after initial run.
+
+**otpCode**: The 6 digit one time password (OTP) code is sent after requesting the challenge ID. Get this from your account/username eMail after initial run.
+
+**token**: Get token from homebridge log after restarting homebridge with challenge ID and OTP set in config.
 
 **countryCode**: Two-letter ISO code of your country, e.g. US, DE, GB...
 

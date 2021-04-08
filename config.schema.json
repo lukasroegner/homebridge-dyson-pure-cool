@@ -21,6 +21,27 @@
                 "required": true,
                 "description": "Your password of the Dyson account you used to register the device with in the Dyson app."
             },
+            "challengeId": {
+                "title": "ChallengeId",
+                "type": "string",
+                "placeholder": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                "required": false,
+                "description": "Challenge ID paired to one time password (2FA) request sent from Dyson via eMail. To get the challenge ID, run the plugin without an challenge ID set. The challenge ID will then be printed out in the logs. Enter it here together with the 6 digit one time password you get via eMail and restart the homebridge."
+            },
+            "otpCode": {
+                "title": "2FA one time password code",
+                "type": "string",
+                "placeholder": "000000",
+                "required": false,
+                "description": "2FA code received via eMail."
+            },
+            "token": {
+                "title": "Token from 2FA login",
+                "type": "string",
+                "placeholder": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "required": false,
+                "description": "This token is received after successful login with 2FA."
+            },
             "countryCode": {
                 "title": "Country Code",
                 "type": "string",
