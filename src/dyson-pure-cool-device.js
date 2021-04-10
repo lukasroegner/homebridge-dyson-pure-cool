@@ -73,6 +73,13 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             hasAdvancedAirQualitySensors = true;
             hasHeating = true;
             break;
+        case '527E':
+            model = 'Dyson Purifier Hot+Cool Formaldehyde';
+            hardwareRevision = 'HP09';
+            hasJetFocus = true;
+            hasAdvancedAirQualitySensors = true;
+            hasHeating = true;
+            break;
     }
 
     // Checks if heating is disabled by the configuration
