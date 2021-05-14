@@ -1,5 +1,12 @@
 # homebridge-dyson-pure-cool
 
+## IMPORTANT: Breaking Changes in version 2.0.0
+
+Dyson has introduced two factor authentication for Dyson accounts. Due to the complexity of the authentication flow, you **MUST** configure credentials for each device in the config.
+To obtain the credentials, please follow the instructions below.
+
+## Supported Devices and Features
+
 This project is a homebridge plugin for the Dyson air purifiers. Supported devices are:
 
 - Dyson Pure Humidify+Cool (PH01)
@@ -13,8 +20,6 @@ This project is a homebridge plugin for the Dyson air purifiers. Supported devic
 - Dyson Pure Cool Link Tower (TP02)
 - Dyson Pure Cool Link Desk (DP01)
 - Dyson Pure Hot+Cool Link (HP02)
-
-The device information is downloaded from your Dyson account. You just have to provide the IP addresses of the devices in the local network.
 
 All your devices are exposed as air purifiers in HomeKit, with support (also in Apple Home app) for:
 - On/off
@@ -43,17 +48,44 @@ The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode
 
 ## Installation
 
-Option 1: Install the plugin via [config-ui-x](https://github.com/oznu/homebridge-config-ui-x):
+**Option 1:** Install the plugin via [config-ui-x](https://github.com/oznu/homebridge-config-ui-x):
 - Search for Dyson on config-ui-x plugin screen
 - Click Install on homebridge Dyson Pure Cool plugin
 - Once installed you will be prompted to set the config
 - Restart homebridge service and plugin should be loaded with accessories
 
-Option 2: Install the plugin via npm:
+**Option 2:** Install the plugin via npm:
 
 ```bash
 npm install homebridge-dyson-pure-cool -g
 ```
+
+## Retrieve Credentials
+
+For each Dyson device that you want to use with this plugin, credentials have to be retrieved from the Dyson API.
+
+**Step 1:** Configure the plugin (don't add devices to the devices array if you don't already have the credentials for them). If you're setting up the plugin for the first time, you can simply use the following configuration:
+
+```json
+{
+    "platforms": [
+        {
+            "platform": "DysonPureCoolPlatform",
+            "devices": [],
+            "updateInterval": 60000,
+            "credentialsGeneratorPort": 48000
+        }
+    ]
+}
+```
+
+**Step 2:** Start homebridge
+
+**Step 3:** Open a browser and navigate to `http://<IP-ADDRESS-OF-HOMEBRIDGE-HOST>:48000/` (where `<IP-ADDRESS-OF-HOMEBRIDGE-HOST>` is the IP address of the host your homebridge instance is running on).
+
+**Step 4:** Follow the steps on the website to retrieve the credentials for all of the devices that are registered in your Dyson account.
+
+**Step 5:** Now you can add the devices to the configuration (see below) and restart homebridge.
 
 ## Configuration
 
@@ -62,14 +94,11 @@ npm install homebridge-dyson-pure-cool -g
     "platforms": [
         {
             "platform": "DysonPureCoolPlatform",
-            "username": "<YOUR-EMAIL-ADDRESS>",
-            "password": "<YOUR-PASSWORD>",
-            "countryCode": "<COUNTRY-CODE>",
             "devices": [
                 {
                     "ipAddress": "XXX.XXX.XXX.XXX",
                     "serialNumber": "XXX-EU-XXXXXXXX",
-                    "credentials": null,
+                    "credentials": "xxx...xxx",
                     "enableAutoModeWhenActivating": false,
                     "enableOscillationWhenActivating": false,
                     "isNightModeEnabled": false,
@@ -84,17 +113,11 @@ npm install homebridge-dyson-pure-cool -g
                 }
             ],
             "updateInterval": 60000,
-            "retrySignInInterval": 0
+            "credentialsGeneratorPort": 48000
         }
     ]
 }
 ```
-
-**username**: Your email address of the Dyson account you used to register the device with in the Dyson app.
-
-**password**: Your password of the Dyson account you used to register the device with in the Dyson app.
-
-**countryCode**: Two-letter ISO code of your country, e.g. US, DE, GB...
 
 **devices**: Array of all your Dyson devices.
 
@@ -102,7 +125,7 @@ npm install homebridge-dyson-pure-cool -g
 
 **serialNumber**: Serial number of the device.
 
-**credentials** (optional): By default, the Dyson API is contacted to retrieve required information of the devices. However, you can also store credentials of each device in this property. If you do that for ALL of the devices, the Dyson API is no longer used, the connection can be directly established with the credentials. To retrieve the credentials, run the plugin without credentials. The credentials will then be printed out in the logs for each device.
+**credentials**: The credentials for connecting to the device. They can be retrieved via the credentials generator (website), see instructions above.
 
 **enableAutoModeWhenActivating**: If set to `true`, the Auto mode is enabled when you activate the device in the Home app. Defaults to `false`.
 
@@ -130,4 +153,4 @@ npm install homebridge-dyson-pure-cool -g
 
 **updateInterval** (optional): The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices. Defaults to 60 seconds.
 
-**retrySignInInterval** (optional): The interval (in milliseconds) at which the plugin tries to communicate with the Dyson API at plugin startup. Set the value to `5000` (5 seconds) or more if you have internet connectivity issue. Defaults to `0`, which means retry is disabled.
+**credentialsGeneratorPort** (optional): The port number for the (credentials generator) website. Only change this setting in case of a port collision.
