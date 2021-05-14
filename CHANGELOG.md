@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2021-05-14
+### Changes
+- Breaking Change: the authentication flow (i.e. retrieving credentials from the Dyson API) is now a separate process on a website (that is hosted on the homebridge host)
+- Breaking Change: the plugin won't communicate with the Dyson API automatically anymore. Credentials have to be retrieved via the credentials generator website
+
 ## [1.8.8] - 2021-05-14
 ### Changes
 - Increased the maximum temperature for heating devices to 38°C due to a bug when setting the temperature in Fahrenheit (thanks to wawoodwa for the PR)

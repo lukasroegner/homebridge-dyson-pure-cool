@@ -6,30 +6,6 @@
     "schema": {
         "type": "object",
         "properties": {
-            "username": {
-                "title": "Username",
-                "type": "string",
-                "required": true,
-                "placeholder": "YOUR-DYSON-EMAIL",
-                "format": "email",
-                "description": "Your email address of the Dyson account you used to register the device with in the Dyson app."
-            },
-            "password": {
-                "title": "Password",
-                "type": "string",
-                "placeholder": "YOUR-DYSON-PASSWORD",
-                "required": true,
-                "description": "Your password of the Dyson account you used to register the device with in the Dyson app."
-            },
-            "countryCode": {
-                "title": "Country Code",
-                "type": "string",
-                "minLength": 2,
-                "maxLength": 2,
-                "placeholder": "EU",
-                "required": true,
-                "description": "Two-letter ISO code of your country, e.g. US, DE, GB..."
-            },
             "devices": {
                 "type": "array",
                 "items": {
@@ -54,7 +30,8 @@
                         "credentials": {
                             "title": "Credentials",
                             "type": "string",
-                            "description": "By default, the Dyson API is contacted to retrieve required information of the devices. However, you can also store credentials of each device in this property. If you do that for ALL of the devices, the Dyson API is no longer used, the connection can be directly established with the credentials. To get the credentials, run the plugin without credentials. The credentials will then be printed out in the logs for each device."
+                            "required": true,
+                            "description": "The credentials for connecting to the device. They can be retrieved via the credentials generator (website), please consult the README on how to retrieve the credentials."
                         },
                         "enableAutoModeWhenActivating": {
                             "title": "Enable Auto Mode",
@@ -145,11 +122,11 @@
                 "placeholder": "60000",
                 "description": "The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices."
             },
-            "retrySignInInterval": {
-                "title": "Retry Sign-In Interval",
+            "credentialsGeneratorPort": {
+                "title": "Port number for Credentials Generator",
                 "type": "integer",
-                "placeholder": "0",
-                "description": "The interval (in milliseconds) at which the plugin tries to communicate with the Dyson API at plugin startup. Disabled by default."
+                "placeholder": "48000",
+                "description": "The port number for the (credentials generator) website. Only change this setting in case of a port collision."
             }
         }
     }
