@@ -70,7 +70,7 @@ function DysonPureCoolPlatform(log, config, api) {
 
         // Checks if there are credentials provided for all devices
         if (platform.config.devices.some(function(d) { return !d.credentials; })) {
-            platform.log.info('Some devices are missing credentials. Please visit the credentials generator (see README) to retrieve the them and add them to the configuration.');
+            platform.log.info('Some devices are missing credentials. Please visit the credentials generator (see README) to retrieve them and add them to the configuration.');
             return ;
         }
 
@@ -83,7 +83,7 @@ function DysonPureCoolPlatform(log, config, api) {
                 JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('utf8'));
             } catch (e) {
                 platform.log.warn('Invalid device credentials for device with serial number ' + config.serialNumber + '. Make sure you copied them correctly.');
-                return false;
+                return;
             }
         }
     
@@ -107,7 +107,6 @@ function DysonPureCoolPlatform(log, config, api) {
         }
         platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, unusedAccessories);
     
-        // Returns a positive result
         platform.log.info('Accessories initialized.');
     });
 
