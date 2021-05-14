@@ -46,6 +46,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             hasJetFocus = true;
             hasAdvancedAirQualitySensors = true;
             break;
+        case '438E':
+            model = 'Dyson Pure Cool';
+            hardwareRevision = 'TP07';
+            hasJetFocus = true;
+            hasAdvancedAirQualitySensors = true;
+            break;
         case '455':
             model = 'Dyson Pure Hot+Cool Link';
             hardwareRevision = 'HP02';
