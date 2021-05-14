@@ -257,7 +257,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     
             // Updates the target temperature for heating
             temperatureService.getCharacteristic(Characteristic.TargetTemperature).setProps({
-                maxValue: 37,
+                maxValue: 38,
                 minValue: 0,
                 minStep: 1,
                 unit: 'celsius'
