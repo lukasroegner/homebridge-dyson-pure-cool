@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [1.8.8] - 2021-05-14
 ### Changes
 - Increased the maximum temperature for heating devices to 38°C due to a bug when setting the temperature in Fahrenheit (thanks to wawoodwa for the PR)
+- Added support for the TP07 (thanks to coraxx for the PR)
 
 ## [1.8.7] - 2021-02-13
 ### Changes
