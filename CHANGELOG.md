@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2021-05-19
+### Changes
+- If continuous monitoring is disabled, the plugin will no longer add warnings to the logs (due to invalid data)
+
 ## [2.0.0] - 2021-05-14
 ### Changes
 - Breaking Change: the authentication flow (i.e. retrieving credentials from the Dyson API) is now a separate process on a website (that is hosted on the homebridge host)

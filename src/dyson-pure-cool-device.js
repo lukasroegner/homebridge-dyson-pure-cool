@@ -307,7 +307,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 humidityService = humidityAccessory.addService(Service.HumidifierDehumidifier);
             }
 
-            // Disables dehumififying
+            // Disables dehumidifying
             humidityService.getCharacteristic(Characteristic.CurrentHumidifierDehumidifierState).setProps({
                 maxValue: 2,
                 minValue: 0,
@@ -471,13 +471,37 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             let p = 0;
             let v = 0;
             if (hasAdvancedAirQualitySensors) {
+
+                // Checks whether continuous monitoring is disabled
+                if (content['data']['pm25'] === 'OFF') {
+                    return;
+                }
+                if (content['data']['pm10'] === 'OFF') {
+                    return;
+                }
+                if (content['data']['va10'] === 'OFF') {
+                    return;
+                }
+                if (content['data']['noxl'] === 'OFF') {
+                    return;
+                }
+
                 pm25 = content['data']['pm25'] === 'INIT' ? 0 : Number.parseInt(content['data']['pm25']);
                 pm10 = content['data']['pm10'] === 'INIT' ? 0 : Number.parseInt(content['data']['pm10']);
                 va10 = content['data']['va10'] === 'INIT' ? 0 : Number.parseInt(content['data']['va10']);
                 noxl = content['data']['noxl'] === 'INIT' ? 0 : Number.parseInt(content['data']['noxl']);
             } else {
-                p = Number.parseInt(content['data']['pact']);
-                v = Number.parseInt(content['data']['vact']);
+
+                // Checks whether continuous monitoring is disabled
+                if (content['data']['pact'] === 'OFF') {
+                    return;
+                }
+                if (content['data']['vact'] === 'OFF') {
+                    return;
+                }
+
+                p = content['data']['pact'] === 'INIT' ? 0 : Number.parseInt(content['data']['pact']);
+                v = content['data']['vact'] === 'INIT' ? 0 : Number.parseInt(content['data']['vact']);
             }
 
             // Maps the values of the sensors to the relative values described in the app (1 - 5 => Good, Medium, Bad, Very Bad, Extremely Bad)
@@ -487,7 +511,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             // Maps the VOC values to a self-created scale (as described values in the app don't fit)
             const va10Quality = (va10 * 0.125) <= 3 ? 1 : ((va10 * 0.125) <= 6 ? 2 : ((va10 * 0.125) <= 8 ? 3 : 4));
 
-            // Maps the NO2 value ti a self-created scale
+            // Maps the NO2 value to a self-created scale
             const noxlQuality = noxl <= 30 ? 1 : (noxl <= 60 ? 2 : (noxl <= 80 ? 3 : (noxl <= 90 ? 4 : 5)));
 
             // Maps the values of the sensors to the relative values, these operations are copied from the newer devices as the app does not specify the correct values
