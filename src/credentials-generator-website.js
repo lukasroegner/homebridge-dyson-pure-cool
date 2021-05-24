@@ -132,6 +132,7 @@ CredentialsGeneratorWebsite.prototype.step1 = function (req, formData, res) {
         },
         rejectUnauthorized: false
     }, function (error, response, body) {
+        website.platform.log.debug(body);
 
         // Checks if the API returned a positive result
         if (error || response.statusCode != 200 || !body || !body.accountStatus || !body.authenticationMethod) {
@@ -176,6 +177,7 @@ CredentialsGeneratorWebsite.prototype.step1 = function (req, formData, res) {
                 },
                 rejectUnauthorized: false
             }, function (error, response, body) {
+                website.platform.log.debug(body);
 
                 // Checks if the API returned a positive result
                 if (error || response.statusCode != 200 || !body || !body.challengeId) {
@@ -286,6 +288,7 @@ CredentialsGeneratorWebsite.prototype.step22fa = function (req, formData, res) {
         },
         rejectUnauthorized: false
     }, function (error, response, body) {
+        website.platform.log.debug(body);
 
         // Checks if the API returned a positive result
         if (error || response.statusCode != 200 || !body || !body.account || !body.token || !body.tokenType) {
@@ -346,6 +349,7 @@ CredentialsGeneratorWebsite.prototype.step2No2fa = function (req, formData, res)
         },
         rejectUnauthorized: false
     }, function (error, response, body) {
+        website.platform.log.debug(body);
 
         // Checks if the API returned a positive result
         if (error || response.statusCode != 200 || !body || !body.Account || !body.Password) {
@@ -403,6 +407,7 @@ CredentialsGeneratorWebsite.prototype.getDevices = function (authorizationHeader
         json: true,
         rejectUnauthorized: false
     }, function (error, response, body) {
+        website.platform.log.debug(body);
 
         // Checks if the API returned a positive result
         if (error || response.statusCode != 200 || !body) {

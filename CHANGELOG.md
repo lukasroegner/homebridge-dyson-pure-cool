@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.0.2] - 2021-05-24
+### Changes
+- Added debug output when using the credentials generator website
+
 ## [2.0.1] - 2021-05-19
 ### Changes
 - If continuous monitoring is disabled, the plugin will no longer add warnings to the logs (due to invalid data)
