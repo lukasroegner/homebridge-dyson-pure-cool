@@ -447,26 +447,29 @@ CredentialsGeneratorWebsite.prototype.getDevices = function (authorizationHeader
         for (let i = 0; i < body.length; i++) {
             const deviceBody = body[i];
 
-            // Gets the MQTT credentials from the device (see https://github.com/CharlesBlonde/libpurecoollink/blob/master/libpurecoollink/utils.py)
-            const key = Uint8Array.from(Array(32), (_, index) => index + 1);
-            const initializationVector = new Uint8Array(16);
-            const decipher = crypto.createDecipheriv('aes-256-cbc', key, initializationVector);
-            const decryptedPasswordString = decipher.update(deviceBody.LocalCredentials, 'base64', 'utf8') + decipher.final('utf8');
-            const decryptedPasswordJson = JSON.parse(decryptedPasswordString);
-            const password = decryptedPasswordJson.apPasswordHash;
+            if (deviceBody.LocalCredentials) {
 
-            deviceBody.password = password;
+                // Gets the MQTT credentials from the device (see https://github.com/CharlesBlonde/libpurecoollink/blob/master/libpurecoollink/utils.py)
+                const key = Uint8Array.from(Array(32), (_, index) => index + 1);
+                const initializationVector = new Uint8Array(16);
+                const decipher = crypto.createDecipheriv('aes-256-cbc', key, initializationVector);
+                const decryptedPasswordString = decipher.update(deviceBody.LocalCredentials, 'base64', 'utf8') + decipher.final('utf8');
+                const decryptedPasswordJson = JSON.parse(decryptedPasswordString);
+                const password = decryptedPasswordJson.apPasswordHash;
 
-            htmlBody +=
-                '<br /> \
-                 <br /> \
-                 <label>Serial number<label> \
-                 <br /> \
-                 <strong>' + deviceBody.Serial + '</strong> \
-                 <br /> \
-                 <label>Credentials<label> \
-                 <br /> \
-                 <textarea readonly style="width: 100%;" rows="10">' + Buffer.from(JSON.stringify(deviceBody)).toString('base64') + '</textarea>';
+                deviceBody.password = password;
+
+                htmlBody +=
+                    '<br /> \
+                    <br /> \
+                    <label>Serial number<label> \
+                    <br /> \
+                    <strong>' + deviceBody.Serial + '</strong> \
+                    <br /> \
+                    <label>Credentials<label> \
+                    <br /> \
+                    <textarea readonly style="width: 100%;" rows="10">' + Buffer.from(JSON.stringify(deviceBody)).toString('base64') + '</textarea>';
+            }
         }
 
         res.write(

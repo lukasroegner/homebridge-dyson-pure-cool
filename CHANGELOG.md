@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.0.3] - 2021-05-25
+### Changes
+- Fixed a bug in the credentials generator that occurred for users that also own Lightcycle devices
+
 ## [2.0.2] - 2021-05-24
 ### Changes
 - Added debug output when using the credentials generator website
