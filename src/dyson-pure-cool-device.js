@@ -42,7 +42,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             break;
         case '358E':
             model = 'Dyson Pure Humidify+Cool Formaldehyde';
-            hardwareRevision = 'PH02';
+            hardwareRevision = 'PH04';
             hasAdvancedAirQualitySensors = true;
             hasHumidifier = true;
             hasJetFocus = true;
