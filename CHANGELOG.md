@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2021-11-14
+### Changes
+- Added support for the PH04 (thanks to crzcrz for the PR)
+
 ## [2.0.3] - 2021-05-25
 ### Changes
 - Fixed a bug in the credentials generator that occurred for users that also own Lightcycle devices
