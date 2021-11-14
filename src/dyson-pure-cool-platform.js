@@ -44,7 +44,7 @@ function DysonPureCoolPlatform(log, config, api) {
 
     // Initializes the configuration
     platform.config.devices = platform.config.devices || [];
-    platform.config.supportedProductTypes = ['358', '438', '438E', '455', '469', '475', '520', '527', '527E'];
+    platform.config.supportedProductTypes = ['358', '358E', '438', '438E', '455', '469', '475', '520', '527', '527E'];
     platform.config.updateInterval = platform.config.updateInterval || (60 * 1000);
     platform.config.credentialsGeneratorPort = platform.config.credentialsGeneratorPort || 48000;
 
@@ -77,7 +77,7 @@ function DysonPureCoolPlatform(log, config, api) {
         // Cycles over all devices from the config and tests whether the credentials can be parsed
         for (let i = 0; i < platform.config.devices.length; i++) {
             const config = platform.config.devices[i];
-    
+
             // Decodes the API configuration that has been stored
             try {
                 JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('utf8'));
@@ -86,18 +86,18 @@ function DysonPureCoolPlatform(log, config, api) {
                 return;
             }
         }
-    
+
         // Cycles over all devices from the config and creates them
         for (let i = 0; i < platform.config.devices.length; i++) {
             const config = platform.config.devices[i];
-    
+
             // Decodes the API configuration that has been stored
             let apiConfig = JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('utf8'));
-    
+
             // Creates the device instance and adds it to the list of all devices
             platform.devices.push(new DysonPureCoolDevice(platform, apiConfig.Name, apiConfig.Serial, apiConfig.ProductType, apiConfig.Version, apiConfig.password, config));
         }
-    
+
         // Removes the accessories that are not bound to a device
         let unusedAccessories = platform.accessories.filter(function(a) { return !platform.devices.some(function(d) { return d.serialNumber === a.context.serialNumber; }); });
         for (let i = 0; i < unusedAccessories.length; i++) {
@@ -106,7 +106,7 @@ function DysonPureCoolPlatform(log, config, api) {
             platform.accessories.splice(platform.accessories.indexOf(unusedAccessory), 1);
         }
         platform.api.unregisterPlatformAccessories(platform.pluginName, platform.platformName, unusedAccessories);
-    
+
         platform.log.info('Accessories initialized.');
     });
 

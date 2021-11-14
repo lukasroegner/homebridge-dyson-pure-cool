@@ -11,6 +11,7 @@ This project is a homebridge plugin for the Dyson air purifiers. Supported devic
 
 - Dyson Pure Humidify+Cool (PH01)
 - Dyson Pure Humidify+Cool Cryptomic (PH02)
+- Dyson Pure Humidify+Cool Formaldehyde (PH04)
 - Dyson Pure Cool Tower (TP04, TP07)
 - Dyson Pure Cool Tower Cryptomic (TP06)
 - Dyson Pure Cool Desk (DP04)

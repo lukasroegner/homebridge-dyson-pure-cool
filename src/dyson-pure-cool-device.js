@@ -40,6 +40,13 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             hasHumidifier = true;
             hasJetFocus = true;
             break;
+        case '358E':
+            model = 'Dyson Pure Humidify+Cool Formaldehyde';
+            hardwareRevision = 'PH04';
+            hasAdvancedAirQualitySensors = true;
+            hasHumidifier = true;
+            hasJetFocus = true;
+            break;
         case '438':
             model = 'Dyson Pure Cool Tower';
             hardwareRevision = 'TP04';
@@ -267,7 +274,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 minValue: 0,
                 validValues: [0, 1]
             });
-    
+
             // Updates the target temperature for heating
             temperatureService.getCharacteristic(Characteristic.TargetTemperature).setProps({
                 maxValue: 38,
@@ -318,7 +325,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 minValue: 0,
                 validValues: [0, 1]
             });
-    
+
             // Updates the humidity threshold
             if (config.isFullRangeHumidity) {
                 humidityService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).setProps({
@@ -752,7 +759,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         if (config.enableOscillationWhenActivating) {
             commandData['oson'] = 'ON';
         }
-    
+
         // Executes the actual change of the active state
         platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify(commandData));
         device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
