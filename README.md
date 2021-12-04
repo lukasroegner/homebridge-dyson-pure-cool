@@ -86,6 +86,14 @@ For each Dyson device that you want to use with this plugin, credentials have to
 
 **Step 4:** Follow the steps on the website to retrieve the credentials for all of the devices that are registered in your Dyson account.
 
+**If you get a 401 or 400 error:** Try the following:
+
+- Log out of any mobile apps
+- Restart your homebridge server
+- Try again
+
+This method seems to work for most people, see [#196](https://github.com/lukasroegner/homebridge-dyson-pure-cool/issues/196) for instance.
+
 **Step 5:** Now you can add the devices to the configuration (see below) and restart homebridge.
 
 ## Configuration
