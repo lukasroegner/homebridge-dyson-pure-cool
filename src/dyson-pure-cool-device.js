@@ -1,4 +1,4 @@
-
+const productTypeInfo = require('./productTypeInfo');
 const mqtt = require('mqtt');
 
 /**
@@ -20,84 +20,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     device.platform = platform;
     device.mqttClient = null;
 
-    // Makes sure that a name is set
-    if (!name) {
-        name = 'Dyson';
-    }
-
-    // Creates the device information from the API results
-    let model = 'Pure Cool';
-    let hardwareRevision = '';
-    let hasHeating = false;
-    let hasHumidifier = false;
-    let hasJetFocus = false;
-    let hasAdvancedAirQualitySensors = false;
-    switch (productType) {
-        case '358':
-            model = 'Dyson Pure Humidify+Cool';
-            hardwareRevision = 'PH01';
-            hasAdvancedAirQualitySensors = true;
-            hasHumidifier = true;
-            hasJetFocus = true;
-            break;
-        case '358E':
-            model = 'Dyson Pure Humidify+Cool Formaldehyde';
-            hardwareRevision = 'PH04';
-            hasAdvancedAirQualitySensors = true;
-            hasHumidifier = true;
-            hasJetFocus = true;
-            break;
-        case '438':
-            model = 'Dyson Pure Cool Tower';
-            hardwareRevision = 'TP04';
-            hasJetFocus = true;
-            hasAdvancedAirQualitySensors = true;
-            break;
-        case '438E':
-            model = 'Dyson Pure Cool';
-            hardwareRevision = 'TP07';
-            hasJetFocus = true;
-            hasAdvancedAirQualitySensors = true;
-            break;
-        case '455':
-            model = 'Dyson Pure Hot+Cool Link';
-            hardwareRevision = 'HP02';
-            hasHeating = true;
-            hasJetFocus = true;
-            break;
-        case '469':
-            model = 'Dyson Pure Cool Link Desk';
-            hardwareRevision = 'DP01';
-            break;
-        case '475':
-            model = 'Dyson Pure Cool Link Tower';
-            hardwareRevision = 'TP02';
-            break;
-        case '520':
-            model = 'Dyson Pure Cool Desk';
-            hardwareRevision = 'DP04';
-            hasJetFocus = true;
-            hasAdvancedAirQualitySensors = true;
-            break;
-        case '527':
-            model = 'Dyson Pure Hot+Cool';
-            hardwareRevision = 'HP04';
-            hasJetFocus = true;
-            hasAdvancedAirQualitySensors = true;
-            hasHeating = true;
-            break;
-        case '527E':
-            model = 'Dyson Purifier Hot+Cool Formaldehyde';
-            hardwareRevision = 'HP09';
-            hasJetFocus = true;
-            hasAdvancedAirQualitySensors = true;
-            hasHeating = true;
-            break;
-    }
+    device.info = productTypeInfo(productType);
+    device.info.name = name || 'Dyson'; // Makes sure that a name is set
 
     // Checks if heating is disabled by the configuration
     if (config.isHeatingDisabled) {
-        hasHeating = false;
+        device.info.hasHeating = false;
     }
 
     // Gets all accessories from the platform that match the serial number
@@ -111,7 +39,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(airPurifierAccessory), 1);
     } else {
         platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind AirPurifierAccessory.');
-        airPurifierAccessory = new Accessory(name, UUIDGen.generate(serialNumber + 'AirPurifierAccessory'));
+        airPurifierAccessory = new Accessory(device.info.name, UUIDGen.generate(serialNumber + 'AirPurifierAccessory'));
         airPurifierAccessory.context.serialNumber = serialNumber;
         airPurifierAccessory.context.kind = 'AirPurifierAccessory';
         newDeviceAccessories.push(airPurifierAccessory);
@@ -129,7 +57,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(airQualityAccessory), 1);
             } else {
                 platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind AirQualityAccessory.');
-                airQualityAccessory = new Accessory(name + ' Air Quality', UUIDGen.generate(serialNumber + 'AirQualityAccessory'));
+                airQualityAccessory = new Accessory(device.info.name + ' Air Quality', UUIDGen.generate(serialNumber + 'AirQualityAccessory'));
                 airQualityAccessory.context.serialNumber = serialNumber;
                 airQualityAccessory.context.kind = 'AirQualityAccessory';
                 newDeviceAccessories.push(airQualityAccessory);
@@ -140,10 +68,10 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Gets the temperature accessory
     let temperatureAccessory = null;
-    if (hasHeating || config.isTemperatureSensorEnabled) {
+    if (device.info.hasHeating || config.isTemperatureSensorEnabled) {
         if (config.isSingleAccessoryModeEnabled) {
             temperatureAccessory = airPurifierAccessory;
-        } else if (!hasHeating && config.isAirQualitySensorEnabled && config.isSingleSensorAccessoryModeEnabled) {
+        } else if (!device.info.hasHeating && config.isAirQualitySensorEnabled && config.isSingleSensorAccessoryModeEnabled) {
             temperatureAccessory = airQualityAccessory;
         } else {
             temperatureAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'TemperatureAccessory'; });
@@ -151,7 +79,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(temperatureAccessory), 1);
             } else {
                 platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind TemperatureAccessory.');
-                temperatureAccessory = new Accessory(name + ' Temperature', UUIDGen.generate(serialNumber + 'TemperatureAccessory'));
+                temperatureAccessory = new Accessory(device.info.name + ' Temperature', UUIDGen.generate(serialNumber + 'TemperatureAccessory'));
                 temperatureAccessory.context.serialNumber = serialNumber;
                 temperatureAccessory.context.kind = 'TemperatureAccessory';
                 newDeviceAccessories.push(temperatureAccessory);
@@ -162,10 +90,10 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Gets the humidity accessory
     let humidityAccessory = null;
-    if (hasHumidifier || config.isHumiditySensorEnabled) {
+    if (device.info.hasHumidifier || config.isHumiditySensorEnabled) {
         if (config.isSingleAccessoryModeEnabled) {
             humidityAccessory = airPurifierAccessory;
-        } else if (!hasHumidifier && config.isAirQualitySensorEnabled && config.isSingleSensorAccessoryModeEnabled) {
+        } else if (!device.info.hasHumidifier && config.isAirQualitySensorEnabled && config.isSingleSensorAccessoryModeEnabled) {
             humidityAccessory = airQualityAccessory;
         } else {
             humidityAccessory = unusedDeviceAccessories.find(function(a) { return a.context.kind === 'HumidityAccessory'; });
@@ -173,7 +101,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(humidityAccessory), 1);
             } else {
                 platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind HumidityAccessory.');
-                humidityAccessory = new Accessory(name + ' Humidity', UUIDGen.generate(serialNumber + 'HumidityAccessory'));
+                humidityAccessory = new Accessory(device.info.name + ' Humidity', UUIDGen.generate(serialNumber + 'HumidityAccessory'));
                 humidityAccessory.context.serialNumber = serialNumber;
                 humidityAccessory.context.kind = 'HumidityAccessory';
                 newDeviceAccessories.push(humidityAccessory);
@@ -184,7 +112,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Gets the switch accessory
     let switchAccessory = null;
-    if (config.isNightModeEnabled || config.isContinuousMonitoringEnabled || (config.isJetFocusEnabled && hasJetFocus)) {
+    if (config.isNightModeEnabled || config.isContinuousMonitoringEnabled || (config.isJetFocusEnabled && device.info.hasJetFocus)) {
         if (config.isSingleAccessoryModeEnabled) {
             switchAccessory = airPurifierAccessory;
         } else {
@@ -193,7 +121,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 unusedDeviceAccessories.splice(unusedDeviceAccessories.indexOf(switchAccessory), 1);
             } else {
                 platform.log.info('Adding new accessory with serial number ' + serialNumber + ' and kind SwitchAccessory.');
-                switchAccessory = new Accessory(name + ' Settings', UUIDGen.generate(serialNumber + 'SwitchAccessory'));
+                switchAccessory = new Accessory(device.info.name + ' Settings', UUIDGen.generate(serialNumber + 'SwitchAccessory'));
                 switchAccessory.context.serialNumber = serialNumber;
                 switchAccessory.context.kind = 'SwitchAccessory';
                 newDeviceAccessories.push(switchAccessory);
@@ -222,10 +150,10 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         }
         accessoryInformationService
             .setCharacteristic(Characteristic.Manufacturer, 'Dyson')
-            .setCharacteristic(Characteristic.Model, model)
+            .setCharacteristic(Characteristic.Model, device.info.model)
             .setCharacteristic(Characteristic.SerialNumber, serialNumber)
             .setCharacteristic(Characteristic.FirmwareRevision, version)
-            .setCharacteristic(Characteristic.HardwareRevision, hardwareRevision);
+            .setCharacteristic(Characteristic.HardwareRevision, device.info.hardwareRevision);
     }
 
     // Updates the air purifier
@@ -255,7 +183,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (!temperatureAccessory) {
         temperatureService = airPurifierService;
     } else {
-        if (hasHeating) {
+        if (device.info.hasHeating) {
 
             // Uses a thermostat service
             temperatureService = temperatureAccessory.getService(Service.Thermostat);
@@ -306,7 +234,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (!humidityAccessory) {
         humidityService = airPurifierService;
     } else {
-        if (hasHumidifier) {
+        if (device.info.hasHumidifier) {
 
             // Uses a humidifier service
             humidityService = humidityAccessory.getService(Service.HumidifierDehumidifier);
@@ -366,16 +294,16 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (switchAccessory && config.isNightModeEnabled) {
         nightModeSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'NightMode');
         if (!nightModeSwitchService) {
-            nightModeSwitchService = switchAccessory.addService(Service.Switch, name + ' Night Mode', 'NightMode');
+            nightModeSwitchService = switchAccessory.addService(Service.Switch, device.name + ' Night Mode', 'NightMode');
         }
     }
 
     // Updates the jet focus mode
     let jetFocusSwitchService = null;
-    if (switchAccessory && config.isJetFocusEnabled && hasJetFocus) {
+    if (switchAccessory && config.isJetFocusEnabled && device.info.hasJetFocus) {
         jetFocusSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'JetFocus');
         if (!jetFocusSwitchService) {
-            jetFocusSwitchService = switchAccessory.addService(Service.Switch, name + ' Jet Focus', 'JetFocus');
+            jetFocusSwitchService = switchAccessory.addService(Service.Switch, device.info.name + ' Jet Focus', 'JetFocus');
         }
     }
 
@@ -384,7 +312,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (switchAccessory && config.isContinuousMonitoringEnabled) {
         continuousMonitoringSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'ContinuousMonitoring');
         if (!continuousMonitoringSwitchService) {
-            continuousMonitoringSwitchService = switchAccessory.addService(Service.Switch, name + ' Continuous Monitoring', 'ContinuousMonitoring');
+            continuousMonitoringSwitchService = switchAccessory.addService(Service.Switch, device.info.name + ' Continuous Monitoring', 'ContinuousMonitoring');
         }
     }
 
@@ -477,7 +405,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             let noxl = 0;
             let p = 0;
             let v = 0;
-            if (hasAdvancedAirQualitySensors) {
+            if (device.info.hasAdvancedAirQualitySensors) {
 
                 // Checks whether continuous monitoring is disabled
                 if (content['data']['pm25'] === 'OFF') {
@@ -526,7 +454,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             const vQuality = (v * 0.125) <= 3 ? 1 : ((v * 0.125) <= 6 ? 2 : ((v * 0.125) <= 8 ? 3 : 4));
 
             // Sets the sensor data for air quality (the poorest sensor result wins)
-            if (hasAdvancedAirQualitySensors) {
+            if (device.info.hasAdvancedAirQualitySensors) {
                 airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality));
                 airQualityService.updateCharacteristic(Characteristic.PM2_5Density, pm25)
                 airQualityService.updateCharacteristic(Characteristic.PM10Density, pm10)
@@ -551,7 +479,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             }
 
             // Sets the heating mode and target temperature
-            if (hasHeating) {
+            if (device.info.hasHeating) {
                 if (content['product-state']['hmod']) {
                     temperatureService.updateCharacteristic(Characteristic.CurrentHeatingCoolingState, content['product-state']['hmod'] === 'OFF' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT);
                     temperatureService.updateCharacteristic(Characteristic.TargetHeatingCoolingState, content['product-state']['hmod'] === 'OFF' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT);
@@ -562,7 +490,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             }
 
             // Sets the humidifier mode and threshold
-            if (hasHumidifier) {
+            if (device.info.hasHumidifier) {
                 if (content['product-state']['hume']) {
                     humidityService.updateCharacteristic(Characteristic.Active, content['product-state']['hume'] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
                 }
@@ -645,7 +573,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             }
 
             // Sets the heating mode and target temperature
-            if (hasHeating) {
+            if (device.info.hasHeating) {
                 if (content['product-state']['hmod']) {
                     temperatureService.updateCharacteristic(Characteristic.CurrentHeatingCoolingState, content['product-state']['hmod'][1] === 'OFF' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT);
                     temperatureService.updateCharacteristic(Characteristic.TargetHeatingCoolingState, content['product-state']['hmod'][1] === 'OFF' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT);
@@ -656,7 +584,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             }
 
             // Sets the humidifier mode and threshold
-            if (hasHumidifier) {
+            if (device.info.hasHumidifier) {
                 if (content['product-state']['hume']) {
                     humidityService.updateCharacteristic(Characteristic.Active, content['product-state']['hume'][1] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
                 }
@@ -829,7 +757,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     });
 
     // Subscribes for changes of the heating mode and target temperature
-    if (hasHeating) {
+    if (device.info.hasHeating) {
         temperatureService.getCharacteristic(Characteristic.TargetHeatingCoolingState).on('set', function (value, callback) {
             platform.log.info(serialNumber + ' - set TargetHeatingCoolingState to ' + value + ': ' + JSON.stringify({ hmod: value === Characteristic.TargetHeatingCoolingState.OFF ? 'OFF' : 'HEAT' }));
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
@@ -851,7 +779,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     }
 
     // Subscribes for changes of the humidifier mode and threshold
-    if (hasHumidifier) {
+    if (device.info.hasHumidifier) {
         humidityService.getCharacteristic(Characteristic.Active).on('set', function (value, callback) {
             platform.log.info(serialNumber + ' - set Humidifier Active to ' + value + ': ' + JSON.stringify({ hume: value === Characteristic.Active.ACTIVE ? 'HUMD' : 'OFF' }));
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
