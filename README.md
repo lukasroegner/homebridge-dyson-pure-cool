@@ -86,6 +86,14 @@ For each Dyson device that you want to use with this plugin, credentials have to
 
 **Step 4:** Follow the steps on the website to retrieve the credentials for all of the devices that are registered in your Dyson account.
 
+**If you get a 401 or 400 error:** Try the following:
+
+- Log out of any mobile apps
+- Restart your homebridge server
+- Try again
+
+This method seems to work for most people, see [#196](https://github.com/lukasroegner/homebridge-dyson-pure-cool/issues/196) for instance.
+
 **Step 5:** Now you can add the devices to the configuration (see below) and restart homebridge.
 
 ## Configuration
@@ -155,3 +163,9 @@ For each Dyson device that you want to use with this plugin, credentials have to
 **updateInterval** (optional): The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices. Defaults to 60 seconds.
 
 **credentialsGeneratorPort** (optional): The port number for the (credentials generator) website. Only change this setting in case of a port collision.
+
+## Using Multiple Devices
+
+When setting up multiple devices, it's very easy to get the serial number, IP address and credentials mismatched. This will result in silent failures and non-responsive devices. You can check if you've got this issue by enabled debug in your homebridge controller and reviewing the logs for authentication failures.
+
+To avoid this situation, take special care to match the serial number of the unit in the Dyson app with the last six digits of the mac address found on the appliance and then double check your IP address matches. It's strongly recommended you setup a reserved IP address for the unit via your DHCP server so you can be certain the serial number matches the IP address.
