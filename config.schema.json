@@ -33,6 +33,12 @@
                             "required": true,
                             "description": "The credentials for connecting to the device. They can be retrieved via the credentials generator (website), please consult the README on how to retrieve the credentials."
                         },
+                        "useFahrenheit": {
+                            "title": "Use Fahrenheit for thermostat",
+                            "type": "boolean",
+                            "default": false,
+                            "description": "If set to true, it will use Fahrenheit for temperature scale in the Home app."
+                        },
                         "enableAutoModeWhenActivating": {
                             "title": "Enable Auto Mode",
                             "type": "boolean",
