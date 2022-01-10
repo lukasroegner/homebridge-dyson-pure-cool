@@ -770,7 +770,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         });
         temperatureService.getCharacteristic(Characteristic.TargetTemperature).on('set', function (value, callback) {
             platform.log.info(serialNumber + ' - set TargetTemperature to ' + value + ': ' + JSON.stringify({ hmax: ('0000' + Math.round((value + 273.0) * 10.0).toString()).slice(-4) }));
-            console.log(value);
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
