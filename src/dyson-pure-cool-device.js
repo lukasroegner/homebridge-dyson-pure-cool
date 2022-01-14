@@ -183,6 +183,8 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (!temperatureAccessory) {
         temperatureService = airPurifierService;
     } else {
+        const fahrenheit = (device.platform.config.temperatureUnit === 'fahrenheit');
+
         if (device.info.hasHeating) {
 
             // Uses a thermostat service
@@ -207,8 +209,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             temperatureService.getCharacteristic(Characteristic.TargetTemperature).setProps({
                 maxValue: 38,
                 minValue: 0,
-                minStep: 1,
-                unit: 'celsius'
+                minStep: fahrenheit ? 0.1 : 1,
             });
         } else {
 
@@ -218,6 +219,8 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 temperatureService = temperatureAccessory.addService(Service.TemperatureSensor);
             }
         }
+
+        temperatureService.getCharacteristic(Characteristic.TemperatureDisplayUnits).updateValue(fahrenheit ? 1 : 0);
     }
 
     // Updates the temperature steps
@@ -226,7 +229,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         .setProps({
             minValue: -50,
             maxValue: 100,
-            unit: 'celsius'
         });
 
     // Updates the humidity sensor

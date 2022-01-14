@@ -116,6 +116,22 @@
                     }
                 }
             },
+            "temperatureUnit": {
+                "title": "Temperature Unit",
+                "type": "string",
+                "default": "celsius",
+                "oneOf": [
+                    {
+                        "title": "Celsius",
+                        "enum": ["celsius"]
+                    },
+                    {
+                        "title": "Fahrenheit",
+                        "enum": ["fahrenheit"]
+                    }
+                ],
+                "required": true
+            },
             "updateInterval": {
                 "title": "Update Interval",
                 "type": "integer",
