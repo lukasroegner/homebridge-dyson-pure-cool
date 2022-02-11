@@ -75,12 +75,24 @@
                             "required": true,
                             "description": "If set to true, a separate temperature sensor is exposed. Only used for non-heating devices. If set to false, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app)."
                         },
+                        "temperatureOffset": {
+                            "title": "Temperature Offset",
+                            "type": "number",
+                            "default": 0.0,
+                            "description": "Negatively or positively offset the value reported by the temperature sensor before exposing it to HomeKit."
+                        },
                         "isHumiditySensorEnabled": {
                             "title": "Enable Humidity Sensor",
                             "type": "boolean",
                             "default": false,
                             "required": true,
                             "description": "If set to true, a separate humidity sensor is exposed. Only used for non-humidifier devices. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app)."
+                        },
+                        "humidityOffset": {
+                            "title": "",
+                            "type": "number",
+                            "default": 0.0,
+                            "description": "Negatively or positively offset the value reported by the humidity sensor before exposing it to HomeKit."
                         },
                         "isAirQualitySensorEnabled": {
                             "title": "Enable Air Quality Sensor",
