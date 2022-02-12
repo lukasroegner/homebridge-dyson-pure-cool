@@ -110,6 +110,7 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
                     "credentials": "xxx...xxx",
                     "enableAutoModeWhenActivating": false,
                     "enableOscillationWhenActivating": false,
+                    "enableNightModeWhenActivating": false,
                     "isNightModeEnabled": false,
                     "isJetFocusEnabled": false,
                     "isContinuousMonitoringEnabled": false,
@@ -138,7 +139,9 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 
 **enableAutoModeWhenActivating**: If set to `true`, the Auto mode is enabled when you activate the device in the Home app. Defaults to `false`.
 
-**enableOscillationWhenActivating**: If set to `true`, oscillation is enabled when you active the device. Defaults to `false`.
+**enableOscillationWhenActivating**: If set to `true`, oscillation is enabled when you activate the device. Defaults to `false`.
+
+**enableNightModeWhenActivating**: If set to `true`, night mode is enabled when you activate the device. Defaults to `false`.
 
 **isNightModeEnabled**: If set to `true`, a switch is exposed for the night mode. Defaults to `false`.
 

@@ -680,13 +680,16 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         // Gets the active mode based on the configuration
         let activeMode = config.enableAutoModeWhenActivating ? 'AUTO' : 'FAN';
 
-        // Builds the command data, which contains the active state and (optionally) the oscillation mode
+        // Builds the command data, which contains the active state and (optionally) the oscillation and night modes
         let commandData = {
             fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON',
             fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode
         };
         if (config.enableOscillationWhenActivating) {
             commandData['oson'] = 'ON';
+        }
+        if (config.enableNightModeWhenActivating) {
+            commandData['nmod'] = 'ON';
         }
 
         // Executes the actual change of the active state

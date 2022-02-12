@@ -47,49 +47,56 @@
                             "description": "If set to true, the Auto mode is enabled when you activate the device in the Home app."
                         },
                         "enableOscillationWhenActivating": {
-                            "title": "Enable Auto Oscillation",
+                            "title": "Activate with Oscillation",
                             "type": "boolean",
                             "default": false,
                             "required": true,
-                            "description": "If set to true, oscillation is enabled when you active the device."
+                            "description": "If set to true, oscillation is enabled when you activate the device."
+                        },
+                        "enableNightModeWhenActivating": {
+                            "title": "Enable Night Mode",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, night mode is enabled when you activate the device."
                         },
                         "isNightModeEnabled": {
-                            "title": "Enable Night Mode",
+                            "title": "Expose Night Mode",
                             "type": "boolean",
                             "default": false,
                             "required": true,
                             "description": "If set to true, a switch is exposed for the night mode."
                         },
                         "isJetFocusEnabled": {
-                            "title": "Enable Jet Focus",
+                            "title": "Expose Jet Focus",
                             "type": "boolean",
                             "default": false,
                             "required": true,
                             "description": "If set to true, a switch is exposed for the jet focus. DP01, TP02 and HP02 are not supported."
                         },
                         "isContinuousMonitoringEnabled": {
-                            "title": "Enable Continuous Monitoring",
+                            "title": "Expose Continuous Monitoring",
                             "type": "boolean",
                             "default": false,
                             "required": true,
                             "description": "If set to true, a switch is exposed for the continuous monitoring."
                         },
                         "isTemperatureSensorEnabled": {
-                            "title": "Enable Temperature Sensor",
+                            "title": "Expose Temperature Sensor",
                             "type": "boolean",
                             "default": false,
                             "required": true,
                             "description": "If set to true, a separate temperature sensor is exposed. Only used for non-heating devices. If set to false, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app)."
                         },
                         "isHumiditySensorEnabled": {
-                            "title": "Enable Humidity Sensor",
+                            "title": "Expose Humidity Sensor",
                             "type": "boolean",
                             "default": false,
                             "required": true,
                             "description": "If set to true, a separate humidity sensor is exposed. Only used for non-humidifier devices. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app)."
                         },
                         "isAirQualitySensorEnabled": {
-                            "title": "Enable Air Quality Sensor",
+                            "title": "Expose Air Quality Sensor",
                             "type": "boolean",
                             "default": false,
                             "required": true,
