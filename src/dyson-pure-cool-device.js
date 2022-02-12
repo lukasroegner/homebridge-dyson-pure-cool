@@ -14,6 +14,7 @@ const mqtt = require('mqtt');
 function DysonPureCoolDevice(platform, name, serialNumber, productType, version, password, config) {
     const device = this;
     const { UUIDGen, Accessory, Characteristic, Service } = platform;
+    const temperatureStep = config.useFahrenheit ? 0.555 : 1;
 
     // Stores the information of the device that is used for shutdown
     device.serialNumber = serialNumber;
@@ -207,7 +208,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             temperatureService.getCharacteristic(Characteristic.TargetTemperature).setProps({
                 maxValue: 38,
                 minValue: 0,
-                minStep: 1,
+                minStep: temperatureStep,
                 unit: 'celsius'
             });
         } else {
