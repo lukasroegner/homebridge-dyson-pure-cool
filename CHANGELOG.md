@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.3.4] - 2022-02-12
+### Changes
+- Enhanced the handling for air quality data to prevent warnings in the logs (NaN)
+
 ## [2.3.2] - 2022-02-12
 ### Changes
 - Enhanced the credentials generator, so that it gets clearer to enter a country code in the first step

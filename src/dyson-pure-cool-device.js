@@ -426,6 +426,19 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 pm10 = content['data']['pm10'] === 'INIT' ? 0 : Number.parseInt(content['data']['pm10']);
                 va10 = content['data']['va10'] === 'INIT' ? 0 : Number.parseInt(content['data']['va10']);
                 noxl = content['data']['noxl'] === 'INIT' ? 0 : Number.parseInt(content['data']['noxl']);
+
+                if (isNaN(pm25)) {
+                    pm25 = 0;
+                }
+                if (isNaN(pm10)) {
+                    pm10 = 0;
+                }
+                if (isNaN(va10)) {
+                    va10 = 0;
+                }
+                if (isNaN(noxl)) {
+                    noxl = 0;
+                }
             } else {
 
                 // Checks whether continuous monitoring is disabled
@@ -438,6 +451,13 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
                 p = content['data']['pact'] === 'INIT' ? 0 : Number.parseInt(content['data']['pact']);
                 v = content['data']['vact'] === 'INIT' ? 0 : Number.parseInt(content['data']['vact']);
+
+                if (isNaN(p)) {
+                    p = 0;
+                }
+                if (isNaN(v)) {
+                    v = 0;
+                }
             }
 
             // Maps the values of the sensors to the relative values described in the app (1 - 5 => Good, Medium, Bad, Very Bad, Extremely Bad)
