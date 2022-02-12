@@ -391,12 +391,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
             // Sets the sensor data for temperature
             if (content['data']['tact'] !== 'OFF') {
-                temperatureService.updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0);
+                temperatureService.updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0 + (config.temperatureOffset || 0.0));
             }
 
             // Sets the sensor data for humidity
             if (content['data']['hact'] !== 'OFF') {
-                humidityService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']));
+                humidityService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']) + (config.humidityOffset || 0.0));
             }
 
             // Parses the air quality sensor data
@@ -486,7 +486,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                     temperatureService.updateCharacteristic(Characteristic.TargetHeatingCoolingState, content['product-state']['hmod'] === 'OFF' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT);
                 }
                 if (content['product-state']['hmax']) {
-                    temperatureService.updateCharacteristic(Characteristic.TargetTemperature, (Number.parseInt(content['product-state']['hmax']) / 10.0) - 273.0);
+                    temperatureService.updateCharacteristic(Characteristic.TargetTemperature, (Number.parseInt(content['product-state']['hmax']) / 10.0) - 273.0 + (config.temperatureOffset || 0.0));
                 }
             }
 
@@ -502,7 +502,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                     humidityService.updateCharacteristic(Characteristic.TargetHumidifierDehumidifierState, content['product-state']['haut'] === 'OFF' ? Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER : Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER_OR_DEHUMIDIFIER);
                 }
                 if (content['product-state']['humt']) {
-                    humidityService.updateCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold, Number.parseInt(content['product-state']['humt']));
+                    humidityService.updateCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold, Number.parseInt(content['product-state']['humt']) + (config.humidityOffset || 0.0));
                 }
             }
 
@@ -580,7 +580,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                     temperatureService.updateCharacteristic(Characteristic.TargetHeatingCoolingState, content['product-state']['hmod'][1] === 'OFF' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT);
                 }
                 if (content['product-state']['hmax']) {
-                    temperatureService.updateCharacteristic(Characteristic.TargetTemperature, (Number.parseInt(content['product-state']['hmax'][1]) / 10.0) - 273.0);
+                    temperatureService.updateCharacteristic(Characteristic.TargetTemperature, (Number.parseInt(content['product-state']['hmax'][1]) / 10.0) - 273.0 + (config.temperatureOffset || 0.0));
                 }
             }
 
@@ -596,7 +596,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                     humidityService.updateCharacteristic(Characteristic.TargetHumidifierDehumidifierState, content['product-state']['haut'][1] === 'OFF' ? Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER : Characteristic.TargetHumidifierDehumidifierState.HUMIDIFIER_OR_DEHUMIDIFIER);
                 }
                 if (content['product-state']['humt']) {
-                    humidityService.updateCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold, Number.parseInt(content['product-state']['humt'][1]));
+                    humidityService.updateCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold, Number.parseInt(content['product-state']['humt'][1]) + (config.humidityOffset || 0.0));
                 }
             }
 
@@ -776,7 +776,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
-                data: { hmax: ('0000' + Math.round((value + 273.0) * 10.0).toString()).slice(-4) }
+                data: { hmax: ('0000' + Math.round((value + 273.0 - (config.temperatureOffset || 0.0)) * 10.0).toString()).slice(-4) }
             }));
             callback(null);
         });
@@ -807,7 +807,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
-                data: { humt: ('0000' +  Math.min(70, Math.max(30, value)).toString()).slice(-4) }
+                data: { humt: ('0000' +  Math.min(70, Math.max(30, value - (config.humidityOffset || 0.0))).toString()).slice(-4) }
             }));
             callback(null);
         });

@@ -154,7 +154,11 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 
 **isTemperatureSensorEnabled**: If set to `true`, a separate temperature sensor is exposed. Only used for non-heating devices. If set to `false`, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app). Defaults to `false`.
 
+**temperatureOffset**: Negatively or positively offset the value reported by the temperature sensor before exposing it to HomeKit.
+
 **isHumiditySensorEnabled**: If set to `true`, a separate humidity sensor is exposed. Only used for non-humidifier devices. If set to `false`, the humidity is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
+
+**humidityOffset**: Negatively or positively offset the value reported by the humidity sensor before exposing it to HomeKit.
 
 **isAirQualitySensorEnabled**: If set to `true`, a separate air quality sensor is exposed. If set to `false`, the air quality is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
 
