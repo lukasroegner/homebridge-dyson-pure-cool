@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] - 2022-02-12
+### Changes
+- Support for temperature and humidity offsets (thanks to Kentzo for the PR)
+
 ## [2.2.0] - 2022-02-12
 ### Changes
 - Better support for Fahrenheit (thanks to mpiotrowski for the PR)

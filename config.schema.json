@@ -92,7 +92,7 @@
                             "title": "Temperature Offset",
                             "type": "number",
                             "default": 0.0,
-                            "description": "Negatively or positively offset the value reported by the temperature sensor before exposing it to HomeKit."
+                            "description": "Negatively or positively offset the value reported by the temperature sensor before exposing it to HomeKit. Provide the value in degree Celsius."
                         },
                         "isHumiditySensorEnabled": {
                             "title": "Expose Humidity Sensor",
@@ -105,7 +105,7 @@
                             "title": "",
                             "type": "number",
                             "default": 0.0,
-                            "description": "Negatively or positively offset the value reported by the humidity sensor before exposing it to HomeKit."
+                            "description": "Negatively or positively offset the value reported by the humidity sensor before exposing it to HomeKit. Provide the value in degree Celsius."
                         },
                         "isAirQualitySensorEnabled": {
                             "title": "Expose Air Quality Sensor",
