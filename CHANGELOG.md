@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2022-02-12
+### Changes
+- Better support for Fahrenheit (thanks to mpiotrowski for the PR)
+- Support for enabling the device in night mode (thanks to Kentzo for the PR)
+
 ## [2.1.0] - 2021-11-14
 ### Changes
 - Added support for the PH04 (thanks to crzcrz for the PR)

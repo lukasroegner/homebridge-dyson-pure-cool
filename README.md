@@ -108,6 +108,7 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
                     "ipAddress": "XXX.XXX.XXX.XXX",
                     "serialNumber": "XXX-EU-XXXXXXXX",
                     "credentials": "xxx...xxx",
+                    "useFahrenheit": false,
                     "enableAutoModeWhenActivating": false,
                     "enableOscillationWhenActivating": false,
                     "enableNightModeWhenActivating": false,
@@ -136,6 +137,8 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 **serialNumber**: Serial number of the device.
 
 **credentials**: The credentials for connecting to the device. They can be retrieved via the credentials generator (website), see instructions above.
+
+**useFahrenheit**: If set to `true`, it will use Fahrenheit for temperature scale in the Home app.
 
 **enableAutoModeWhenActivating**: If set to `true`, the Auto mode is enabled when you activate the device in the Home app. Defaults to `false`.
 
