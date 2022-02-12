@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.4.0] - 2022-02-12
+### Changes
+- Added support for the HP07
+
 ## [2.3.5] - 2022-02-12
 ### Changes
 - Added a new log output for the product type of a device, which makes it easier to add new products in the future

@@ -1,7 +1,7 @@
 {
     "pluginAlias": "DysonPureCoolPlatform",
     "pluginType": "platform",
-    "headerDisplay": "This plugin supports the Dyson Pure Cool (DP04, TP04, TP06, TP07), Dyson Pure Cool Link (DP01, TP02), Dyson Hot+Cool (HP02, HP04, HP06, HP09) and Dyson Pure Humidify+Cool (PH01, PH02, PH04) devices.",
+    "headerDisplay": "This plugin supports the Dyson Pure Cool (DP04, TP04, TP06, TP07), Dyson Pure Cool Link (DP01, TP02), Dyson Hot+Cool (HP02, HP04, HP06, HP07, HP09) and Dyson Pure Humidify+Cool (PH01, PH02, PH04) devices.",
     "footerDisplay": "For help please visit the [GitHub repository](https://github.com/lukasroegner/homebridge-dyson-pure-cool).",
     "schema": {
         "type": "object",
@@ -136,7 +136,7 @@
                             "title": "Disable Heating",
                             "type": "boolean",
                             "default": false,
-                            "description": "Only for HP02/HP04/HP06/HP09. If set to true, the heating controls are not exposed to HomeKit."
+                            "description": "Only for HP02/HP04/HP06/HP07/HP09. If set to true, the heating controls are not exposed to HomeKit."
                         }
                     }
                 }

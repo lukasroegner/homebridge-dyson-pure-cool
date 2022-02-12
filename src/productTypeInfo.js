@@ -54,7 +54,7 @@ const knownProducts = {
   },
   '527E': {
     model: 'Dyson Purifier Hot+Cool Formaldehyde',
-    hardwareRevision: 'HP09',
+    hardwareRevision: 'HP07/HP09',
     hasJetFocus: true,
     hasAdvancedAirQualitySensors: true,
     hasHeating: true,
