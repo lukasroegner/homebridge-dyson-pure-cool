@@ -102,7 +102,7 @@
                             "description": "If set to true, a separate humidity sensor is exposed. Only used for non-humidifier devices. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app)."
                         },
                         "humidityOffset": {
-                            "title": "",
+                            "title": "Humidity Offset",
                             "type": "number",
                             "default": 0.0,
                             "description": "Negatively or positively offset the value reported by the humidity sensor before exposing it to HomeKit. Provide the value in degree Celsius."
