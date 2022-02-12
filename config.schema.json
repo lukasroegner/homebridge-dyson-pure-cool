@@ -18,7 +18,7 @@
                             "required": true,
                             "placeholder": "XXX.XXX.XXX.XXX",
                             "format": "ipv4",
-                            "description": "Local IP address of the device."
+                            "description": "Local IP address of the device. Leave out leading zeros (e.g. 192.168.0.1 instead of 192.168.000.001)."
                         },
                         "serialNumber": {
                             "title": "Serial",

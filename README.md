@@ -134,7 +134,7 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 
 **devices**: Array of all your Dyson devices.
 
-**ipAddress**: Local IP address of the device.
+**ipAddress**: Local IP address of the device. Leave out leading zeros (e.g. 192.168.0.1 instead of 192.168.000.001).
 
 **serialNumber**: Serial number of the device.
 
