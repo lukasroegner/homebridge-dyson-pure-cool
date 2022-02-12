@@ -21,6 +21,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     device.platform = platform;
     device.mqttClient = null;
 
+    // Logs the product type, so that new devices can be easily added in the future
+    platform.log.info('Device with serial number ' + serialNumber + ': product type ' + productType);
+
     device.info = productTypeInfo(productType);
     device.info.name = name || 'Dyson'; // Makes sure that a name is set
 

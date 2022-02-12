@@ -44,7 +44,6 @@ function DysonPureCoolPlatform(log, config, api) {
 
     // Initializes the configuration
     platform.config.devices = platform.config.devices || [];
-    platform.config.supportedProductTypes = ['358', '358E', '438', '438E', '455', '469', '475', '520', '527', '527E'];
     platform.config.updateInterval = platform.config.updateInterval || (60 * 1000);
     platform.config.credentialsGeneratorPort = platform.config.credentialsGeneratorPort || 48000;
 

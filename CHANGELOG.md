@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.3.5] - 2022-02-12
+### Changes
+- Added a new log output for the product type of a device, which makes it easier to add new products in the future
+
 ## [2.3.4] - 2022-02-12
 ### Changes
 - Enhanced the handling for air quality data to prevent warnings in the logs (NaN)
