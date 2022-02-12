@@ -96,7 +96,7 @@ CredentialsGeneratorWebsite.prototype.handleInitial = function (res) {
                 <h1>Step 1</h1> \
                 <label for="country-code">Enter the country code of the country your Dyson account is registered in (i.e. US for Unites States, DE for Germany, GB for Great Britain, etc.).</label>\
                 <br /> \
-                <input type="text" id="country-code" name="country-code" placeholder="US" style="width: 100%;" /> \
+                <input type="text" id="country-code" name="country-code" placeholder="XX" style="width: 100%;" /> \
                 <br /> \
                 <br /> \
                 <label for="email-address">Enter the email address of your Dyson account.</label>\

@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.3.2] - 2022-02-12
+### Changes
+- Enhanced the credentials generator, so that it gets clearer to enter a country code in the first step
+
 ## [2.3.1] - 2022-02-12
 ### Changes
 - Fixed an issue with the config schema for the humidity offset
