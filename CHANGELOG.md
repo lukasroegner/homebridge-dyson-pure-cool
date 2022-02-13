@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.4.1] - 2022-02-12
+### Changes
+- Added support for the PH03
+
 ## [2.4.0] - 2022-02-12
 ### Changes
 - Added support for the HP07

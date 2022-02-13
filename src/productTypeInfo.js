@@ -7,8 +7,8 @@ const knownProducts = {
     hasJetFocus: true,
   },
   '358E': {
-    model: 'Dyson Pure Humidify+Cool Formaldehyde',
-    hardwareRevision: 'PH04',
+    model: 'Dyson Pure Humidify+Cool',
+    hardwareRevision: 'PH03/PH04',
     hasAdvancedAirQualitySensors: true,
     hasHumidifier: true,
     hasJetFocus: true,
