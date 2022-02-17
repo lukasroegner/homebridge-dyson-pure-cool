@@ -21,7 +21,7 @@ const knownProducts = {
   },
   '438E': {
     model: 'Dyson Pure Cool',
-    hardwareRevision: 'TP07',
+    hardwareRevision: 'TP07/TP09',
     hasJetFocus: true,
     hasAdvancedAirQualitySensors: true,
   },
