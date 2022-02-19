@@ -38,16 +38,30 @@ function CredentialsGeneratorWebsite(platform) {
 
                     // As 2FA is done, the user is signed in with email address, password, challenge ID and 2FA code
                     website.step22fa(req, formData, res);
+                } else if (uriParts.pathname === '/step2-cn') {
+                    const formData = website.parseFormData(Buffer.concat(payload).toString());
+
+                    // As 2FA is done, the user is signed in with phone number, challenge ID and 2FA code
+                    website.step2Cn(req, formData, res);
                 } else if (uriParts.pathname === '/step2-no2fa') {
                     const formData = website.parseFormData(Buffer.concat(payload).toString());
 
                     // As no 2FA is done, the user is signed in with email address and password
                     website.step2No2fa(req, formData, res);
+                } else if (uriParts.pathname === '/step1-cn') {
+                    const formData = website.parseFormData(Buffer.concat(payload).toString());
+
+                    // Requests the 2FA code and returns the website for step 2 (2FA code)
+                    website.step1Cn(req, formData, res);
                 } else if (uriParts.pathname === '/step1') {
                     const formData = website.parseFormData(Buffer.concat(payload).toString());
 
                     // Requests the 2FA code and returns the website for step 2 (password and 2FA code)
                     website.step1(req, formData, res);
+                } else if (uriParts.pathname === '/cn') {
+
+                    // Returns the website for step 1 (phone number)
+                    website.handleInitialCn(res);
                 } else {
 
                     // Returns the website for step 1 (country code and email address)
@@ -102,6 +116,37 @@ CredentialsGeneratorWebsite.prototype.handleInitial = function (res) {
                 <label for="email-address">Enter the email address of your Dyson account.</label>\
                 <br /> \
                 <input type="text" id="email-address" name="email-address" placeholder="example@mail.com" style="width: 100%;" /> \
+                <br /> \
+                <br /> \
+                <input type="submit" value="Submit" /> \
+                <br /> \
+                <div style="text-align: center;">Click <a href="/cn">here</a> for signing in via mobile phone (Mainland China).</div> \
+            </form> \
+            </body> \
+        </html>'
+    );
+    res.statusCode = 200;
+    res.end();
+}
+
+/**
+ * Handles requests to GET /cn (i.e. the initial call).
+ * @param res The response object.
+ */
+CredentialsGeneratorWebsite.prototype.handleInitialCn = function (res) {
+    const website = this;
+
+    res.write(
+        '<html> \
+            <head> \
+                <title>Dyson Pure Cool Plugin - Credentials Generator</title> \
+            </head> \
+            <body> \
+            <form method="POST" action="/step1-cn" enctype="application/x-www-form-urlencoded" style="max-width: 600px; margin: 100px auto;"> \
+                <h1>Step 1</h1> \
+                <label for="phone-number">Enter the phone number of your Dyson account.</label>\
+                <br /> \
+                <input type="text" id="phone-number" name="phone-number" style="width: 100%;" /> \
                 <br /> \
                 <br /> \
                 <input type="submit" value="Submit" /> \
@@ -267,6 +312,82 @@ CredentialsGeneratorWebsite.prototype.step1 = function (req, formData, res) {
 }
 
 /**
+ * Handles requests to POST /step1-cn (i.e. the first step).
+ * @param req The request object.
+ * @param formData The request data.
+ * @param res The res object.
+ */
+ CredentialsGeneratorWebsite.prototype.step1Cn = function (req, formData, res) {
+    const website = this;
+
+    request({
+        uri: 'https://appapi.cp.dyson.cn/v3/userregistration/mobile/auth',
+        method: 'POST',
+        headers: { 'User-Agent': 'android client' },
+        json: {
+            mobile: formData['phone-number']
+        },
+        rejectUnauthorized: false
+    }, function (error, response, body) {
+        website.platform.log.debug(body);
+
+        // Checks if the API returned a positive result
+        if (error || response.statusCode != 200 || !body || !body.challengeId) {
+            let errorMessage = '';
+            if (error) {
+                errorMessage = 'Error while receiving 2FA challenge ID. Error: ' + error;
+            } else if (response.statusCode != 200) {
+                errorMessage = 'Error while receiving 2FA challenge ID. Status Code: ' + response.statusCode;
+                if (response.statusCode === 429) {
+                    errorMessage = 'Too many API requests.';
+                }
+            } else if (!body || !body.challengeId) {
+                errorMessage = 'Error while receiving 2FA challenge ID. Could not get challenge ID from response: ' + JSON.stringify(body);
+            } else {
+                errorMessage = 'Unknown error. Please check your input and try again.';
+            }
+
+            res.write(
+                '<html> \
+                    <head> \
+                        <title>Dyson Pure Cool Plugin - Credentials Generator</title> \
+                    </head> \
+                    <body> \
+                    <h1>' + errorMessage + '</h1> \
+                    </body> \
+                </html>'
+            );
+            res.statusCode = 200;
+            res.end();
+            return;
+        }
+
+        res.write(
+            '<html> \
+                <head> \
+                    <title>Dyson Pure Cool Plugin - Credentials Generator</title> \
+                </head> \
+                <body> \
+                <form method="POST" action="/step2-cn" enctype="application/x-www-form-urlencoded" style="max-width: 600px; margin: 100px auto;"> \
+                    <h1>Step 2</h1> \
+                    <label for="2fa-code">Enter the 2FA code that you received via SMS from Dyson.</label>\
+                    <br /> \
+                    <input type="text" id="2fa-code" name="2fa-code" placeholder="XXXXXX" style="width: 100%;" /> \
+                    <br /> \
+                    <br /> \
+                    <input type="hidden" id="challenge-id" name="challenge-id" value="' + body.challengeId + '" /> \
+                    <input type="hidden" id="phone-number" name="phone-number" value="' + formData['phone-number'] + '" /> \
+                    <input type="submit" value="Submit" /> \
+                </form> \
+                </body> \
+            </html>'
+        );
+        res.statusCode = 200;
+        res.end();
+    });
+}
+
+/**
  * Handles requests to POST /step2-2fa (i.e. the 2FA flow).
  * @param req The request object.
  * @param formData The request data.
@@ -283,6 +404,68 @@ CredentialsGeneratorWebsite.prototype.step22fa = function (req, formData, res) {
         json: {
             Email: formData['email-address'],
             Password: formData['password'],
+            challengeId: formData['challenge-id'],
+            otpCode: formData['2fa-code'],
+        },
+        rejectUnauthorized: false
+    }, function (error, response, body) {
+        website.platform.log.debug(body);
+
+        // Checks if the API returned a positive result
+        if (error || response.statusCode != 200 || !body || !body.account || !body.token || !body.tokenType) {
+            let errorMessage = '';
+            if (error) {
+                errorMessage = 'Error while retrieving token. Error: ' + error;
+            } else if (response.statusCode != 200) {
+                errorMessage = 'Error while retrieving token. Status Code: ' + response.statusCode;
+                if (response.statusCode === 401) {
+                    errorMessage = 'Check if account password is correct.';
+                } else if (response.statusCode === 429) {
+                    errorMessage = 'Too many API requests.';
+                }
+            } else if (!body || !body.account || !body.token || !body.tokenType) {
+                errorMessage = 'Error while retrieving token. Could not get account/token parameter from response: ' + JSON.stringify(body);
+            } else {
+                errorMessage = 'Unknown error. Please check your input and try again.';
+            }
+
+            res.write(
+                '<html> \
+                    <head> \
+                        <title>Dyson Pure Cool Plugin - Credentials Generator</title> \
+                    </head> \
+                    <body> \
+                    <h1>' + errorMessage + '</h1> \
+                    </body> \
+                </html>'
+            );
+            res.statusCode = 200;
+            res.end();
+            return;
+        }
+
+        // Creates the authorization header for getting the devices
+        const authorizationHeader = body.tokenType + ' ' + body.token;
+        website.getDevices(authorizationHeader, res);
+    });
+}
+
+/**
+ * Handles requests to POST /step2-cn (i.e. the 2FA flow).
+ * @param req The request object.
+ * @param formData The request data.
+ * @param res The res object.
+ */
+ CredentialsGeneratorWebsite.prototype.step2Cn = function (req, formData, res) {
+    const website = this;
+
+    // Performs the call to sign the user in
+    request({
+        uri: 'https://appapi.cp.dyson.cn/v3/userregistration/mobile/verify',
+        method: 'POST',
+        headers: { 'User-Agent': 'android client' },
+        json: {
+            mobile: formData['phone-number'],
             challengeId: formData['challenge-id'],
             otpCode: formData['2fa-code'],
         },
