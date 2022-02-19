@@ -214,6 +214,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 minStep: temperatureStep,
                 unit: 'celsius'
             });
+
+            // Properly set the temperature display unit
+            temperatureService.updateCharacteristic(Characteristic.TemperatureDisplayUnits, config.useFahrenheit ? 1 : 0);
         } else {
 
             // Uses a temperature sensor
