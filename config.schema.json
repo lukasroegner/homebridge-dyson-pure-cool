@@ -106,7 +106,7 @@
                             "type": "boolean",
                             "default": false,
                             "required": true,
-                            "description": "If set to true, a separate humidity sensor is exposed. Only used for non-humidifier devices. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app)."
+                            "description": "If set to true, a separate humidity sensor is exposed. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app)."
                         },
                         "isHumidityIgnored": {
                             "title": "Ignore Humidity",

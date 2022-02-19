@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.0] - 2022-02-19
+### Changes
+- An additional humidity sensor can be exposed if the device is a humidifier
+
 ## [2.6.0] - 2022-02-19
 ### Changes
 - Added options to prevent temperature, humidity and air quality from being exposed to HomeKit

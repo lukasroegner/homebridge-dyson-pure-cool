@@ -165,7 +165,7 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 
 **temperatureOffset**: Negatively or positively offset the value reported by the temperature sensor before exposing it to HomeKit. Provide the value in degree Celsius.
 
-**isHumiditySensorEnabled**: If set to `true`, a separate humidity sensor is exposed. Only used for non-humidifier devices. If set to `false`, the humidity is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
+**isHumiditySensorEnabled**: If set to `true`, a separate humidity sensor is exposed. If set to `false`, the humidity is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
 
 **isHumidityIgnored**: If set to `true`, the humidity measurement is completely ignored and not exposed. Can only used for non-humidifier devices. Defaults to `false`.
 
