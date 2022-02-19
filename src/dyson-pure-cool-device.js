@@ -410,15 +410,16 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             let pm10 = 0;
             let va10 = 0;
             let noxl = 0;
+            let hcho = 0;
             let p = 0;
             let v = 0;
             if (device.info.hasAdvancedAirQualitySensors) {
 
                 // Checks whether continuous monitoring is disabled
-                if (content['data']['pm25'] === 'OFF') {
+                if (content['data']['p25r'] === 'OFF') {
                     return;
                 }
-                if (content['data']['pm10'] === 'OFF') {
+                if (content['data']['p10r'] === 'OFF') {
                     return;
                 }
                 if (content['data']['va10'] === 'OFF') {
@@ -428,10 +429,14 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                     return;
                 }
 
-                pm25 = content['data']['pm25'] === 'INIT' ? 0 : Number.parseInt(content['data']['pm25']);
-                pm10 = content['data']['pm10'] === 'INIT' ? 0 : Number.parseInt(content['data']['pm10']);
+                pm25 = content['data']['p25r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p25r']);
+                pm10 = content['data']['p10r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p10r']);
                 va10 = content['data']['va10'] === 'INIT' ? 0 : Number.parseInt(content['data']['va10']);
                 noxl = content['data']['noxl'] === 'INIT' ? 0 : Number.parseInt(content['data']['noxl']);
+
+                if (content['data']['hchr']) {
+                    hcho = content['data']['hchr'] === 'INIT' ? 0 : Number.parseInt(content['data']['hchr']);
+                }
 
                 if (isNaN(pm25)) {
                     pm25 = 0;
@@ -444,6 +449,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 }
                 if (isNaN(noxl)) {
                     noxl = 0;
+                }
+                if (isNaN(hcho)) {
+                    hcho = 0;
                 }
             } else {
 
@@ -476,13 +484,16 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             // Maps the NO2 value to a self-created scale
             const noxlQuality = noxl <= 30 ? 1 : (noxl <= 60 ? 2 : (noxl <= 80 ? 3 : (noxl <= 90 ? 4 : 5)));
 
+            // Maps the HCHO value to a self-created scale
+            const hchoQuality = hcho <= 99 ? 1 : (hcho <= 299 ? 2 : (hcho <= 499 ? 3 : 4));
+
             // Maps the values of the sensors to the relative values, these operations are copied from the newer devices as the app does not specify the correct values
             const pQuality = p <= 2 ? 1 : (p <= 4 ? 2 : (p <= 7 ? 3 : (p <= 9 ? 4 : 5)));
             const vQuality = (v * 0.125) <= 3 ? 1 : ((v * 0.125) <= 6 ? 2 : ((v * 0.125) <= 8 ? 3 : 4));
 
             // Sets the sensor data for air quality (the poorest sensor result wins)
             if (device.info.hasAdvancedAirQualitySensors) {
-                airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality));
+                airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality, hchoQuality));
                 airQualityService.updateCharacteristic(Characteristic.PM2_5Density, pm25)
                 airQualityService.updateCharacteristic(Characteristic.PM10Density, pm10)
                 airQualityService.updateCharacteristic(Characteristic.VOCDensity, va10)
