@@ -64,3 +64,6 @@ typings/
 config.json
 persist
 accessories
+
+# IDE files
+.vscode/
