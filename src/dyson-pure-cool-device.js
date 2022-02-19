@@ -508,7 +508,8 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             // Sets the heating mode and target temperature
             if (device.info.hasHeating) {
                 if (content['product-state']['hmod']) {
-                    temperatureService.updateCharacteristic(Characteristic.CurrentHeatingCoolingState, content['product-state']['hmod'] === 'OFF' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT);
+                    const poweredOff = airPurifierService.getCharacteristic(Characteristic.Active).value === Characteristic.Active.INACTIVE;
+                    temperatureService.updateCharacteristic(Characteristic.CurrentHeatingCoolingState, (poweredOff || content['product-state']['hmod'] === 'OFF') ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT);
                     temperatureService.updateCharacteristic(Characteristic.TargetHeatingCoolingState, content['product-state']['hmod'] === 'OFF' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT);
                 }
                 if (content['product-state']['hmax']) {
@@ -602,7 +603,8 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             // Sets the heating mode and target temperature
             if (device.info.hasHeating) {
                 if (content['product-state']['hmod']) {
-                    temperatureService.updateCharacteristic(Characteristic.CurrentHeatingCoolingState, content['product-state']['hmod'][1] === 'OFF' ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT);
+                    const poweredOff = airPurifierService.getCharacteristic(Characteristic.Active).value === Characteristic.Active.INACTIVE;
+                    temperatureService.updateCharacteristic(Characteristic.CurrentHeatingCoolingState, (poweredOff || content['product-state']['hmod'][1] === 'OFF') ? Characteristic.CurrentHeatingCoolingState.OFF : Characteristic.CurrentHeatingCoolingState.HEAT);
                     temperatureService.updateCharacteristic(Characteristic.TargetHeatingCoolingState, content['product-state']['hmod'][1] === 'OFF' ? Characteristic.TargetHeatingCoolingState.OFF : Characteristic.TargetHeatingCoolingState.HEAT);
                 }
                 if (content['product-state']['hmax']) {
