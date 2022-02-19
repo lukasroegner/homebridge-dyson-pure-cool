@@ -185,7 +185,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Updates the temperature service
     let temperatureService = null;
     if (!temperatureAccessory) {
-        temperatureService = airPurifierService;
+        if (!config.isTemperatureIgnored) {
+            temperatureService = airPurifierService;
+        }
     } else {
         if (device.info.hasHeating) {
 
@@ -228,18 +230,22 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     }
 
     // Updates the temperature steps
-    temperatureService
-        .getCharacteristic(Characteristic.CurrentTemperature)
-        .setProps({
-            minValue: -50,
-            maxValue: 100,
-            unit: 'celsius'
-        });
+    if (temperatureService) {
+        temperatureService
+            .getCharacteristic(Characteristic.CurrentTemperature)
+            .setProps({
+                minValue: -50,
+                maxValue: 100,
+                unit: 'celsius'
+            });
+    }
 
     // Updates the humidity sensor
     let humidityService = null;
     if (!humidityAccessory) {
-        humidityService = airPurifierService;
+        if (!config.isHumidityIgnored) {
+            humidityService = airPurifierService;
+        }
     } else {
         if (device.info.hasHumidifier) {
 
@@ -288,7 +294,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Updates the air quality sensor
     let airQualityService = null;
     if (!airQualityAccessory) {
-        airQualityService = airPurifierService;
+        if (!config.isAirQualityIgnored) {
+            airQualityService = airPurifierService;
+        }
     } else {
         airQualityService = airQualityAccessory.getService(Service.AirQualitySensor);
         if (!airQualityService) {
@@ -396,110 +404,112 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         if (content.msg === 'ENVIRONMENTAL-CURRENT-SENSOR-DATA') {
 
             // Sets the sensor data for temperature
-            if (content['data']['tact'] !== 'OFF') {
+            if (content['data']['tact'] !== 'OFF' && temperatureService) {
                 temperatureService.updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0 + (config.temperatureOffset || 0.0));
             }
 
             // Sets the sensor data for humidity
-            if (content['data']['hact'] !== 'OFF') {
+            if (content['data']['hact'] !== 'OFF' && humidityService) {
                 humidityService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']) + (config.humidityOffset || 0.0));
             }
 
             // Parses the air quality sensor data
-            let pm25 = 0;
-            let pm10 = 0;
-            let va10 = 0;
-            let noxl = 0;
-            let hcho = 0;
-            let p = 0;
-            let v = 0;
-            if (device.info.hasAdvancedAirQualitySensors) {
+            if (airQualityService) {
+                let pm25 = 0;
+                let pm10 = 0;
+                let va10 = 0;
+                let noxl = 0;
+                let hcho = 0;
+                let p = 0;
+                let v = 0;
+                if (device.info.hasAdvancedAirQualitySensors) {
 
-                // Checks whether continuous monitoring is disabled
-                if (content['data']['p25r'] === 'OFF') {
-                    return;
-                }
-                if (content['data']['p10r'] === 'OFF') {
-                    return;
-                }
-                if (content['data']['va10'] === 'OFF') {
-                    return;
-                }
-                if (content['data']['noxl'] === 'OFF') {
-                    return;
+                    // Checks whether continuous monitoring is disabled
+                    if (content['data']['p25r'] === 'OFF') {
+                        return;
+                    }
+                    if (content['data']['p10r'] === 'OFF') {
+                        return;
+                    }
+                    if (content['data']['va10'] === 'OFF') {
+                        return;
+                    }
+                    if (content['data']['noxl'] === 'OFF') {
+                        return;
+                    }
+
+                    pm25 = content['data']['p25r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p25r']);
+                    pm10 = content['data']['p10r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p10r']);
+                    va10 = content['data']['va10'] === 'INIT' ? 0 : Number.parseInt(content['data']['va10']);
+                    noxl = content['data']['noxl'] === 'INIT' ? 0 : Number.parseInt(content['data']['noxl']);
+
+                    if (content['data']['hchr']) {
+                        hcho = content['data']['hchr'] === 'INIT' ? 0 : Number.parseInt(content['data']['hchr']);
+                    }
+
+                    if (isNaN(pm25)) {
+                        pm25 = 0;
+                    }
+                    if (isNaN(pm10)) {
+                        pm10 = 0;
+                    }
+                    if (isNaN(va10)) {
+                        va10 = 0;
+                    }
+                    if (isNaN(noxl)) {
+                        noxl = 0;
+                    }
+                    if (isNaN(hcho)) {
+                        hcho = 0;
+                    }
+                } else {
+
+                    // Checks whether continuous monitoring is disabled
+                    if (content['data']['pact'] === 'OFF') {
+                        return;
+                    }
+                    if (content['data']['vact'] === 'OFF') {
+                        return;
+                    }
+
+                    p = content['data']['pact'] === 'INIT' ? 0 : Number.parseInt(content['data']['pact']);
+                    v = content['data']['vact'] === 'INIT' ? 0 : Number.parseInt(content['data']['vact']);
+
+                    if (isNaN(p)) {
+                        p = 0;
+                    }
+                    if (isNaN(v)) {
+                        v = 0;
+                    }
                 }
 
-                pm25 = content['data']['p25r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p25r']);
-                pm10 = content['data']['p10r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p10r']);
-                va10 = content['data']['va10'] === 'INIT' ? 0 : Number.parseInt(content['data']['va10']);
-                noxl = content['data']['noxl'] === 'INIT' ? 0 : Number.parseInt(content['data']['noxl']);
+                // Maps the values of the sensors to the relative values described in the app (1 - 5 => Good, Medium, Bad, Very Bad, Extremely Bad)
+                const pm25Quality = pm25 <= 35 ? 1 : (pm25 <= 53 ? 2 : (pm25 <= 70 ? 3 : (pm25 <= 150 ? 4 : 5)));
+                const pm10Quality = pm10 <= 50 ? 1 : (pm10 <= 75 ? 2 : (pm10 <= 100 ? 3 : (pm10 <= 350 ? 4 : 5)));
 
-                if (content['data']['hchr']) {
-                    hcho = content['data']['hchr'] === 'INIT' ? 0 : Number.parseInt(content['data']['hchr']);
+                // Maps the VOC values to a self-created scale (as described values in the app don't fit)
+                const va10Quality = (va10 * 0.125) <= 3 ? 1 : ((va10 * 0.125) <= 6 ? 2 : ((va10 * 0.125) <= 8 ? 3 : 4));
+
+                // Maps the NO2 value to a self-created scale
+                const noxlQuality = noxl <= 30 ? 1 : (noxl <= 60 ? 2 : (noxl <= 80 ? 3 : (noxl <= 90 ? 4 : 5)));
+
+                // Maps the HCHO value to a self-created scale
+                const hchoQuality = hcho <= 99 ? 1 : (hcho <= 299 ? 2 : (hcho <= 499 ? 3 : 4));
+
+                // Maps the values of the sensors to the relative values, these operations are copied from the newer devices as the app does not specify the correct values
+                const pQuality = p <= 2 ? 1 : (p <= 4 ? 2 : (p <= 7 ? 3 : (p <= 9 ? 4 : 5)));
+                const vQuality = (v * 0.125) <= 3 ? 1 : ((v * 0.125) <= 6 ? 2 : ((v * 0.125) <= 8 ? 3 : 4));
+
+                // Sets the sensor data for air quality (the poorest sensor result wins)
+                if (device.info.hasAdvancedAirQualitySensors) {
+                    airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality, hchoQuality));
+                    airQualityService.updateCharacteristic(Characteristic.PM2_5Density, pm25)
+                    airQualityService.updateCharacteristic(Characteristic.PM10Density, pm10)
+                    airQualityService.updateCharacteristic(Characteristic.VOCDensity, va10)
+                    airQualityService.updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
+                } else {
+                    airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pQuality, vQuality));
                 }
-
-                if (isNaN(pm25)) {
-                    pm25 = 0;
-                }
-                if (isNaN(pm10)) {
-                    pm10 = 0;
-                }
-                if (isNaN(va10)) {
-                    va10 = 0;
-                }
-                if (isNaN(noxl)) {
-                    noxl = 0;
-                }
-                if (isNaN(hcho)) {
-                    hcho = 0;
-                }
-            } else {
-
-                // Checks whether continuous monitoring is disabled
-                if (content['data']['pact'] === 'OFF') {
-                    return;
-                }
-                if (content['data']['vact'] === 'OFF') {
-                    return;
-                }
-
-                p = content['data']['pact'] === 'INIT' ? 0 : Number.parseInt(content['data']['pact']);
-                v = content['data']['vact'] === 'INIT' ? 0 : Number.parseInt(content['data']['vact']);
-
-                if (isNaN(p)) {
-                    p = 0;
-                }
-                if (isNaN(v)) {
-                    v = 0;
-                }
-            }
-
-            // Maps the values of the sensors to the relative values described in the app (1 - 5 => Good, Medium, Bad, Very Bad, Extremely Bad)
-            const pm25Quality = pm25 <= 35 ? 1 : (pm25 <= 53 ? 2 : (pm25 <= 70 ? 3 : (pm25 <= 150 ? 4 : 5)));
-            const pm10Quality = pm10 <= 50 ? 1 : (pm10 <= 75 ? 2 : (pm10 <= 100 ? 3 : (pm10 <= 350 ? 4 : 5)));
-
-            // Maps the VOC values to a self-created scale (as described values in the app don't fit)
-            const va10Quality = (va10 * 0.125) <= 3 ? 1 : ((va10 * 0.125) <= 6 ? 2 : ((va10 * 0.125) <= 8 ? 3 : 4));
-
-            // Maps the NO2 value to a self-created scale
-            const noxlQuality = noxl <= 30 ? 1 : (noxl <= 60 ? 2 : (noxl <= 80 ? 3 : (noxl <= 90 ? 4 : 5)));
-
-            // Maps the HCHO value to a self-created scale
-            const hchoQuality = hcho <= 99 ? 1 : (hcho <= 299 ? 2 : (hcho <= 499 ? 3 : 4));
-
-            // Maps the values of the sensors to the relative values, these operations are copied from the newer devices as the app does not specify the correct values
-            const pQuality = p <= 2 ? 1 : (p <= 4 ? 2 : (p <= 7 ? 3 : (p <= 9 ? 4 : 5)));
-            const vQuality = (v * 0.125) <= 3 ? 1 : ((v * 0.125) <= 6 ? 2 : ((v * 0.125) <= 8 ? 3 : 4));
-
-            // Sets the sensor data for air quality (the poorest sensor result wins)
-            if (device.info.hasAdvancedAirQualitySensors) {
-                airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality, hchoQuality));
-                airQualityService.updateCharacteristic(Characteristic.PM2_5Density, pm25)
-                airQualityService.updateCharacteristic(Characteristic.PM10Density, pm10)
-                airQualityService.updateCharacteristic(Characteristic.VOCDensity, va10)
-                airQualityService.updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
-            } else {
-                airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pQuality, vQuality));
             }
 
             return;

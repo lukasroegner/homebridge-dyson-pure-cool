@@ -118,10 +118,13 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
                     "isJetFocusEnabled": false,
                     "isContinuousMonitoringEnabled": false,
                     "isTemperatureSensorEnabled": false,
+                    "isTemperatureIgnored": false,
                     "temperatureOffset": 0,
                     "isHumiditySensorEnabled": false,
+                    "isHumidityIgnored": false,
                     "humidityOffset": 0,
                     "isAirQualitySensorEnabled": false,
+                    "isAirQualityIgnored": false,
                     "isSingleAccessoryModeEnabled": false,
                     "isFullRangeHumidity": false,
                     "isHeatingDisabled": false
@@ -158,13 +161,19 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 
 **isTemperatureSensorEnabled**: If set to `true`, a separate temperature sensor is exposed. Only used for non-heating devices. If set to `false`, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app). Defaults to `false`.
 
+**isTemperatureIgnored**: If set to `true`, the temperature measurement is completely ignored and not exposed. Can only used for non-heating devices. Defaults to `false`.
+
 **temperatureOffset**: Negatively or positively offset the value reported by the temperature sensor before exposing it to HomeKit. Provide the value in degree Celsius.
 
 **isHumiditySensorEnabled**: If set to `true`, a separate humidity sensor is exposed. Only used for non-humidifier devices. If set to `false`, the humidity is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
 
+**isHumidityIgnored**: If set to `true`, the humidity measurement is completely ignored and not exposed. Can only used for non-humidifier devices. Defaults to `false`.
+
 **humidityOffset**: Negatively or positively offset the value reported by the humidity sensor before exposing it to HomeKit. Provide the value in degree Celsius.
 
 **isAirQualitySensorEnabled**: If set to `true`, a separate air quality sensor is exposed. If set to `false`, the air quality is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
+
+**isAirQualityIgnored**: If set to `true`, the air quality measurements are completely ignored and not exposed. Defaults to `false`.
 
 **isSingleSensorAccessoryModeEnabled**: If set to `true`, all sensors are exposed to HomeKit in a single accessory instead of multiple accessories. Only has an effect if the previous settings for enabling sensors are set to `true`. Defaults to `false`.
 

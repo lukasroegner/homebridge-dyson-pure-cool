@@ -88,6 +88,13 @@
                             "required": true,
                             "description": "If set to true, a separate temperature sensor is exposed. Only used for non-heating devices. If set to false, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app)."
                         },
+                        "isTemperatureIgnored": {
+                            "title": "Ignore Temperature",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, the temperature measurement is completely ignored and not exposed. Can only used for non-heating devices."
+                        },
                         "temperatureOffset": {
                             "title": "Temperature Offset",
                             "type": "number",
@@ -101,6 +108,13 @@
                             "required": true,
                             "description": "If set to true, a separate humidity sensor is exposed. Only used for non-humidifier devices. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app)."
                         },
+                        "isHumidityIgnored": {
+                            "title": "Ignore Humidity",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, the humidity measurement is completely ignored and not exposed. Can only used for non-humidifier devices."
+                        },
                         "humidityOffset": {
                             "title": "Humidity Offset",
                             "type": "number",
@@ -113,6 +127,13 @@
                             "default": false,
                             "required": true,
                             "description": "If set to true, a separate air quality sensor is exposed. If set to false, the air quality is added as characteristic to the air purifier (supported in the Apple Home app)."
+                        },
+                        "isAirQualityIgnored": {
+                            "title": "Ignore Air Quality",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, the air quality measurements are completely ignored and not exposed."
                         },
                         "isSingleSensorAccessoryModeEnabled": {
                             "title": "Single Sensor Accessory Mode",

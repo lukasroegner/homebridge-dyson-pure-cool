@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.6.0] - 2022-02-19
+### Changes
+- Added options to prevent temperature, humidity and air quality from being exposed to HomeKit
+
 ## [2.5.1] - 2022-02-19
 ### Changes
 - Fixed a bug where changing the device to automatic mode would not work with Siri
