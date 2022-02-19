@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.4.4] - 2022-02-19
+### Changes
+- Enhanced air quality calculation and sensor readings (thanks to WLBQE for the PR)
+
 ## [2.4.3] - 2022-02-19
 ### Changes
 - Corrected the temperature display unit when using Fahrenheit (thanks to WLBQE for the PR)
