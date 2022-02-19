@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.4.3] - 2022-02-19
+### Changes
+- Corrected the temperature display unit when using Fahrenheit (thanks to WLBQE for the PR)
+- Thermostat is now shown as off if the device is switched off (thanks to WLBQE for the PR)
+
 ## [2.4.2] - 2022-02-17
 ### Changes
 - Added support for the TP09
