@@ -745,7 +745,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     airPurifierService.getCharacteristic(Characteristic.TargetAirPurifierState).on('set', function (value, callback) {
 
         // Checks if AUTO mode can be enabled when activating the device
-        if (config.enableAutoModeWhenActivating) {
+        if (config.enableAutoModeWhenActivating || airPurifierService.getCharacteristic(Characteristic.Active).value) {
 
             // Directly sets the target state
             platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));

@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.5.1] - 2022-02-19
+### Changes
+- Fixed a bug where changing the device to automatic mode would not work with Siri
+
 ## [2.5.0] - 2022-02-19
 ### Changes
 - Support for signing in via mobile phone (Mainland China)
