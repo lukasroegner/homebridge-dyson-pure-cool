@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.1] - 2022-02-20
+### Changes
+- Fixed the sign in via mobile phone
+
 ## [2.7.0] - 2022-02-19
 ### Changes
 - An additional humidity sensor can be exposed if the device is a humidifier

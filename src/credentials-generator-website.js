@@ -146,7 +146,7 @@ CredentialsGeneratorWebsite.prototype.handleInitialCn = function (res) {
                 <h1>Step 1</h1> \
                 <label for="phone-number">Enter the phone number of your Dyson account.</label>\
                 <br /> \
-                <input type="text" id="phone-number" name="phone-number" style="width: 100%;" /> \
+                <input type="text" id="phone-number" name="phone-number" placeholder="+86XXXXXXXX" style="width: 100%;" /> \
                 <br /> \
                 <br /> \
                 <input type="submit" value="Submit" /> \
@@ -508,7 +508,7 @@ CredentialsGeneratorWebsite.prototype.step22fa = function (req, formData, res) {
 
         // Creates the authorization header for getting the devices
         const authorizationHeader = body.tokenType + ' ' + body.token;
-        website.getDevices(authorizationHeader, res);
+        website.getDevicesCn(authorizationHeader, res);
     });
 }
 
@@ -582,6 +582,108 @@ CredentialsGeneratorWebsite.prototype.getDevices = function (authorizationHeader
     // Performs the call to sign the user in
     request({
         uri: 'https://appapi.cp.dyson.com/v2/provisioningservice/manifest',
+        method: 'GET',
+        headers: {
+            'Authorization': authorizationHeader,
+            'User-Agent': 'android client'
+        },
+        json: true,
+        rejectUnauthorized: false
+    }, function (error, response, body) {
+        website.platform.log.debug(body);
+
+        // Checks if the API returned a positive result
+        if (error || response.statusCode != 200 || !body) {
+            let errorMessage = '';
+            if (error) {
+                errorMessage = 'Error while retrieving the devices from the API. Error: ' + error;
+            } else if (response.statusCode != 200) {
+                errorMessage = 'Error while retrieving the devices from the API. Status Code: ' + response.statusCode;
+                if (response.statusCode === 401) {
+                    errorMessage = 'Check if account password/token is correct.';
+                } else if (response.statusCode === 429) {
+                    errorMessage = 'Too many API requests.';
+                }
+            } else if (!body) {
+                errorMessage = 'Error while retrieving the devices from the API. Could not get devices from response: ' + JSON.stringify(body);
+            } else {
+                errorMessage = 'Unknown error. Please check your input and try again.';
+            }
+
+            res.write(
+                '<html> \
+                    <head> \
+                        <title>Dyson Pure Cool Plugin - Credentials Generator</title> \
+                    </head> \
+                    <body> \
+                    <h1>' + errorMessage + '</h1> \
+                    </body> \
+                </html>'
+            );
+            res.statusCode = 200;
+            res.end();
+            return;
+        }
+
+        // Initializes a device for each device from the API
+        let htmlBody = '';
+        for (let i = 0; i < body.length; i++) {
+            const deviceBody = body[i];
+
+            if (deviceBody.LocalCredentials) {
+
+                // Gets the MQTT credentials from the device (see https://github.com/CharlesBlonde/libpurecoollink/blob/master/libpurecoollink/utils.py)
+                const key = Uint8Array.from(Array(32), (_, index) => index + 1);
+                const initializationVector = new Uint8Array(16);
+                const decipher = crypto.createDecipheriv('aes-256-cbc', key, initializationVector);
+                const decryptedPasswordString = decipher.update(deviceBody.LocalCredentials, 'base64', 'utf8') + decipher.final('utf8');
+                const decryptedPasswordJson = JSON.parse(decryptedPasswordString);
+                const password = decryptedPasswordJson.apPasswordHash;
+
+                deviceBody.password = password;
+
+                htmlBody +=
+                    '<br /> \
+                    <br /> \
+                    <label>Serial number<label> \
+                    <br /> \
+                    <strong>' + deviceBody.Serial + '</strong> \
+                    <br /> \
+                    <label>Credentials<label> \
+                    <br /> \
+                    <textarea readonly style="width: 100%;" rows="10">' + Buffer.from(JSON.stringify(deviceBody)).toString('base64') + '</textarea>';
+            }
+        }
+
+        res.write(
+            '<html> \
+                <head> \
+                    <title>Dyson Pure Cool Plugin - Credentials Generator</title> \
+                </head> \
+                <body> \
+                <form style="max-width: 600px; margin: 100px auto;"> \
+                    <h1>Credentials</h1> \
+                    ' + htmlBody + ' \
+                </form> \
+                </body> \
+            </html>'
+        );
+        res.statusCode = 200;
+        res.end();
+    });
+}
+
+/**
+ * Gets the devices from the API and returns the website with the credentials.
+ * @param authorizationHeader The header used for authorizing the user.
+ * @param res The res object.
+ */
+ CredentialsGeneratorWebsite.prototype.getDevicesCn = function (authorizationHeader, res) {
+    const website = this;
+
+    // Performs the call to sign the user in
+    request({
+        uri: 'https://appapi.cp.dyson.cn/v2/provisioningservice/manifest',
         method: 'GET',
         headers: {
             'Authorization': authorizationHeader,
