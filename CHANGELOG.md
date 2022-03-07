@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.2] - 2022-03-07
+### Changes
+- Due to safety concerns, heating is now switch off when devices are switched on, which is the same behavior as in the Dyson app 
+
 ## [2.7.1] - 2022-02-20
 ### Changes
 - Fixed the sign in via mobile phone

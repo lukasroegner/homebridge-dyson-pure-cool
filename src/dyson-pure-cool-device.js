@@ -753,6 +753,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             commandData['nmod'] = 'ON';
         }
 
+        // The Dyson app disables heating when the device is turned on
+        if (value === Characteristic.Active.ACTIVE && device.info.hasHeating) {
+            commandData['hmod'] = 'OFF';
+        }
+
         // Executes the actual change of the active state
         platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify(commandData));
         device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
