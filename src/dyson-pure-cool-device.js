@@ -754,7 +754,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         }
 
         // The Dyson app disables heating when the device is turned on
-        if (value === Characteristic.Active.ACTIVE && device.info.hasHeating) {
+        if (value === Characteristic.Active.ACTIVE && device.info.hasHeating && !config.isHeatingSafetyIgnored) {
             commandData['hmod'] = 'OFF';
         }
 

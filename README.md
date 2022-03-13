@@ -127,7 +127,8 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
                     "isAirQualityIgnored": false,
                     "isSingleAccessoryModeEnabled": false,
                     "isFullRangeHumidity": false,
-                    "isHeatingDisabled": false
+                    "isHeatingDisabled": false,
+                    "isHeatingSafetyIgnored": false
                 }
             ],
             "updateInterval": 60000,
@@ -182,6 +183,8 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 **isFullRangeHumidity**: Only for PH01/PH02. If set to `true`, the range of the target humidity control will be from 0% to 100% instead of translating it to the allowed range (30% to 70%) of the Dyson. Defaults to `false`.
 
 **isHeatingDisabled**: Only for HP02/HP04/HP06. If set to `true`, the heating controls are not exposed to HomeKit. Defaults to `false`.
+
+**isHeatingSafetyIgnored**: Only for HP02/HP04/HP06. If set to `true`, this overrides the default safety feature to allow heat to be turned on along with the fan if the fan was heating when last turned off. By default, the heat is disabled when turning on the fan in the Dyson app.
 
 **updateInterval** (optional): The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices. Defaults to 60 seconds.
 
