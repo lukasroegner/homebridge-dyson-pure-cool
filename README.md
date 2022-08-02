@@ -94,6 +94,12 @@ For each Dyson device that you want to use with this plugin, credentials have to
 - Restart your homebridge server
 - Try again
 
+**If you don't get any page at all:
+
+- Make sure to allow the port in the firewall Rules
+- For ufw try:
+`sudo ufw allow 48000` (when you have a different port use it instead of 48000)
+
 This method seems to work for most people, see [#196](https://github.com/lukasroegner/homebridge-dyson-pure-cool/issues/196) for instance.
 
 **Step 5:** Now you can add the devices to the configuration (see below) and restart homebridge.
