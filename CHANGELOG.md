@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.4] - 2022-08-19
+### Changes
+- Fixed the default name of the nightmode switch (thanks to merik-chen for the PR)
+
 ## [2.7.3] - 2022-03-13
 ### Changes
 - Added a configuration option for the heating safety behavior introduced in `2.7.2`
