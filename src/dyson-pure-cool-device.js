@@ -318,7 +318,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (switchAccessory && config.isNightModeEnabled) {
         nightModeSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'NightMode');
         if (!nightModeSwitchService) {
-            nightModeSwitchService = switchAccessory.addService(Service.Switch, device.name + ' Night Mode', 'NightMode');
+            nightModeSwitchService = switchAccessory.addService(Service.Switch, device.info.name + ' Night Mode', 'NightMode');
         }
     }
 
