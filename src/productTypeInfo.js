@@ -7,7 +7,7 @@ const knownProducts = {
     hasJetFocus: true,
   },
   '358E': {
-    model: 'Dyson Pure Humidify+Cool',
+    model: 'Dyson Pure Humidify+Cool Formaldehyd',
     hardwareRevision: 'PH03/PH04',
     hasAdvancedAirQualitySensors: true,
     hasHumidifier: true,
@@ -40,7 +40,7 @@ const knownProducts = {
     hardwareRevision: 'TP02',
   },
   '520': {
-    model: 'Dyson Pure Cool Desk',
+    model: 'Dyson Pure Cool Purifying Desk',
     hardwareRevision: 'DP04',
     hasJetFocus: true,
     hasAdvancedAirQualitySensors: true,
