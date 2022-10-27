@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.5] - 2022-10-27
+### Changes
+- Added support for HP07 527K (thanks to iml885203 for the PR)
+
 ## [2.7.4] - 2022-08-19
 ### Changes
 - Fixed the default name of the nightmode switch (thanks to merik-chen for the PR)
