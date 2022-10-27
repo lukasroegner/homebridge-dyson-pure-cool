@@ -59,6 +59,13 @@ const knownProducts = {
     hasAdvancedAirQualitySensors: true,
     hasHeating: true,
   },
+  '527K': {
+    model: 'Dyson Purifier Hot+Cool',
+    hardwareRevision: 'HP07',
+    hasJetFocus: true,
+    hasAdvancedAirQualitySensors: true,
+    hasHeating: true,
+  },
 };
 
 module.exports = function(productType) {
