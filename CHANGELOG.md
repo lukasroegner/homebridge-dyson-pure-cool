@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.6] - 2023-11-10
+### Changes
+- Fix for the credentials generator (thanks to matthewdavidlloyd for the PR)
+
 ## [2.7.5] - 2022-10-27
 ### Changes
 - Added support for HP07 527K (thanks to iml885203 for the PR)
