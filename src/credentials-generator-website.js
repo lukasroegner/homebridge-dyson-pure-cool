@@ -1,4 +1,3 @@
-
 const http = require('http');
 const url = require('url');
 const request = require('request');
@@ -125,6 +124,45 @@ CredentialsGeneratorWebsite.prototype.handleInitial = function (res) {
             </body> \
         </html>'
     );
+
+    request({
+        uri: 'https://appapi.cp.dyson.com/v1/provisioningservice/application/Android/version',
+        method: 'GET',
+        headers: { 'User-Agent': 'android client' },
+        rejectUnauthorized: false
+    }, function (error, response, body) {
+        website.platform.log.debug(body);
+
+        // Checks if the API returned a positive result
+        if (error || response.statusCode != 200 || !body || !body.accountStatus || !body.authenticationMethod) {
+            let errorMessage = '';
+            if (error) {
+                errorMessage = 'Error while checking version. Error: ' + error;
+            } else if (response.statusCode != 200) {
+                errorMessage = 'Error while checking version. Status Code: ' + response.statusCode;
+                if (response.statusCode === 429) {
+                    errorMessage = 'Too many API requests.';
+                }
+            } else {
+                errorMessage = 'Unknown error. Please check your input and try again.';
+            }
+
+            res.write(
+                '<html> \
+                    <head> \
+                        <title>Dyson Pure Cool Plugin - Credentials Generator</title> \
+                    </head> \
+                    <body> \
+                    <h1>' + errorMessage + '</h1> \
+                    </body> \
+                </html>'
+            );
+            res.statusCode = 200;
+            res.end();
+            return;
+        }
+    });
+
     res.statusCode = 200;
     res.end();
 }
