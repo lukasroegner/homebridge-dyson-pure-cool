@@ -23,6 +23,7 @@ This project is a homebridge plugin for the Dyson air purifiers. Supported devic
 - Dyson Pure Cool Link Tower (TP02)
 - Dyson Pure Cool Link Desk (DP01)
 - Dyson Pure Hot+Cool Link (HP02)
+- Dyson Purifier Big+Quiet Formaldehyde (BP02, BP03, BP04, BP06)
 
 All your devices are exposed as air purifiers in HomeKit, with support (also in Apple Home app) for:
 - On/off
@@ -44,7 +45,7 @@ For humidifier devices, a humidifier is also exposes to HomeKit with support for
 
 Optionally, the following switches are exposed:
 - Night mode (on/off)
-- Jet Focus (on/off; DP01, TP02 and HP02 are not supported)
+- Jet Focus (on/off; DP01, TP02, HP02, BP02, BP03, BP04 and BP06 are not supported)
 - Continuous Monitoring (on/off)
 
 The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode and jet focus switches are combined in a separate settings accessory. This can be changed in the config.

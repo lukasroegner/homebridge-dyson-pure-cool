@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.7] - 2023-11-23
+### Changes
+- Support for new revisions of PH03, PH04, TP07, TP09
+- Support for BP02, BP03, BP04, BP06
+
 ## [2.7.6] - 2023-11-10
 ### Changes
 - Fix for the credentials generator (thanks to matthewdavidlloyd for the PR)

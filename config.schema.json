@@ -1,7 +1,7 @@
 {
     "pluginAlias": "DysonPureCoolPlatform",
     "pluginType": "platform",
-    "headerDisplay": "This plugin supports the Dyson Pure Cool (DP04, TP04, TP06, TP07, TP09), Dyson Pure Cool Link (DP01, TP02), Dyson Hot+Cool (HP02, HP04, HP06, HP07, HP09) and Dyson Pure Humidify+Cool (PH01, PH02, PH03, PH04) devices.",
+    "headerDisplay": "This plugin supports the Dyson Pure Cool (DP04, TP04, TP06, TP07, TP09), Dyson Pure Cool Link (DP01, TP02), Dyson Hot+Cool (HP02, HP04, HP06, HP07, HP09), Dyson Pure Humidify+Cool (PH01, PH02, PH03, PH04) and Dyson Purifier Big+Quiet Formaldehyde (BP02, BP03, BP04, BP06) devices.",
     "footerDisplay": "For help please visit the [GitHub repository](https://github.com/lukasroegner/homebridge-dyson-pure-cool).",
     "schema": {
         "type": "object",
@@ -72,7 +72,7 @@
                             "type": "boolean",
                             "default": false,
                             "required": true,
-                            "description": "If set to true, a switch is exposed for the jet focus. DP01, TP02 and HP02 are not supported."
+                            "description": "If set to true, a switch is exposed for the jet focus. DP01, TP02, HP02, BP02, BP03, BP04 and BP06 are not supported."
                         },
                         "isContinuousMonitoringEnabled": {
                             "title": "Expose Continuous Monitoring",

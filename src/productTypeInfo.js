@@ -13,6 +13,13 @@ const knownProducts = {
     hasHumidifier: true,
     hasJetFocus: true,
   },
+  '358K': {
+    model: 'Dyson Pure Humidify+Cool Formaldehyde',
+    hardwareRevision: 'PH03/PH04',
+    hasAdvancedAirQualitySensors: true,
+    hasHumidifier: true,
+    hasJetFocus: true,
+  },
   '438': {
     model: 'Dyson Pure Cool Tower',
     hardwareRevision: 'TP04',
@@ -20,6 +27,12 @@ const knownProducts = {
     hasAdvancedAirQualitySensors: true,
   },
   '438E': {
+    model: 'Dyson Pure Cool',
+    hardwareRevision: 'TP07/TP09',
+    hasJetFocus: true,
+    hasAdvancedAirQualitySensors: true,
+  },
+  '438K': {
     model: 'Dyson Pure Cool',
     hardwareRevision: 'TP07/TP09',
     hasJetFocus: true,
@@ -65,6 +78,11 @@ const knownProducts = {
     hasJetFocus: true,
     hasAdvancedAirQualitySensors: true,
     hasHeating: true,
+  },
+  '664': {
+    model: 'Dyson Purifier Big+Quiet Formaldehyde',
+    hardwareRevision: 'BP02/BP03/BP04/BP06',
+    hasAdvancedAirQualitySensors: true,
   },
 };
 
