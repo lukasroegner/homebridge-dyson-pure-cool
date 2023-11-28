@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.8] - 2023-11-28
+### Changes
+- Added display name to plugin (thanks to donavanbecker for the PR)
+
 ## [2.7.7] - 2023-11-23
 ### Changes
 - Support for new revisions of PH03, PH04, TP07, TP09
