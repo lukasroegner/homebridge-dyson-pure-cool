@@ -37,7 +37,7 @@
                             "title": "Use Fahrenheit for thermostat",
                             "type": "boolean",
                             "default": false,
-                            "description": "If set to true, it will use Fahrenheit for temperature scale in the Home app."
+                            "description": "If set to true, it will use Fahrenheit temperature scale in the Home app. This only affects changing temperature (e.g. for heating devices)."
                         },
                         "enableAutoModeWhenActivating": {
                             "title": "Enable Auto Mode",

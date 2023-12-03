@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.9] - 2023-12-03
+### Changes
+- Enhanced documentation for useFahrenheit (thanks to joshjohanning for the PR)
+
 ## [2.7.8] - 2023-11-28
 ### Changes
 - Added display name to plugin (thanks to donavanbecker for the PR)
