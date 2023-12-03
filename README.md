@@ -95,7 +95,7 @@ For each Dyson device that you want to use with this plugin, credentials have to
 - Restart your homebridge server
 - Try again
 
-**If you don't get any page at all:
+**If you don't get any page at all**:
 
 - Make sure to allow the port in the firewall Rules
 - For ufw try:
@@ -117,7 +117,6 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
                     "ipAddress": "XXX.XXX.XXX.XXX",
                     "serialNumber": "XXX-EU-XXXXXXXX",
                     "credentials": "xxx...xxx",
-                    "useFahrenheit": false,
                     "enableAutoModeWhenActivating": false,
                     "enableOscillationWhenActivating": false,
                     "enableNightModeWhenActivating": false,
@@ -135,7 +134,8 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
                     "isSingleAccessoryModeEnabled": false,
                     "isFullRangeHumidity": false,
                     "isHeatingDisabled": false,
-                    "isHeatingSafetyIgnored": false
+                    "isHeatingSafetyIgnored": false,
+                    "useFahrenheit": false
                 }
             ],
             "updateInterval": 60000,
@@ -152,8 +152,6 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 **serialNumber**: Serial number of the device.
 
 **credentials**: The credentials for connecting to the device. They can be retrieved via the credentials generator (website), see instructions above.
-
-**useFahrenheit**: If set to `true`, it will use Fahrenheit for temperature scale in the Home app.
 
 **enableAutoModeWhenActivating**: If set to `true`, the Auto mode is enabled when you activate the device in the Home app. Defaults to `false`.
 
@@ -192,6 +190,8 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 **isHeatingDisabled**: Only for HP02/HP04/HP06/HP07/HP09. If set to `true`, the heating controls are not exposed to HomeKit. Defaults to `false`.
 
 **isHeatingSafetyIgnored**: Only for HP02/HP04/HP06/HP07/HP09. If set to `true`, this overrides the default safety feature to allow heat to be turned on along with the fan if the fan was heating when last turned off. By default, the heat is disabled when turning on the fan in the Dyson app.
+
+**useFahrenheit**: If set to `true`, it will use Fahrenheit temperature scale in the Home app. This only affects _changing_ temperature (e.g. for heating devices). Defaults to `false`.
 
 **updateInterval** (optional): The interval (in milliseconds) at which updates of the sensors are requested from the Dyson devices. Defaults to 60 seconds.
 
