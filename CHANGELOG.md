@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.10] - 2024-05-12
+### Changes
+- Fix for BPXX devices that do not support oscillation (thanks to gisselin for the PR)
+
 ## [2.7.9] - 2023-12-03
 ### Changes
 - Enhanced documentation for useFahrenheit (thanks to joshjohanning for the PR)
