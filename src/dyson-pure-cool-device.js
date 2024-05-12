@@ -577,7 +577,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             }
 
             // Sets the rotation status
-            airPurifierService.updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED);
+            if (device.info.hasOscillation) {
+                airPurifierService.updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED);
+            }            
 
             // Sets the filter life
             if (content['product-state']['cflr'] && content['product-state']['hflr']) {
@@ -672,7 +674,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             }
 
             // Sets the rotation status
-            airPurifierService.updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'][1] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED);
+            if (device.info.hasOscillation) {
+                airPurifierService.updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'][1] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED);
+            }            
 
             // Sets the filter life
             if (content['product-state']['cflr'] && content['product-state']['hflr']) {
@@ -746,7 +750,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON',
             fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode
         };
-        if (config.enableOscillationWhenActivating) {
+        if (config.enableOscillationWhenActivating && device.info.hasOscillation) {
             commandData['oson'] = 'ON';
         }
         if (config.enableNightModeWhenActivating) {
