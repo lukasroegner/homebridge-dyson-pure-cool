@@ -5,6 +5,8 @@
 Dyson has introduced two factor authentication for Dyson accounts. Due to the complexity of the authentication flow, you **MUST** configure credentials for each device in the config.
 To obtain the credentials, please follow the instructions below.
 
+**IMPORTANT:** special characters in email addresses (like a plus sign) are not supported by Dyson and cause issues with this plugin and in the Dyson app.
+
 ## Supported Devices and Features
 
 This project is a homebridge plugin for the Dyson air purifiers. Supported devices are:
