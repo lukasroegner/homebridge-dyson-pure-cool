@@ -95,7 +95,7 @@ module.exports = function(productType) {
   if (!info.hasHeating) info.hasHeating = false;
   if (!info.hasHumidifier) info.hasHumidifier = false;
   if (!info.hasJetFocus) info.hasJetFocus = false;
-  if (!!info.hasOscillation) info.hasOscillation = true; // Assume most devices have oscillation - as of May 24' only BP-series don't
+  if (!info.hasOscillation) info.hasOscillation = true; // Assume most devices have oscillation - as of May 24' only BP-series don't
   if (!info.model) info.model = 'Pure Cool';
   return info;
 };
