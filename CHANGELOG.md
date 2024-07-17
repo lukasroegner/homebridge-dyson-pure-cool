@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.11] - 2024-07-17
+### Changes
+- Fix for issues with oscillation that have been introduced in 2.7.10 (thanks to schen31 for the PR)
+
 ## [2.7.10] - 2024-05-12
 ### Changes
 - Fix for BPXX devices that do not support oscillation (thanks to gisselin for the PR)
