@@ -170,7 +170,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     airPurifierService
         .getCharacteristic(Characteristic.FilterLifeLevel)
         .setProps({
-            unit: Characteristic.Units.PERCENTAGE
+            unit: "percentage"
         });
 
     // Updates the rotation speed steps
