@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.7.12] - 2024-07-24
+### Changes
+- Fix for issues with homebridge v1 and v2 beta (thanks to donavanbecker for the PR)
+
 ## [2.7.11] - 2024-07-17
 ### Changes
 - Fix for issues with oscillation that have been introduced in 2.7.10 (thanks to schen31 for the PR)
