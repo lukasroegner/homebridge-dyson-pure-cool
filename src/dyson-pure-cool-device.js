@@ -316,7 +316,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Updates the night mode
     let nightModeSwitchService = null;
     if (switchAccessory && config.isNightModeEnabled) {
-        nightModeSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'NightMode');
+        nightModeSwitchService = switchAccessory.getServiceById(Service.Switch, 'NightMode');
         if (!nightModeSwitchService) {
             nightModeSwitchService = switchAccessory.addService(Service.Switch, device.info.name + ' Night Mode', 'NightMode');
         }
@@ -325,7 +325,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Updates the jet focus mode
     let jetFocusSwitchService = null;
     if (switchAccessory && config.isJetFocusEnabled && device.info.hasJetFocus) {
-        jetFocusSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'JetFocus');
+        jetFocusSwitchService = switchAccessory.getServiceById(Service.Switch, 'JetFocus');
         if (!jetFocusSwitchService) {
             jetFocusSwitchService = switchAccessory.addService(Service.Switch, device.info.name + ' Jet Focus', 'JetFocus');
         }
@@ -334,7 +334,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Updates the continuous monitoring
     let continuousMonitoringSwitchService = null;
     if (switchAccessory && config.isContinuousMonitoringEnabled) {
-        continuousMonitoringSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'ContinuousMonitoring');
+        continuousMonitoringSwitchService = switchAccessory.getServiceById(Service.Switch, 'ContinuousMonitoring');
         if (!continuousMonitoringSwitchService) {
             continuousMonitoringSwitchService = switchAccessory.addService(Service.Switch, device.info.name + ' Continuous Monitoring', 'ContinuousMonitoring');
         }
@@ -579,7 +579,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             // Sets the rotation status
             if (device.info.hasOscillation) {
                 airPurifierService.updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED);
-            }            
+            }
 
             // Sets the filter life
             if (content['product-state']['cflr'] && content['product-state']['hflr']) {
@@ -676,7 +676,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             // Sets the rotation status
             if (device.info.hasOscillation) {
                 airPurifierService.updateCharacteristic(Characteristic.SwingMode, content['product-state']['oson'][1] === 'OFF' ? Characteristic.SwingMode.SWING_DISABLED : Characteristic.SwingMode.SWING_ENABLED);
-            }            
+            }
 
             // Sets the filter life
             if (content['product-state']['cflr'] && content['product-state']['hflr']) {
