@@ -47,6 +47,7 @@ For humidifier devices, a humidifier is also exposes to HomeKit with support for
 
 Optionally, the following switches are exposed:
 - Night mode (on/off)
+- Auto mode (on/off)
 - Jet Focus (on/off; DP01, TP02, HP02, BP02, BP03, BP04 and BP06 are not supported)
 - Continuous Monitoring (on/off)
 
@@ -162,6 +163,8 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 **enableNightModeWhenActivating**: If set to `true`, night mode is enabled when you activate the device. Defaults to `false`.
 
 **isNightModeEnabled**: If set to `true`, a switch is exposed for the night mode. Defaults to `false`.
+
+**isAutoModeEnabled**: If set to `true`, a switch is exposed for the auto mode. Defaults to `false`.
 
 **isJetFocusEnabled**: If set to `true`, a switch is exposed for the jet focus. DP01, TP02 and HP02 are not supported. Defaults to `false`.
 

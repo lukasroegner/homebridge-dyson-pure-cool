@@ -116,7 +116,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Gets the switch accessory
     let switchAccessory = null;
-    if (config.isNightModeEnabled || config.isContinuousMonitoringEnabled || (config.isJetFocusEnabled && device.info.hasJetFocus)) {
+    if (config.isAutoModeEnabled || config.isNightModeEnabled || config.isContinuousMonitoringEnabled || (config.isJetFocusEnabled && device.info.hasJetFocus)) {
         if (config.isSingleAccessoryModeEnabled) {
             switchAccessory = airPurifierAccessory;
         } else {
@@ -319,6 +319,15 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         nightModeSwitchService = switchAccessory.getServiceById(Service.Switch, 'NightMode');
         if (!nightModeSwitchService) {
             nightModeSwitchService = switchAccessory.addService(Service.Switch, device.info.name + ' Night Mode', 'NightMode');
+        }
+    }
+
+    // Updates the auto mode
+    let autoModeSwitchService = null;
+    if (switchAccessory && config.isAutoModeEnabled) {
+        autoModeSwitchService = switchAccessory.getServiceByUUIDAndSubType(Service.Switch, 'AutoMode');
+        if (!autoModeSwitchService) {
+            autoModeSwitchService = switchAccessory.addService(Service.Switch, device.info.name + ' Auto Mode', 'AutoMode');
         }
     }
 
@@ -606,6 +615,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 nightModeSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['nmod'] !== 'OFF');
             }
 
+            // Sets the state of the auto mode switch
+            if (autoModeSwitchService) {
+                autoModeSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['fmod'] === 'AUTO');
+            }
+
             // Sets the state of the jet focus switch
             if (jetFocusSwitchService) {
                 if (content['product-state']['fdir']) {
@@ -701,6 +715,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             // Sets the state of the night mode switch
             if (nightModeSwitchService) {
                 nightModeSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['nmod'][1] !== 'OFF');
+            }
+
+            // Sets the state of the auto mode switch
+            if (autoModeSwitchService) {
+                autoModeSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['fmod'][1] === 'AUTO');
             }
 
             // Sets the state of the jet focus switch
@@ -905,6 +924,33 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
             // Sends the command
             platform.log.info(serialNumber + ' - set NightMode to ' + value + ': ' + JSON.stringify(commandData));
+            device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+                msg: 'STATE-SET',
+                time: new Date().toISOString(),
+                data: commandData
+            }));
+            callback(null);
+        });
+    }
+
+    // Subscribes for changes of the auto mode
+    if (autoModeSwitchService) {
+        autoModeSwitchService.getCharacteristic(Characteristic.On).on('set', function (value, callback) {
+
+            // Builds the command data, if auto mode is set to ON, the device has to be ON
+            // If auto mode is set to OFF, the device status is not changed
+            let commandData = {};
+            if (value) {
+                commandData = { auto: 'ON', fmod: 'AUTO' }
+                if (!airPurifierService.getCharacteristic(Characteristic.Active).value) {
+                    commandData['fpwr'] = 'ON'
+                }
+            } else {
+                commandData = { auto: 'OFF', fmod: 'FAN' };
+            }
+
+            // Sends the command
+            platform.log.info(serialNumber + ' - set AutoMode to ' + value + ': ' + JSON.stringify(commandData));
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
