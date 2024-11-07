@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.8.1] - 2024-11-07
+### Changes
+- New option for exposing auto mode as a switch (thanks to jetpks for the PR)
+
 ## [2.8.0] - 2024-10-13
 ### Changes
 - Support for homebridge v2 (thanks to bwp91 for the PR)
