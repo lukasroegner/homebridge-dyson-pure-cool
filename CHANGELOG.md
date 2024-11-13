@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.8.2] - 2024-11-13
+### Changes
+- Fix for a bug with the auto mode switch that was introduced in 2.8.1
+
 ## [2.8.1] - 2024-11-07
 ### Changes
 - New option for exposing auto mode as a switch (thanks to jetpks for the PR)

@@ -617,7 +617,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
             // Sets the state of the auto mode switch
             if (autoModeSwitchService) {
-                autoModeSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['fmod'] === 'AUTO');
+                if (content['product-state']['fmod']) {
+                    autoModeSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['fmod'] === 'AUTO');
+                }
             }
 
             // Sets the state of the jet focus switch
@@ -719,7 +721,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
             // Sets the state of the auto mode switch
             if (autoModeSwitchService) {
-                autoModeSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['fmod'][1] === 'AUTO');
+                if (content['product-state']['fmod']) {
+                    autoModeSwitchService.updateCharacteristic(Characteristic.On, content['product-state']['fmod'][1] === 'AUTO');
+                }
             }
 
             // Sets the state of the jet focus switch
