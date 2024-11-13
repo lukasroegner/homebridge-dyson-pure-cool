@@ -459,10 +459,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                         return;
                     }
 
-                    pm25 = content['data']['p25r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p25r']);
-                    pm10 = content['data']['p10r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p10r']);
-                    va10 = content['data']['va10'] === 'INIT' ? 0 : Number.parseInt(content['data']['va10']);
-                    noxl = content['data']['noxl'] === 'INIT' ? 0 : Number.parseInt(content['data']['noxl']);
+                    // per issue 292 removed -->     content['data']['p10r'] === 'INIT' ? 0 :     prior to Number.parseInt solved issue
+                    pm25 = Number.parseInt(content['data']['p25r']);
+                    pm10 = Number.parseInt(content['data']['p10r']);
+                    va10 = Number.parseInt(content['data']['va10']);
+                    noxl = Number.parseInt(content['data']['noxl']);
 
                     if (content['data']['hchr']) {
                         hcho = content['data']['hchr'] === 'INIT' ? 0 : Number.parseInt(content['data']['hchr']);
