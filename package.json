@@ -26,8 +26,8 @@
     "url": "http://github.com/lukasroegner/homebridge-dyson-pure-cool/issues"
   },
   "engines": {
-    "node": ">=0.12.0",
-    "homebridge": ">=0.2.0"
+    "homebridge": "^1.6.0 || ^2.0.0-beta.0 || ^2.0.0",
+    "node": "^18.20.4 || ^20.15.1 || ^22.12.0"
   },
   "devDependencies": {
     "tap": "^15.1.5"
