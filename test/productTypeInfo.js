@@ -9,6 +9,7 @@ t.test('Default product', t => {
     hasHeating: false,
     hasHumidifier: false,
     hasJetFocus: false,
+    hasOscillation: false,
   });
   t.end();
   });
@@ -21,6 +22,7 @@ t.test('Dyson Pure Humidify+Cool - Few defaults', t => {
     hasHeating: false,
     hasHumidifier: true,
     hasJetFocus: true,
+    hasOscillation: true,
   });
   t.end();
 });
@@ -33,6 +35,7 @@ t.test('Dyson Pure Cool Link Desk - Mostly defaults', t => {
     hasHeating: false,
     hasHumidifier: false,
     hasJetFocus: false,
+    hasOscillation: true,
   });
   t.end();
 });
