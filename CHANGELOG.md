@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.8.3] - 2024-12-18
+### Changes
+- Updated engine versions for homebridge v2 (thanks to jabrown93 for the PR)
+
 ## [2.8.2] - 2024-11-13
 ### Changes
 - Fix for a bug with the auto mode switch that was introduced in 2.8.1
