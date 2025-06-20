@@ -27,8 +27,8 @@ const knownProducts = {
     hasOscillation: true,
   },
   '438': {
-    model: 'Dyson Pure Cool Tower',
-    hardwareRevision: 'TP04',
+    model: 'Dyson Pure Cool (Tower)',
+    hardwareRevision: 'TP04/TP11',
     hasAdvancedAirQualitySensors: true,
     hasHeating: false,
     hasHumidifier: false,

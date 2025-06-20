@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.8.4] - 2025-06-20
+### Changes
+- Support for Pure Cool PC1 (TP11)
+
 ## [2.8.3] - 2024-12-18
 ### Changes
 - Updated engine versions for homebridge v2 (thanks to jabrown93 for the PR)
