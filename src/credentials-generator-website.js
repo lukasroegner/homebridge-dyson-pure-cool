@@ -619,7 +619,7 @@ CredentialsGeneratorWebsite.prototype.getDevices = function (authorizationHeader
 
     // Performs the call to sign the user in
     request({
-        uri: 'https://appapi.cp.dyson.com/v2/provisioningservice/manifest',
+        uri: 'https://appapi.cp.dyson.com/v3/manifest',
         method: 'GET',
         headers: {
             'Authorization': authorizationHeader,
@@ -668,24 +668,24 @@ CredentialsGeneratorWebsite.prototype.getDevices = function (authorizationHeader
         for (let i = 0; i < body.length; i++) {
             const deviceBody = body[i];
 
-            if (deviceBody.LocalCredentials) {
+            if (deviceBody.connectedConfiguration && deviceBody.connectedConfiguration.mqtt && deviceBody.connectedConfiguration.mqtt.localBrokerCredentials) {
 
                 // Gets the MQTT credentials from the device (see https://github.com/CharlesBlonde/libpurecoollink/blob/master/libpurecoollink/utils.py)
                 const key = Uint8Array.from(Array(32), (_, index) => index + 1);
                 const initializationVector = new Uint8Array(16);
                 const decipher = crypto.createDecipheriv('aes-256-cbc', key, initializationVector);
-                const decryptedPasswordString = decipher.update(deviceBody.LocalCredentials, 'base64', 'utf8') + decipher.final('utf8');
+                const decryptedPasswordString = decipher.update(deviceBody.connectedConfiguration.mqtt.localBrokerCredentials, 'base64', 'utf8') + decipher.final('utf8');
                 const decryptedPasswordJson = JSON.parse(decryptedPasswordString);
                 const password = decryptedPasswordJson.apPasswordHash;
 
-                deviceBody.password = password;
+                deviceBody.connectedConfiguration.mqtt.password = password;
 
                 htmlBody +=
                     '<br /> \
                     <br /> \
                     <label>Serial number<label> \
                     <br /> \
-                    <strong>' + deviceBody.Serial + '</strong> \
+                    <strong>' + deviceBody.serialNumber + '</strong> \
                     <br /> \
                     <label>Credentials<label> \
                     <br /> \
@@ -721,7 +721,7 @@ CredentialsGeneratorWebsite.prototype.getDevices = function (authorizationHeader
 
     // Performs the call to sign the user in
     request({
-        uri: 'https://appapi.cp.dyson.cn/v2/provisioningservice/manifest',
+        uri: 'https://appapi.cp.dyson.cn/v3/manifest',
         method: 'GET',
         headers: {
             'Authorization': authorizationHeader,
@@ -770,24 +770,24 @@ CredentialsGeneratorWebsite.prototype.getDevices = function (authorizationHeader
         for (let i = 0; i < body.length; i++) {
             const deviceBody = body[i];
 
-            if (deviceBody.LocalCredentials) {
+            if (deviceBody.connectedConfiguration && deviceBody.connectedConfiguration.mqtt && deviceBody.connectedConfiguration.mqtt.localBrokerCredentials) {
 
                 // Gets the MQTT credentials from the device (see https://github.com/CharlesBlonde/libpurecoollink/blob/master/libpurecoollink/utils.py)
                 const key = Uint8Array.from(Array(32), (_, index) => index + 1);
                 const initializationVector = new Uint8Array(16);
                 const decipher = crypto.createDecipheriv('aes-256-cbc', key, initializationVector);
-                const decryptedPasswordString = decipher.update(deviceBody.LocalCredentials, 'base64', 'utf8') + decipher.final('utf8');
+                const decryptedPasswordString = decipher.update(deviceBody.connectedConfiguration.mqtt.localBrokerCredentials, 'base64', 'utf8') + decipher.final('utf8');
                 const decryptedPasswordJson = JSON.parse(decryptedPasswordString);
                 const password = decryptedPasswordJson.apPasswordHash;
 
-                deviceBody.password = password;
+                deviceBody.connectedConfiguration.mqtt.password = password;
 
                 htmlBody +=
                     '<br /> \
                     <br /> \
                     <label>Serial number<label> \
                     <br /> \
-                    <strong>' + deviceBody.Serial + '</strong> \
+                    <strong>' + deviceBody.serialNumber + '</strong> \
                     <br /> \
                     <label>Credentials<label> \
                     <br /> \

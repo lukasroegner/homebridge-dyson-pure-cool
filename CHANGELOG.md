@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.9.0] - 2025-06-28
+### Changes
+- Fixed Support for Pure Cool PC1 (TP11)
+- Updated the credentials generator to use the latest API endpoint
+
 ## [2.8.4] - 2025-06-20
 ### Changes
 - Support for Pure Cool PC1 (TP11)

@@ -72,7 +72,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Gets the temperature accessory
     let temperatureAccessory = null;
-    if (device.info.hasHeating || config.isTemperatureSensorEnabled) {
+    if (device.info.hasHeating || (device.info.hasTemperatureAndHumiditySensors && config.isTemperatureSensorEnabled)) {
         if (config.isSingleAccessoryModeEnabled) {
             temperatureAccessory = airPurifierAccessory;
         } else if (!device.info.hasHeating && config.isAirQualitySensorEnabled && config.isSingleSensorAccessoryModeEnabled) {
@@ -94,7 +94,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Gets the humidity accessory
     let humidityAccessory = null;
-    if (device.info.hasHumidifier || config.isHumiditySensorEnabled) {
+    if (device.info.hasHumidifier || (device.info.hasTemperatureAndHumiditySensors && config.isHumiditySensorEnabled)) {
         if (config.isSingleAccessoryModeEnabled) {
             humidityAccessory = airPurifierAccessory;
         } else if (!device.info.hasHumidifier && config.isAirQualitySensorEnabled && config.isSingleSensorAccessoryModeEnabled) {
@@ -184,118 +184,122 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Updates the temperature service
     let temperatureService = null;
-    if (!temperatureAccessory) {
-        if (!config.isTemperatureIgnored) {
-            temperatureService = airPurifierService;
-        }
-    } else {
-        if (device.info.hasHeating) {
-
-            // Uses a thermostat service
-            temperatureService = temperatureAccessory.getService(Service.Thermostat);
-            if (!temperatureService) {
-                temperatureService = temperatureAccessory.addService(Service.Thermostat);
+    if (device.info.hasHeating || device.info.hasTemperatureAndHumiditySensors) {
+        if (!temperatureAccessory) {
+            if (!config.isTemperatureIgnored) {
+                temperatureService = airPurifierService;
             }
-
-            // Disables cooling
-            temperatureService.getCharacteristic(Characteristic.CurrentHeatingCoolingState).setProps({
-                maxValue: 1,
-                minValue: 0,
-                validValues: [0, 1]
-            });
-            temperatureService.getCharacteristic(Characteristic.TargetHeatingCoolingState).setProps({
-                maxValue: 1,
-                minValue: 0,
-                validValues: [0, 1]
-            });
-
-            // Updates the target temperature for heating
-            temperatureService.getCharacteristic(Characteristic.TargetTemperature).setProps({
-                maxValue: 38,
-                minValue: 0,
-                minStep: temperatureStep,
-                unit: 'celsius'
-            });
-
-            // Properly set the temperature display unit
-            temperatureService.updateCharacteristic(Characteristic.TemperatureDisplayUnits, config.useFahrenheit ? 1 : 0);
         } else {
+            if (device.info.hasHeating) {
 
-            // Uses a temperature sensor
-            temperatureService = temperatureAccessory.getService(Service.TemperatureSensor);
-            if (!temperatureService) {
-                temperatureService = temperatureAccessory.addService(Service.TemperatureSensor);
+                // Uses a thermostat service
+                temperatureService = temperatureAccessory.getService(Service.Thermostat);
+                if (!temperatureService) {
+                    temperatureService = temperatureAccessory.addService(Service.Thermostat);
+                }
+
+                // Disables cooling
+                temperatureService.getCharacteristic(Characteristic.CurrentHeatingCoolingState).setProps({
+                    maxValue: 1,
+                    minValue: 0,
+                    validValues: [0, 1]
+                });
+                temperatureService.getCharacteristic(Characteristic.TargetHeatingCoolingState).setProps({
+                    maxValue: 1,
+                    minValue: 0,
+                    validValues: [0, 1]
+                });
+
+                // Updates the target temperature for heating
+                temperatureService.getCharacteristic(Characteristic.TargetTemperature).setProps({
+                    maxValue: 38,
+                    minValue: 0,
+                    minStep: temperatureStep,
+                    unit: 'celsius'
+                });
+
+                // Properly set the temperature display unit
+                temperatureService.updateCharacteristic(Characteristic.TemperatureDisplayUnits, config.useFahrenheit ? 1 : 0);
+            } else {
+
+                // Uses a temperature sensor
+                temperatureService = temperatureAccessory.getService(Service.TemperatureSensor);
+                if (!temperatureService) {
+                    temperatureService = temperatureAccessory.addService(Service.TemperatureSensor);
+                }
             }
         }
-    }
 
-    // Updates the temperature steps
-    if (temperatureService) {
-        temperatureService
-            .getCharacteristic(Characteristic.CurrentTemperature)
-            .setProps({
-                minValue: -50,
-                maxValue: 100,
-                unit: 'celsius'
-            });
+        // Updates the temperature steps
+        if (temperatureService) {
+            temperatureService
+                .getCharacteristic(Characteristic.CurrentTemperature)
+                .setProps({
+                    minValue: -50,
+                    maxValue: 100,
+                    unit: 'celsius'
+                });
+        }
     }
 
     // Updates the humidity sensor
     let humidifierService = null;
     let humidityService = null;
-    if (!humidityAccessory) {
-        if (!config.isHumidityIgnored) {
-            humidityService = airPurifierService;
-        }
-    } else {
-        if (device.info.hasHumidifier) {
-
-            // Uses a humidifier service
-            humidifierService = humidityAccessory.getService(Service.HumidifierDehumidifier);
-            if (!humidifierService) {
-                humidifierService = humidityAccessory.addService(Service.HumidifierDehumidifier);
+    if (device.info.hasHumidifier || device.info.hasTemperatureAndHumiditySensors) {
+        if (!humidityAccessory) {
+            if (!config.isHumidityIgnored) {
+                humidityService = airPurifierService;
             }
+        } else {
+            if (device.info.hasHumidifier) {
 
-            // Disables dehumidifying
-            humidifierService.getCharacteristic(Characteristic.CurrentHumidifierDehumidifierState).setProps({
-                maxValue: 2,
-                minValue: 0,
-                validValues: [0, 1, 2]
-            });
-            humidifierService.getCharacteristic(Characteristic.TargetHumidifierDehumidifierState).setProps({
-                maxValue: 1,
-                minValue: 0,
-                validValues: [0, 1]
-            });
+                // Uses a humidifier service
+                humidifierService = humidityAccessory.getService(Service.HumidifierDehumidifier);
+                if (!humidifierService) {
+                    humidifierService = humidityAccessory.addService(Service.HumidifierDehumidifier);
+                }
 
-            // Updates the humidity threshold
-            if (config.isFullRangeHumidity) {
-                humidifierService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).setProps({
-                    maxValue: 100,
+                // Disables dehumidifying
+                humidifierService.getCharacteristic(Characteristic.CurrentHumidifierDehumidifierState).setProps({
+                    maxValue: 2,
                     minValue: 0,
-                    minStep: 1
+                    validValues: [0, 1, 2]
                 });
-            } else {
-                humidifierService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).setProps({
-                    maxValue: 70,
-                    minValue: 30,
-                    minStep: 10
+                humidifierService.getCharacteristic(Characteristic.TargetHumidifierDehumidifierState).setProps({
+                    maxValue: 1,
+                    minValue: 0,
+                    validValues: [0, 1]
                 });
-            }
 
-            // Uses a humidify sensor if an additional sensor should be exposed
-            if (config.isHumiditySensorEnabled) {
+                // Updates the humidity threshold
+                if (config.isFullRangeHumidity) {
+                    humidifierService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).setProps({
+                        maxValue: 100,
+                        minValue: 0,
+                        minStep: 1
+                    });
+                } else {
+                    humidifierService.getCharacteristic(Characteristic.RelativeHumidityHumidifierThreshold).setProps({
+                        maxValue: 70,
+                        minValue: 30,
+                        minStep: 10
+                    });
+                }
+
+                // Uses a humidify sensor if an additional sensor should be exposed
+                if (config.isHumiditySensorEnabled) {
+                    humidityService = humidityAccessory.getService(Service.HumiditySensor);
+                    if (!humidityService) {
+                        humidityService = humidityAccessory.addService(Service.HumiditySensor);
+                    }
+                }
+            } else {
+
+                // Uses a humidify sensor
                 humidityService = humidityAccessory.getService(Service.HumiditySensor);
                 if (!humidityService) {
                     humidityService = humidityAccessory.addService(Service.HumiditySensor);
                 }
-            }
-        } else {
-
-            // Uses a humidify sensor
-            humidityService = humidityAccessory.getService(Service.HumiditySensor);
-            if (!humidityService) {
-                humidityService = humidityAccessory.addService(Service.HumiditySensor);
             }
         }
     }
@@ -422,27 +426,31 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         if (content.msg === 'ENVIRONMENTAL-CURRENT-SENSOR-DATA') {
 
             // Sets the sensor data for temperature
-            if (content['data']['tact'] !== 'OFF' && temperatureService) {
-                temperatureService.updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0 + (config.temperatureOffset || 0.0));
+            if (device.info.hasHeating || device.info.hasTemperatureAndHumiditySensors) {
+                if (content['data']['tact'] !== 'OFF' && temperatureService) {
+                    temperatureService.updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0 + (config.temperatureOffset || 0.0));
+                }
             }
 
             // Sets the sensor data for humidity
-            if (content['data']['hact'] !== 'OFF' && humidityService) {
-                humidityService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']) + (config.humidityOffset || 0.0));
-            }
-            if (content['data']['hact'] !== 'OFF' && humidifierService) {
-                humidifierService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']) + (config.humidityOffset || 0.0));
+            if (device.info.hasHumidifier || device.info.hasTemperatureAndHumiditySensors) {
+                if (content['data']['hact'] !== 'OFF' && humidityService) {
+                    humidityService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']) + (config.humidityOffset || 0.0));
+                }
+                if (content['data']['hact'] !== 'OFF' && humidifierService) {
+                    humidifierService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']) + (config.humidityOffset || 0.0));
+                }
             }
 
             // Parses the air quality sensor data
             if (airQualityService) {
-                let pm25 = 0;
-                let pm10 = 0;
-                let va10 = 0;
-                let noxl = 0;
-                let hcho = 0;
-                let p = 0;
-                let v = 0;
+                let pm25 = -1;
+                let pm10 = -1;
+                let va10 = -1;
+                let noxl = -1;
+                let hcho = -1;
+                let p = -1;
+                let v = -1;
                 if (device.info.hasAdvancedAirQualitySensors) {
 
                     // Checks whether continuous monitoring is disabled
@@ -459,29 +467,44 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                         return;
                     }
 
-                    pm25 = content['data']['p25r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p25r']);
-                    pm10 = content['data']['p10r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p10r']);
-                    va10 = content['data']['va10'] === 'INIT' ? 0 : Number.parseInt(content['data']['va10']);
-                    noxl = content['data']['noxl'] === 'INIT' ? 0 : Number.parseInt(content['data']['noxl']);
+                    if (content['data']['p25r']) {
+                        pm25 = content['data']['p25r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p25r']);
+
+                        if (isNaN(pm25)) {
+                            pm25 = 0;
+                        }
+                    }
+
+                    if (content['data']['p10r']) {
+                        pm10 = content['data']['p10r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p10r']);
+
+                        if (isNaN(pm10)) {
+                            pm10 = 0;
+                        }
+                    }
+
+                    if (content['data']['va10']) {
+                        va10 = content['data']['va10'] === 'INIT' ? 0 : Number.parseInt(content['data']['va10']);
+
+                        if (isNaN(va10)) {
+                            va10 = 0;
+                        }
+                    }
+
+                    if (content['data']['noxl']) {
+                        noxl = content['data']['noxl'] === 'INIT' ? 0 : Number.parseInt(content['data']['noxl']);
+
+                        if (isNaN(noxl)) {
+                            noxl = 0;
+                        }
+                    }
 
                     if (content['data']['hchr']) {
                         hcho = content['data']['hchr'] === 'INIT' ? 0 : Number.parseInt(content['data']['hchr']);
-                    }
 
-                    if (isNaN(pm25)) {
-                        pm25 = 0;
-                    }
-                    if (isNaN(pm10)) {
-                        pm10 = 0;
-                    }
-                    if (isNaN(va10)) {
-                        va10 = 0;
-                    }
-                    if (isNaN(noxl)) {
-                        noxl = 0;
-                    }
-                    if (isNaN(hcho)) {
-                        hcho = 0;
+                        if (isNaN(hcho)) {
+                            hcho = 0;
+                        }
                     }
                 } else {
 
@@ -493,42 +516,62 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                         return;
                     }
 
-                    p = content['data']['pact'] === 'INIT' ? 0 : Number.parseInt(content['data']['pact']);
-                    v = content['data']['vact'] === 'INIT' ? 0 : Number.parseInt(content['data']['vact']);
+                    if (content['data']['pact']) {
+                        p = content['data']['pact'] === 'INIT' ? 0 : Number.parseInt(content['data']['pact']);
 
-                    if (isNaN(p)) {
-                        p = 0;
+                        if (isNaN(p)) {
+                            p = 0;
+                        }
                     }
-                    if (isNaN(v)) {
-                        v = 0;
+
+                    if (content['data']['vact']) {
+                        v = content['data']['vact'] === 'INIT' ? 0 : Number.parseInt(content['data']['vact']);
+
+                        if (isNaN(v)) {
+                            v = 0;
+                        }
                     }
                 }
 
-                // Maps the values of the sensors to the relative values described in the app (1 - 5 => Good, Medium, Bad, Very Bad, Extremely Bad)
-                const pm25Quality = pm25 <= 35 ? 1 : (pm25 <= 53 ? 2 : (pm25 <= 70 ? 3 : (pm25 <= 150 ? 4 : 5)));
-                const pm10Quality = pm10 <= 50 ? 1 : (pm10 <= 75 ? 2 : (pm10 <= 100 ? 3 : (pm10 <= 350 ? 4 : 5)));
-
-                // Maps the VOC values to a self-created scale (as described values in the app don't fit)
-                const va10Quality = (va10 * 0.125) <= 3 ? 1 : ((va10 * 0.125) <= 6 ? 2 : ((va10 * 0.125) <= 8 ? 3 : 4));
-
-                // Maps the NO2 value to a self-created scale
-                const noxlQuality = noxl <= 30 ? 1 : (noxl <= 60 ? 2 : (noxl <= 80 ? 3 : (noxl <= 90 ? 4 : 5)));
-
-                // Maps the HCHO value to a self-created scale
-                const hchoQuality = hcho <= 99 ? 1 : (hcho <= 299 ? 2 : (hcho <= 499 ? 3 : 4));
-
-                // Maps the values of the sensors to the relative values, these operations are copied from the newer devices as the app does not specify the correct values
-                const pQuality = p <= 2 ? 1 : (p <= 4 ? 2 : (p <= 7 ? 3 : (p <= 9 ? 4 : 5)));
-                const vQuality = (v * 0.125) <= 3 ? 1 : ((v * 0.125) <= 6 ? 2 : ((v * 0.125) <= 8 ? 3 : 4));
-
                 // Sets the sensor data for air quality (the poorest sensor result wins)
                 if (device.info.hasAdvancedAirQualitySensors) {
+
+                    // Maps the values of the sensors to the relative values described in the app (1 - 5 => Good, Medium, Bad, Very Bad, Extremely Bad)
+                    const pm25Quality = pm25 <= 35 ? 1 : (pm25 <= 53 ? 2 : (pm25 <= 70 ? 3 : (pm25 <= 150 ? 4 : 5)));
+                    const pm10Quality = pm10 <= 50 ? 1 : (pm10 <= 75 ? 2 : (pm10 <= 100 ? 3 : (pm10 <= 350 ? 4 : 5)));
+
+                    // Maps the VOC values to a self-created scale (as described values in the app don't fit)
+                    const va10Quality = (va10 * 0.125) <= 3 ? 1 : ((va10 * 0.125) <= 6 ? 2 : ((va10 * 0.125) <= 8 ? 3 : 4));
+
+                    // Maps the NO2 value to a self-created scale
+                    const noxlQuality = noxl <= 30 ? 1 : (noxl <= 60 ? 2 : (noxl <= 80 ? 3 : (noxl <= 90 ? 4 : 5)));
+
+                    // Maps the HCHO value to a self-created scale
+                    const hchoQuality = hcho <= 99 ? 1 : (hcho <= 299 ? 2 : (hcho <= 499 ? 3 : 4));
+                    
                     airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality, hchoQuality));
-                    airQualityService.updateCharacteristic(Characteristic.PM2_5Density, pm25)
-                    airQualityService.updateCharacteristic(Characteristic.PM10Density, pm10)
-                    airQualityService.updateCharacteristic(Characteristic.VOCDensity, va10)
-                    airQualityService.updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
+
+                    if (pm25 !== -1) {
+                        airQualityService.updateCharacteristic(Characteristic.PM2_5Density, pm25);
+                    }
+
+                    if (pm10 !== -1) {
+                        airQualityService.updateCharacteristic(Characteristic.PM10Density, pm10);
+                    }
+
+                    if (va10 !== -1) {
+                        airQualityService.updateCharacteristic(Characteristic.VOCDensity, va10);
+                    }
+
+                    if (noxl !== -1) {
+                        airQualityService.updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
+                    }
                 } else {
+                        
+                    // Maps the values of the sensors to the relative values, these operations are copied from the newer devices as the app does not specify the correct values
+                    const pQuality = p <= 2 ? 1 : (p <= 4 ? 2 : (p <= 7 ? 3 : (p <= 9 ? 4 : 5)));
+                    const vQuality = (v * 0.125) <= 3 ? 1 : ((v * 0.125) <= 6 ? 2 : ((v * 0.125) <= 8 ? 3 : 4));
+
                     airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pQuality, vQuality));
                 }
             }

@@ -31,10 +31,10 @@ All your devices are exposed as air purifiers in HomeKit, with support (also in 
 - On/off
 - Auto/manual
 - Fan speed
-- Oscillation on/off
-- Relative humidity
-- Current temperature (in Apple Home app only supported as separate sensor)
-- Air quality (incl. PM2.5, PM10, VOC and NO2 data for devices other than DP01, TP02 and HP02)
+- Oscillation on/off (for supported devices)
+- Relative humidity (for supported devices)
+- Current temperature (for supported devices; in Apple Home app only supported as separate sensor)
+- Air quality (incl. PM2.5, PM10, VOC and NO2 data for supported devices)
 
 For heating devices, a thermostat is also exposes to HomeKit with support for:
 - On/Off
@@ -48,7 +48,7 @@ For humidifier devices, a humidifier is also exposes to HomeKit with support for
 Optionally, the following switches are exposed:
 - Night mode (on/off)
 - Auto mode (on/off)
-- Jet Focus (on/off; DP01, TP02, HP02, BP02, BP03, BP04 and BP06 are not supported)
+- Jet Focus (on/off; only for supported devices)
 - Continuous Monitoring (on/off)
 
 The plugin is optimized for usage of the Home app in iOS 13, e.g. the night mode and jet focus switches are combined in a separate settings accessory. This can be changed in the config.
@@ -166,17 +166,17 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 
 **isAutoModeEnabled**: If set to `true`, a switch is exposed for the auto mode. Defaults to `false`.
 
-**isJetFocusEnabled**: If set to `true`, a switch is exposed for the jet focus. DP01, TP02 and HP02 are not supported. Defaults to `false`.
+**isJetFocusEnabled**: If set to `true`, a switch is exposed for the jet focus. Only for supported devices. Defaults to `false`.
 
 **isContinuousMonitoringEnabled**: If set to `true`, a switch is exposed for the continuous monitoring. Defaults to `false`.
 
-**isTemperatureSensorEnabled**: If set to `true`, a separate temperature sensor is exposed. Only used for non-heating devices. If set to `false`, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app). Defaults to `false`.
+**isTemperatureSensorEnabled**: If set to `true`, a separate temperature sensor is exposed. Only used for non-heating, supported devices. If set to `false`, the temperature is added as characteristic to the air purifier (does not show up in the Apple Home app). Defaults to `false`.
 
 **isTemperatureIgnored**: If set to `true`, the temperature measurement is completely ignored and not exposed. Can only used for non-heating devices. Defaults to `false`.
 
 **temperatureOffset**: Negatively or positively offset the value reported by the temperature sensor before exposing it to HomeKit. Provide the value in degree Celsius.
 
-**isHumiditySensorEnabled**: If set to `true`, a separate humidity sensor is exposed. If set to `false`, the humidity is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
+**isHumiditySensorEnabled**: If set to `true`, a separate humidity sensor is exposed. Only used for supported devices. If set to `false`, the humidity is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
 
 **isHumidityIgnored**: If set to `true`, the humidity measurement is completely ignored and not exposed. Can only used for non-humidifier devices. Defaults to `false`.
 
@@ -190,11 +190,11 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 
 **isSingleAccessoryModeEnabled**: If set to `true`, all services are exposed to HomeKit in a single accessory instead of multiple accessories. If set to `true`, the single sensor accessory mode has no effect. Use this mode if you are using a third-party HomeKit app and want all services grouped into a single accessory. Defaults to `false`.
 
-**isFullRangeHumidity**: Only for PH01/PH02/PH03/PH04. If set to `true`, the range of the target humidity control will be from 0% to 100% instead of translating it to the allowed range (30% to 70%) of the Dyson. Defaults to `false`.
+**isFullRangeHumidity**: Only for humidifiers. If set to `true`, the range of the target humidity control will be from 0% to 100% instead of translating it to the allowed range (30% to 70%) of the Dyson. Defaults to `false`.
 
-**isHeatingDisabled**: Only for HP02/HP04/HP06/HP07/HP09. If set to `true`, the heating controls are not exposed to HomeKit. Defaults to `false`.
+**isHeatingDisabled**: Only for heating devices. If set to `true`, the heating controls are not exposed to HomeKit. Defaults to `false`.
 
-**isHeatingSafetyIgnored**: Only for HP02/HP04/HP06/HP07/HP09. If set to `true`, this overrides the default safety feature to allow heat to be turned on along with the fan if the fan was heating when last turned off. By default, the heat is disabled when turning on the fan in the Dyson app.
+**isHeatingSafetyIgnored**: Only for heating devices. If set to `true`, this overrides the default safety feature to allow heat to be turned on along with the fan if the fan was heating when last turned off. By default, the heat is disabled when turning on the fan in the Dyson app.
 
 **useFahrenheit**: If set to `true`, it will use Fahrenheit temperature scale in the Home app. This only affects _changing_ temperature (e.g. for heating devices). Defaults to `false`.
 

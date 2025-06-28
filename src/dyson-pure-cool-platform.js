@@ -93,8 +93,15 @@ function DysonPureCoolPlatform(log, config, api) {
             // Decodes the API configuration that has been stored
             let apiConfig = JSON.parse(Buffer.from(config.credentials.trim(), 'base64').toString('utf8'));
 
+            // Parses the API config, which may have come from the v2 or v3 of the Dyson API
+            let name = apiConfig.Name || apiConfig.name;
+            let serialNumber = apiConfig.Serial || apiConfig.serialNumber;
+            let productType = apiConfig.ProductType || apiConfig.connectedConfiguration.mqtt.mqttRootTopicLevel;
+            let version = apiConfig.Version || apiConfig.connectedConfiguration.firmware.version;
+            let password = apiConfig.password || apiConfig.connectedConfiguration.mqtt.password;
+
             // Creates the device instance and adds it to the list of all devices
-            platform.devices.push(new DysonPureCoolDevice(platform, apiConfig.Name, apiConfig.Serial, apiConfig.ProductType, apiConfig.Version, apiConfig.password, config));
+            platform.devices.push(new DysonPureCoolDevice(platform, name, serialNumber, productType, version, password, config));
         }
 
         // Removes the accessories that are not bound to a device
