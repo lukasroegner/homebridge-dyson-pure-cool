@@ -427,18 +427,23 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
             // Sets the sensor data for temperature
             if (device.info.hasHeating || device.info.hasTemperatureAndHumiditySensors) {
-                if (content['data']['tact'] !== 'OFF' && temperatureService) {
-                    temperatureService.updateCharacteristic(Characteristic.CurrentTemperature, (Number.parseInt(content['data']['tact']) / 10.0) - 273.0 + (config.temperatureOffset || 0.0));
+                const tact = Number.parseInt(content['data']['tact']);
+                if (!isNaN(tact) && temperatureService) {
+                    temperatureService.updateCharacteristic(
+                        Characteristic.CurrentTemperature,
+                        (tact / 10.0) - 273.0 + (config.temperatureOffset || 0.0)
+                    );
                 }
             }
 
             // Sets the sensor data for humidity
             if (device.info.hasHumidifier || device.info.hasTemperatureAndHumiditySensors) {
-                if (content['data']['hact'] !== 'OFF' && humidityService) {
-                    humidityService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']) + (config.humidityOffset || 0.0));
+                const hact = Number.parseInt(content['data']['hact']);
+                if (!isNaN(hact) && humidityService) {
+                    humidityService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, hact + (config.humidityOffset || 0.0));
                 }
-                if (content['data']['hact'] !== 'OFF' && humidifierService) {
-                    humidifierService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, Number.parseInt(content['data']['hact']) + (config.humidityOffset || 0.0));
+                if (!isNaN(hact) && humidifierService) {
+                    humidifierService.updateCharacteristic(Characteristic.CurrentRelativeHumidity, hact + (config.humidityOffset || 0.0));
                 }
             }
 
