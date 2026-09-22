@@ -444,6 +444,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
             // Parses the air quality sensor data
             if (airQualityService) {
+                let co2r = -1;
                 let pm25 = -1;
                 let pm10 = -1;
                 let va10 = -1;
@@ -467,6 +468,14 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                         return;
                     }
 
+                    if (content['data']['co2r']) {
+                        co2r = content['data']['co2r'] === 'INIT' ? 0 : Number.parseInt(content['data']['co2r']);
+
+                        if (isNaN(co2r)) {
+                            co2r = 0;
+                        }
+                    }
+                    
                     if (content['data']['p25r']) {
                         pm25 = content['data']['p25r'] === 'INIT' ? 0 : Number.parseInt(content['data']['p25r']);
 
@@ -551,6 +560,10 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                     
                     airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality, va10Quality, noxlQuality, hchoQuality));
 
+                    if (co2r !== -1) {
+                        airQualityService.updateCharacteristic(Characteristic.CarbonDioxideLevel, co2r);
+                    }
+                    
                     if (pm25 !== -1) {
                         airQualityService.updateCharacteristic(Characteristic.PM2_5Density, pm25);
                     }
