@@ -1,10 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.9.5] - 2026-09-22
+### Changes
+- Fix for temperature and humidity parsing (thanks to 5ag-70 for the PR)
+
 ## [2.9.4] - 2026-09-22
 ### Changes
 - Support for CO2 sensor (thanks to marvinpeter95 for the PR)
-- 
 
 ## [2.9.3] - 2026-05-08
 ### Changes
