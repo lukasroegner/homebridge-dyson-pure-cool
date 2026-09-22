@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.9.4] - 2026-09-22
+### Changes
+- Support for CO2 sensor (thanks to marvinpeter95 for the PR)
+- 
+
 ## [2.9.3] - 2026-05-08
 ### Changes
 - Fix for Homebridge 2.0 compatibility (thanks to andreaskas for the PR)

@@ -36,7 +36,7 @@ All your devices are exposed as air purifiers in HomeKit, with support (also in 
 - Oscillation on/off (for supported devices)
 - Relative humidity (for supported devices)
 - Current temperature (for supported devices; in Apple Home app only supported as separate sensor)
-- Air quality (incl. PM2.5, PM10, VOC and NO2 data for supported devices)
+- Air quality (incl. PM2.5, PM10, VOC, NO2, and CO2 data for supported devices)
 
 For heating devices, a thermostat is also exposes to HomeKit with support for:
 - On/Off
