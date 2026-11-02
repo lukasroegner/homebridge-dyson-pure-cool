@@ -81,6 +81,13 @@
                             "required": true,
                             "description": "If set to true, a switch is exposed for the oscillation. Only for supported devices."
                         },
+                        "isFanSpeedControlEnabled": {
+                            "title": "Expose Fan Speed Control",
+                            "type": "boolean",
+                            "default": true,
+                            "required": true,
+                            "description": "If set to false, the manual fan-speed slider is hidden. This is useful when the device is used exclusively in Auto mode, because Dyson does not report a numeric fan speed while Auto is active."
+                        },
                         "isJetFocusEnabled": {
                             "title": "Expose Jet Focus",
                             "type": "boolean",
@@ -121,6 +128,13 @@
                             "default": false,
                             "required": true,
                             "description": "If set to true, a separate humidity sensor is exposed. If set to false, the humidity is added as characteristic to the air purifier (supported in the Apple Home app)."
+                        },
+                        "isHumidifierEnabled": {
+                            "title": "Expose Humidifier Controls",
+                            "type": "boolean",
+                            "default": true,
+                            "required": true,
+                            "description": "Only for PH01/PH02/PH03/PH04/PH05. If set to false, the humidifier controls are hidden while the optional humidity sensor remains available."
                         },
                         "isHumidityIgnored": {
                             "title": "Ignore Humidity",
