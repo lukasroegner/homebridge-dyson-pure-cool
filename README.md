@@ -28,8 +28,9 @@ This project is a homebridge plugin for the Dyson air purifiers. Supported devic
 - Dyson Purifier Big+Quiet Formaldehyde (BP02, BP03, BP04, BP06)
 - Dyson Purifier Hot+Cool (HP1/HP11)
 - Dyson HushJet Purifier Compact (HJ10)
+- Dyson Hot+Cool (HF1)
 
-All your devices are exposed as air purifiers in HomeKit, with support (also in Apple Home app) for:
+All your devices are exposed as air purifiers in HomeKit (the Hot+Cool HF1 has no purifier and no auto mode, so it is exposed as a fan), with support (also in Apple Home app) for:
 - On/off
 - Auto/manual
 - Fan speed
@@ -126,6 +127,7 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
                     "enableOscillationWhenActivating": false,
                     "enableNightModeWhenActivating": false,
                     "isNightModeEnabled": false,
+                    "isOscillationEnabled": false,
                     "isJetFocusEnabled": false,
                     "isContinuousMonitoringEnabled": false,
                     "isTemperatureSensorEnabled": false,
@@ -167,6 +169,8 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 **isNightModeEnabled**: If set to `true`, a switch is exposed for the night mode. Defaults to `false`.
 
 **isAutoModeEnabled**: If set to `true`, a switch is exposed for the auto mode. Defaults to `false`.
+
+**isOscillationEnabled**: If set to `true`, a switch is exposed for the oscillation. Only for supported devices. Defaults to `false`.
 
 **isJetFocusEnabled**: If set to `true`, a switch is exposed for the jet focus. Only for supported devices. Defaults to `false`.
 

@@ -39,3 +39,13 @@ t.test('Dyson Pure Cool Link Desk - Mostly defaults', t => {
   });
   t.end();
 });
+
+t.test('Dyson Hot+Cool HF1 - No purifier', t => {
+  const info = productTypeInfo('635');
+  t.equal(info.hardwareRevision, 'HF1');
+  t.equal(info.hasHeating, true);
+  t.equal(info.hasOscillation, true);
+  t.equal(info.isFanOnly, true);
+  t.equal(productTypeInfo('527').isFanOnly, undefined);
+  t.end();
+});

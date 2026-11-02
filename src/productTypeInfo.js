@@ -159,6 +159,18 @@ const knownProducts = {
     hasJetFocus: false,
     hasOscillation: false,
   },
+  '635': {
+    model: 'Dyson Hot+Cool',
+    hardwareRevision: 'HF1',
+    hasAdvancedAirQualitySensors: false,
+    hasTemperatureAndHumiditySensors: true,
+    hasHeating: true,
+    hasHumidifier: false,
+    hasJetFocus: false,
+    hasOscillation: true,
+    // Fan heater without a purifier: no filters, no air quality sensors and no auto mode
+    isFanOnly: true,
+  },
 };
 
 module.exports = function(productType) {

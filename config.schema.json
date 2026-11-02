@@ -74,6 +74,13 @@
                             "required": true,
                             "description": "If set to true, a switch is exposed for the auto mode."
                         },
+                        "isOscillationEnabled": {
+                            "title": "Expose Oscillation",
+                            "type": "boolean",
+                            "default": false,
+                            "required": true,
+                            "description": "If set to true, a switch is exposed for the oscillation. Only for supported devices."
+                        },
                         "isJetFocusEnabled": {
                             "title": "Expose Jet Focus",
                             "type": "boolean",
