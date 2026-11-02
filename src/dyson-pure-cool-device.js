@@ -1,6 +1,70 @@
 const productTypeInfo = require('./productTypeInfo');
 const mqtt = require('mqtt');
 
+const AUTO_FAN_SPEED_PROTOCOL = 'auto-fnsp';
+
+function usesAutoFanSpeedProtocol(fanControlProtocol) {
+    return fanControlProtocol === AUTO_FAN_SPEED_PROTOCOL;
+}
+
+function buildActiveCommand(fanControlProtocol, active, enableAutoMode) {
+    if (usesAutoFanSpeedProtocol(fanControlProtocol)) {
+        const command = { fpwr: active ? 'ON' : 'OFF' };
+        if (active) {
+            command.auto = enableAutoMode ? 'ON' : 'OFF';
+            if (enableAutoMode) {
+                command.fnsp = 'AUTO';
+            }
+        }
+        return command;
+    }
+    return {
+        fpwr: active ? 'ON' : 'OFF',
+        fmod: active ? (enableAutoMode ? 'AUTO' : 'FAN') : 'OFF'
+    };
+}
+
+function buildTargetStateCommand(fanControlProtocol, automatic) {
+    if (usesAutoFanSpeedProtocol(fanControlProtocol)) {
+        return automatic ? { auto: 'ON', fnsp: 'AUTO' } : { auto: 'OFF' };
+    }
+    return automatic ? { auto: 'ON', fmod: 'AUTO' } : { auto: 'OFF', fmod: 'FAN' };
+}
+
+function buildSpeedCommand(fanControlProtocol, value) {
+    const speed = ('0000' + Math.round(value / 10.0).toString()).slice(-4);
+    return usesAutoFanSpeedProtocol(fanControlProtocol)
+        ? { auto: 'OFF', fnsp: speed }
+        : { fnsp: speed };
+}
+
+function buildContinuousMonitoringCommand(fanControlProtocol, enabled) {
+    if (enabled) {
+        return { rhtm: 'ON' };
+    }
+    return usesAutoFanSpeedProtocol(fanControlProtocol)
+        ? { rhtm: 'OFF' }
+        : { rhtm: 'OFF', fmod: 'OFF' };
+}
+
+function updateRotationSpeed(rotationSpeedCharacteristic, fanSpeed) {
+    if (!rotationSpeedCharacteristic) {
+        return;
+    }
+
+    // Dyson reports AUTO instead of a numeric, real-time fan speed. Represent
+    // this as no manually selected speed rather than preserving a stale value.
+    if (fanSpeed === 'AUTO') {
+        rotationSpeedCharacteristic.updateValue(0);
+        return;
+    }
+
+    const speed = Number.parseInt(fanSpeed);
+    if (!Number.isNaN(speed)) {
+        rotationSpeedCharacteristic.updateValue(speed * 10);
+    }
+}
+
 /**
  * Represents a physical Dyson device.
  * @param platform The DysonPureCoolPlatform instance.
@@ -15,6 +79,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     const device = this;
     const { UUIDGen, Accessory, Characteristic, Service } = platform;
     const temperatureStep = config.useFahrenheit ? 0.555 : 1;
+    const isFanSpeedControlEnabled = config.isFanSpeedControlEnabled !== false;
 
     // Stores the information of the device that is used for shutdown
     device.serialNumber = serialNumber;
@@ -26,6 +91,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     device.info = productTypeInfo(productType);
     device.info.name = name || 'Dyson'; // Makes sure that a name is set
+    const fanControlProtocol = device.info.fanControlProtocol;
 
     // Checks if heating is disabled by the configuration
     if (config.isHeatingDisabled) {
@@ -160,7 +226,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             .setCharacteristic(Characteristic.HardwareRevision, device.info.hardwareRevision);
     }
 
-    // Updates the air purifier
+    let airPurifierConfigurationChanged = false;
     // Devices without a purifier are exposed as a fan: an air purifier service requires a target state (auto/manual), which these devices do not have
     const mainServiceType = device.info.isFanOnly ? Service.Fanv2 : Service.AirPurifier;
     const obsoleteMainService = airPurifierAccessory.getService(device.info.isFanOnly ? Service.AirPurifier : Service.Fanv2);
@@ -170,9 +236,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     let airPurifierService = airPurifierAccessory.getService(mainServiceType);
     if (!airPurifierService) {
         airPurifierService = airPurifierAccessory.addService(mainServiceType);
+        airPurifierConfigurationChanged = true;
     }
-    if (device.info.isFanOnly) {
-        airPurifierService.setPrimaryService(true);
+    if (device.info.isFanOnly && !airPurifierService.isPrimaryService) {
+        airPurifierService.setPrimaryService();
+        airPurifierConfigurationChanged = true;
     }
 
     // Updates the filter life level unit
@@ -184,14 +252,26 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             });
     }
 
-    // Updates the rotation speed steps
-    airPurifierService
-        .getCharacteristic(Characteristic.RotationSpeed)
-        .setProps({
-            minStep: 10,
-            minValue: 0,
-            maxValue: 100
-        });
+    let rotationSpeedCharacteristic = null;
+    const existingRotationSpeedCharacteristic = airPurifierService.characteristics.find(
+        (characteristic) => characteristic.UUID === Characteristic.RotationSpeed.UUID
+    );
+    if (isFanSpeedControlEnabled) {
+        rotationSpeedCharacteristic = airPurifierService
+            .getCharacteristic(Characteristic.RotationSpeed)
+            .setProps({
+                minStep: 10,
+                minValue: 0,
+                maxValue: 100
+            });
+        airPurifierConfigurationChanged = !existingRotationSpeedCharacteristic;
+    } else if (existingRotationSpeedCharacteristic) {
+        airPurifierService.removeCharacteristic(existingRotationSpeedCharacteristic);
+        airPurifierConfigurationChanged = true;
+    }
+    if (airPurifierConfigurationChanged) {
+        platform.api.updatePlatformAccessories([airPurifierAccessory]);
+    }
 
     // Updates the temperature service
     let temperatureService = null;
@@ -262,7 +342,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 humidityService = airPurifierService;
             }
         } else {
-            if (device.info.hasHumidifier) {
+            if (device.info.hasHumidifier && config.isHumidifierEnabled !== false) {
 
                 // Uses a humidifier service
                 humidifierService = humidityAccessory.getService(Service.HumidifierDehumidifier);
@@ -304,7 +384,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                         humidityService = humidityAccessory.addService(Service.HumiditySensor);
                     }
                 }
-            } else {
+            } else if (config.isHumiditySensorEnabled) {
 
                 // Uses a humidify sensor
                 humidityService = humidityAccessory.getService(Service.HumiditySensor);
@@ -312,6 +392,16 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                     humidityService = humidityAccessory.addService(Service.HumiditySensor);
                 }
             }
+        }
+    }
+
+    // This option removes only the control service. The humidity sensor, when
+    // enabled, remains available to HomeKit.
+    if (device.info.hasHumidifier && config.isHumidifierEnabled === false && humidityAccessory) {
+        const existingHumidifierService = humidityAccessory.getService(Service.HumidifierDehumidifier);
+        if (existingHumidifierService) {
+            humidityAccessory.removeService(existingHumidifierService);
+            platform.api.updatePlatformAccessories([humidityAccessory]);
         }
     }
 
@@ -382,6 +472,85 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     });
     platform.log.debug(serialNumber + ' - MQTT connection requested for ' + config.ipAddress + '.');
 
+    let pendingStateConfirmation = null;
+    let stateConfirmationPollHandle = null;
+    let stateConfirmationTimeoutHandle = null;
+    let lastAutoActivationAt = null;
+
+    function clearStateConfirmation() {
+        pendingStateConfirmation = null;
+        if (stateConfirmationPollHandle) {
+            clearTimeout(stateConfirmationPollHandle);
+            stateConfirmationPollHandle = null;
+        }
+        if (stateConfirmationTimeoutHandle) {
+            clearTimeout(stateConfirmationTimeoutHandle);
+            stateConfirmationTimeoutHandle = null;
+        }
+    }
+
+    function requestCurrentState() {
+        device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+            msg: 'REQUEST-CURRENT-STATE',
+            time: new Date().toISOString()
+        }));
+    }
+
+    function stateValue(value) {
+        return Array.isArray(value) ? value[1] : value;
+    }
+
+    function confirmStateIfApplied(productState) {
+        if (!pendingStateConfirmation) {
+            return;
+        }
+
+        const applied = Object.entries(pendingStateConfirmation.expectedState).every(([key, expectedValue]) =>
+            stateValue(productState[key]) === expectedValue
+        );
+        if (applied) {
+            platform.log.info(serialNumber + ' - ' + pendingStateConfirmation.description + ' confirmed by device.');
+            clearStateConfirmation();
+        }
+    }
+
+    function publishStateSet(commandData, description, expectedState) {
+        device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+            msg: 'STATE-SET',
+            time: new Date().toISOString(),
+            data: commandData
+        }));
+
+        if (!expectedState) {
+            return;
+        }
+
+        clearStateConfirmation();
+        pendingStateConfirmation = { description, expectedState };
+        stateConfirmationPollHandle = setTimeout(function () {
+            stateConfirmationPollHandle = null;
+            requestCurrentState();
+        }, 750);
+        stateConfirmationTimeoutHandle = setTimeout(function () {
+            platform.log.warn(serialNumber + ' - ' + description + ' was not confirmed by device within 3 seconds.');
+            clearStateConfirmation();
+        }, 3000);
+    }
+
+    function expectedHushJetState(commandData) {
+        if (!usesAutoFanSpeedProtocol(fanControlProtocol)) {
+            return null;
+        }
+
+        const expectedState = {};
+        for (const key of ['fpwr', 'auto', 'fnsp']) {
+            if (commandData[key]) {
+                expectedState[key] = commandData[key];
+            }
+        }
+        return Object.keys(expectedState).length ? expectedState : null;
+    }
+
     // Subscribes for events of the MQTT client
     let updateIntervalHandle = null;
     device.mqttClient.on('connect', function () {
@@ -442,6 +611,10 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         // Parses the payload
         const content = JSON.parse(payload);
 
+        if ((content.msg === 'CURRENT-STATE' || content.msg === 'STATE-CHANGE') && content['product-state']) {
+            confirmStateIfApplied(content['product-state']);
+        }
+
         // Updates the environmental data
         if (content.msg === 'ENVIRONMENTAL-CURRENT-SENSOR-DATA') {
 
@@ -477,7 +650,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 let hcho = -1;
                 let p = -1;
                 let v = -1;
-                if (device.info.hasAdvancedAirQualitySensors) {
+                if (device.info.hasAdvancedAirQualitySensors || device.info.hasParticulateAirQualitySensors) {
 
                     // Checks whether continuous monitoring is disabled
                     if (content['data']['p25r'] === 'OFF') {
@@ -486,10 +659,10 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                     if (content['data']['p10r'] === 'OFF') {
                         return;
                     }
-                    if (content['data']['va10'] === 'OFF') {
+                    if (device.info.hasAdvancedAirQualitySensors && content['data']['va10'] === 'OFF') {
                         return;
                     }
-                    if (content['data']['noxl'] === 'OFF') {
+                    if (device.info.hasAdvancedAirQualitySensors && content['data']['noxl'] === 'OFF') {
                         return;
                     }
 
@@ -604,6 +777,16 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                     if (noxl !== -1) {
                         airQualityService.updateCharacteristic(Characteristic.NitrogenDioxideDensity, noxl);
                     }
+                } else if (device.info.hasParticulateAirQualitySensors) {
+                    const pm25Quality = pm25 <= 35 ? 1 : (pm25 <= 53 ? 2 : (pm25 <= 70 ? 3 : (pm25 <= 150 ? 4 : 5)));
+                    const pm10Quality = pm10 <= 50 ? 1 : (pm10 <= 75 ? 2 : (pm10 <= 100 ? 3 : (pm10 <= 350 ? 4 : 5)));
+                    airQualityService.updateCharacteristic(Characteristic.AirQuality, Math.max(pm25Quality, pm10Quality));
+                    if (pm25 !== -1) {
+                        airQualityService.updateCharacteristic(Characteristic.PM2_5Density, pm25);
+                    }
+                    if (pm10 !== -1) {
+                        airQualityService.updateCharacteristic(Characteristic.PM10Density, pm10);
+                    }
                 } else {
                         
                     // Maps the values of the sensors to the relative values, these operations are copied from the newer devices as the app does not specify the correct values
@@ -641,7 +824,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             }
 
             // Sets the humidifier mode and threshold
-            if (device.info.hasHumidifier) {
+            if (humidifierService) {
                 if (content['product-state']['hume']) {
                     humidifierService.updateCharacteristic(Characteristic.Active, content['product-state']['hume'] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
                 }
@@ -694,10 +877,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 airPurifierService.updateCharacteristic(Characteristic.FilterLifeLevel, Math.ceil(filterLife * 100));
             }
 
-            // Sets the fan speed based on the auto setting
-            if (content['product-state']['fnsp'] !== 'AUTO') {
-                airPurifierService.updateCharacteristic(Characteristic.RotationSpeed, Number.parseInt(content['product-state']['fnsp']) * 10);
-            }
+            updateRotationSpeed(rotationSpeedCharacteristic, content['product-state']['fnsp']);
 
             // Sets the state of the night mode switch
             if (nightModeSwitchService) {
@@ -753,7 +933,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             }
 
             // Sets the humidifier mode and threshold
-            if (device.info.hasHumidifier) {
+            if (humidifierService) {
                 if (content['product-state']['hume']) {
                     humidifierService.updateCharacteristic(Characteristic.Active, content['product-state']['hume'][1] === 'OFF' ? Characteristic.Active.INACTIVE : Characteristic.Active.ACTIVE);
                 }
@@ -806,10 +986,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 airPurifierService.updateCharacteristic(Characteristic.FilterLifeLevel, Math.ceil(filterLife * 100));
             }
 
-            // Sets the fan speed based on the auto setting
-            if (content['product-state']['fnsp'][1] !== 'AUTO') {
-                airPurifierService.updateCharacteristic(Characteristic.RotationSpeed, Number.parseInt(content['product-state']['fnsp'][1]) * 10);
-            }
+            updateRotationSpeed(rotationSpeedCharacteristic, content['product-state']['fnsp'][1]);
 
             // Sets the state of the night mode switch
             if (nightModeSwitchService) {
@@ -862,14 +1039,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             return callback(null);
         }
 
-        // Gets the active mode based on the configuration
-        let activeMode = config.enableAutoModeWhenActivating ? 'AUTO' : 'FAN';
-
         // Builds the command data, which contains the active state and (optionally) the oscillation and night modes
-        let commandData = {
-            fpwr: value === Characteristic.Active.INACTIVE ? 'OFF' : 'ON',
-            fmod: value === Characteristic.Active.INACTIVE ? 'OFF' : activeMode
-        };
+        let commandData = buildActiveCommand(
+            fanControlProtocol,
+            value === Characteristic.Active.ACTIVE,
+            config.enableAutoModeWhenActivating
+        );
         if (config.enableOscillationWhenActivating && device.info.hasOscillation) {
             commandData['oson'] = 'ON';
         }
@@ -884,11 +1059,9 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
         // Executes the actual change of the active state
         platform.log.info(serialNumber + ' - set Active to ' + value + ': ' + JSON.stringify(commandData));
-        device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
-            msg: 'STATE-SET',
-            time: new Date().toISOString(),
-            data: commandData
-        }));
+        publishStateSet(commandData, 'set Active to ' + value, expectedHushJetState(commandData));
+        lastAutoActivationAt = usesAutoFanSpeedProtocol(fanControlProtocol) &&
+            value === Characteristic.Active.ACTIVE && config.enableAutoModeWhenActivating ? Date.now() : null;
         callback(null);
     });
 
@@ -896,33 +1069,37 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (!device.info.isFanOnly) {
         airPurifierService.getCharacteristic(Characteristic.TargetAirPurifierState).on('set', function (value, callback) {
 
-            // Checks if AUTO mode can be enabled when activating the device
-            if (config.enableAutoModeWhenActivating || airPurifierService.getCharacteristic(Characteristic.Active).value) {
+            // Apple Home commonly changes target mode immediately before switching
+            // an inactive purifier on. Some MQTT protocol variants can drop one of two rapid commands,
+            // so let the Active handler combine the mode and power into one command.
+            const shouldDeferTargetState = device.info.deferTargetStateWhenInactive &&
+                airPurifierService.getCharacteristic(Characteristic.Active).value === Characteristic.Active.INACTIVE;
+            const isAutomatic = value !== Characteristic.TargetAirPurifierState.MANUAL;
+            const wasIncludedInRecentActivation = usesAutoFanSpeedProtocol(fanControlProtocol) &&
+                isAutomatic && config.enableAutoModeWhenActivating && lastAutoActivationAt &&
+                Date.now() - lastAutoActivationAt < 1000;
 
-                // Directly sets the target state
-                platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
-                device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
-                    msg: 'STATE-SET',
-                    time: new Date().toISOString(),
-                    data: {
-                        auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON',
-                        fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO'
-                    }
-                }));
+            if (wasIncludedInRecentActivation) {
+                platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': already included in Active command');
+                return callback(null);
+            }
+
+            if (!shouldDeferTargetState && (config.enableAutoModeWhenActivating || airPurifierService.getCharacteristic(Characteristic.Active).value)) {
+                const targetCommand = buildTargetStateCommand(
+                    fanControlProtocol,
+                    isAutomatic
+                );
+                platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify(targetCommand));
+                publishStateSet(targetCommand, 'set TargetAirPurifierState to ' + value, expectedHushJetState(targetCommand));
             } else {
-
-                // Sets a timeout that can be cancelled by the Active characteristic handler
                 platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ' with delay');
                 timeoutHandle = setTimeout(function () {
-                    platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify({ auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON', fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO' }));
-                    device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
-                        msg: 'STATE-SET',
-                        time: new Date().toISOString(),
-                        data: {
-                            auto: value === Characteristic.TargetAirPurifierState.MANUAL ? 'OFF' : 'ON',
-                            fmod: value === Characteristic.TargetAirPurifierState.MANUAL ? 'FAN' : 'AUTO'
-                        }
-                    }));
+                    const targetCommand = buildTargetStateCommand(
+                        fanControlProtocol,
+                        isAutomatic
+                    );
+                    platform.log.info(serialNumber + ' - set TargetAirPurifierState to ' + value + ': ' + JSON.stringify(targetCommand));
+                    publishStateSet(targetCommand, 'set TargetAirPurifierState to ' + value, expectedHushJetState(targetCommand));
                     timeoutHandle = null;
                 }, 250);
             }
@@ -955,15 +1132,18 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     }
 
     // Subscribes for changes of the rotation speed characteristic
-    airPurifierService.getCharacteristic(Characteristic.RotationSpeed).on('set', function (value, callback) {
-        platform.log.info(serialNumber + ' - set RotationSpeed to ' + value + ': ' + JSON.stringify({ fnsp: ('0000' + Math.round(value / 10.0).toString()).slice(-4) }));
-        device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
-            msg: 'STATE-SET',
-            time: new Date().toISOString(),
-            data: { fnsp: ('0000' + Math.round(value / 10.0).toString()).slice(-4) }
-        }));
-        callback(null);
-    });
+    if (rotationSpeedCharacteristic) {
+        rotationSpeedCharacteristic.on('set', function (value, callback) {
+            const speedCommand = buildSpeedCommand(fanControlProtocol, value);
+            platform.log.info(serialNumber + ' - set RotationSpeed to ' + value + ': ' + JSON.stringify(speedCommand));
+            device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+                msg: 'STATE-SET',
+                time: new Date().toISOString(),
+                data: speedCommand
+            }));
+            callback(null);
+        });
+    }
 
     // Subscribes for changes of the heating mode and target temperature
     if (device.info.hasHeating) {
@@ -988,7 +1168,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     }
 
     // Subscribes for changes of the humidifier mode and threshold
-    if (device.info.hasHumidifier) {
+    if (humidifierService) {
         humidifierService.getCharacteristic(Characteristic.Active).on('set', function (value, callback) {
             platform.log.info(serialNumber + ' - set Humidifier Active to ' + value + ': ' + JSON.stringify({ hume: value === Characteristic.Active.ACTIVE ? 'HUMD' : 'OFF' }));
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
@@ -1022,9 +1202,6 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     if (nightModeSwitchService) {
         nightModeSwitchService.getCharacteristic(Characteristic.On).on('set', function (value, callback) {
 
-            // Gets the active mode based on the configuration
-            const activeMode = config.enableAutoModeWhenActivating ? 'AUTO' : 'FAN';
-
             // Builds the command data, if night mode is set to ON, the device has to be ON
             // If night mode is set to OFF, the device status is not changed
             let commandData = {};
@@ -1032,7 +1209,10 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
                 if (airPurifierService.getCharacteristic(Characteristic.Active).value) {
                     commandData = { nmod: 'ON' };
                 } else {
-                    commandData = { fpwr: 'ON', fmod: activeMode, nmod: 'ON' };
+                    commandData = {
+                        ...buildActiveCommand(fanControlProtocol, true, config.enableAutoModeWhenActivating),
+                        nmod: 'ON'
+                    };
                 }
             } else {
                 commandData = { nmod: 'OFF' };
@@ -1057,12 +1237,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             // If auto mode is set to OFF, the device status is not changed
             let commandData = {};
             if (value) {
-                commandData = { auto: 'ON', fmod: 'AUTO' }
+                commandData = buildTargetStateCommand(fanControlProtocol, true);
                 if (!airPurifierService.getCharacteristic(Characteristic.Active).value) {
                     commandData['fpwr'] = 'ON'
                 }
             } else {
-                commandData = { auto: 'OFF', fmod: 'FAN' };
+                commandData = buildTargetStateCommand(fanControlProtocol, false);
             }
 
             // Sends the command
@@ -1092,11 +1272,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     // Subscribes for changes of the continuous monitoring
     if (continuousMonitoringSwitchService) {
         continuousMonitoringSwitchService.getCharacteristic(Characteristic.On).on('set', function (value, callback) {
-            platform.log.info(serialNumber + ' - set ContinuousMonitoring to ' + value + ': ' + JSON.stringify(value ? { rhtm: 'ON' } : { rhtm: 'OFF', fmod: 'OFF' }));
+            const monitoringCommand = buildContinuousMonitoringCommand(fanControlProtocol, value);
+            platform.log.info(serialNumber + ' - set ContinuousMonitoring to ' + value + ': ' + JSON.stringify(monitoringCommand));
             device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
                 msg: 'STATE-SET',
                 time: new Date().toISOString(),
-                data: value ? { rhtm: 'ON' } : { rhtm: 'OFF', fmod: 'OFF' }
+                data: monitoringCommand
             }));
             callback(null);
         });

@@ -21,7 +21,7 @@ const knownProducts = {
   },
   '358K': {
     model: 'Dyson Pure Humidify+Cool Formaldehyde',
-    hardwareRevision: 'PH03/PH04',
+    hardwareRevision: 'PH04/PH05',
     hasAdvancedAirQualitySensors: true,
     hasTemperatureAndHumiditySensors: true,
     hasHeating: false,
@@ -171,13 +171,29 @@ const knownProducts = {
     // Fan heater without a purifier: no filters, no air quality sensors and no auto mode
     isFanOnly: true,
   },
+  '897': {
+    model: 'Dyson HushJet Purifier Compact',
+    hardwareRevision: 'HJ10',
+    fanControlProtocol: 'auto-fnsp',
+    deferTargetStateWhenInactive: true,
+    hasAdvancedAirQualitySensors: false,
+    hasParticulateAirQualitySensors: true,
+    hasTemperatureAndHumiditySensors: false,
+    hasHeating: false,
+    hasHumidifier: false,
+    hasJetFocus: false,
+    hasOscillation: false,
+  },
 };
 
 module.exports = function(productType) {
   const info = {};
   for (const [k, v] of Object.entries(knownProducts[productType] || {})) info[k] = v;
   if (!info.hardwareRevision) info.hardwareRevision = '';
+  if (!info.fanControlProtocol) info.fanControlProtocol = 'fmod';
+  if (!info.deferTargetStateWhenInactive) info.deferTargetStateWhenInactive = false;
   if (!info.hasAdvancedAirQualitySensors) info.hasAdvancedAirQualitySensors = false;
+  if (!info.hasParticulateAirQualitySensors) info.hasParticulateAirQualitySensors = false;
   if (!info.hasTemperatureAndHumiditySensors) info.hasTemperatureAndHumiditySensors = false;
   if (!info.hasHeating) info.hasHeating = false;
   if (!info.hasHumidifier) info.hasHumidifier = false;
