@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.10.0] - 2026-11-02
+### Changes
+- Support for devices without purifier (thanks to blond-in-blue for the PR)
+
 ## [2.9.5] - 2026-09-22
 ### Changes
 - Fix for temperature and humidity parsing (thanks to 5ag-70 for the PR)
