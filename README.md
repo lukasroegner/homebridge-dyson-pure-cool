@@ -128,12 +128,14 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
                     "enableNightModeWhenActivating": false,
                     "isNightModeEnabled": false,
                     "isOscillationEnabled": false,
+                    "isFanSpeedControlEnabled": true,
                     "isJetFocusEnabled": false,
                     "isContinuousMonitoringEnabled": false,
                     "isTemperatureSensorEnabled": false,
                     "isTemperatureIgnored": false,
                     "temperatureOffset": 0,
                     "isHumiditySensorEnabled": false,
+                    "isHumidifierEnabled": true,
                     "isHumidityIgnored": false,
                     "humidityOffset": 0,
                     "isAirQualitySensorEnabled": false,
@@ -172,6 +174,8 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 
 **isOscillationEnabled**: If set to `true`, a switch is exposed for the oscillation. Only for supported devices. Defaults to `false`.
 
+**isFanSpeedControlEnabled**: If set to `false`, the manual fan speed slider is hidden while the air purifier controls remain available. When Dyson reports Auto mode instead of a numeric fan speed, the slider displays 0%; this does not stop the fan. Defaults to `true`, including when omitted.
+
 **isJetFocusEnabled**: If set to `true`, a switch is exposed for the jet focus. Only for supported devices. Defaults to `false`.
 
 **isContinuousMonitoringEnabled**: If set to `true`, a switch is exposed for the continuous monitoring. Defaults to `false`.
@@ -183,6 +187,8 @@ This method seems to work for most people, see [#196](https://github.com/lukasro
 **temperatureOffset**: Negatively or positively offset the value reported by the temperature sensor before exposing it to HomeKit. Provide the value in degree Celsius.
 
 **isHumiditySensorEnabled**: If set to `true`, a separate humidity sensor is exposed. Only used for supported devices. If set to `false`, the humidity is added as characteristic to the air purifier (supported in the Apple Home app). Defaults to `false`.
+
+**isHumidifierEnabled**: Only for humidifier devices. If set to `false`, the humidifier controls are hidden. The separate humidity sensor remains available when `isHumiditySensorEnabled` is set to `true`. Defaults to `true`, including when omitted.
 
 **isHumidityIgnored**: If set to `true`, the humidity measurement is completely ignored and not exposed. Can only used for non-humidifier devices. Defaults to `false`.
 

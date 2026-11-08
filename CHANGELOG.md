@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.11.0] - 2026-11-08
+### Changes
+- Improved control protocol and sensor support for the Dyson HushJet Purifier Compact HJ10 (thanks to kacperduras for the PR)
+- Added options to hide fan speed control and humidifier controls
+
 ## [2.10.0] - 2026-11-02
 ### Changes
 - Support for devices without purifier (thanks to blond-in-blue for the PR)

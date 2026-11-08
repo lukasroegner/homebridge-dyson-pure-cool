@@ -160,7 +160,8 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // Gets the humidity accessory
     let humidityAccessory = null;
-    if (device.info.hasHumidifier || (device.info.hasTemperatureAndHumiditySensors && config.isHumiditySensorEnabled)) {
+    if ((device.info.hasHumidifier && config.isHumidifierEnabled !== false) ||
+        ((device.info.hasHumidifier || device.info.hasTemperatureAndHumiditySensors) && config.isHumiditySensorEnabled)) {
         if (config.isSingleAccessoryModeEnabled) {
             humidityAccessory = airPurifierAccessory;
         } else if (!device.info.hasHumidifier && config.isAirQualitySensorEnabled && config.isSingleSensorAccessoryModeEnabled) {
@@ -268,6 +269,16 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     } else if (existingRotationSpeedCharacteristic) {
         airPurifierService.removeCharacteristic(existingRotationSpeedCharacteristic);
         airPurifierConfigurationChanged = true;
+    }
+    // Removes cached oscillation controls from devices without oscillation.
+    if (!device.info.hasOscillation) {
+        const existingSwingModeCharacteristic = airPurifierService.characteristics.find(
+            (characteristic) => characteristic.UUID === Characteristic.SwingMode.UUID
+        );
+        if (existingSwingModeCharacteristic) {
+            airPurifierService.removeCharacteristic(existingSwingModeCharacteristic);
+            airPurifierConfigurationChanged = true;
+        }
     }
     if (airPurifierConfigurationChanged) {
         platform.api.updatePlatformAccessories([airPurifierAccessory]);
@@ -397,11 +408,12 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
 
     // This option removes only the control service. The humidity sensor, when
     // enabled, remains available to HomeKit.
-    if (device.info.hasHumidifier && config.isHumidifierEnabled === false && humidityAccessory) {
-        const existingHumidifierService = humidityAccessory.getService(Service.HumidifierDehumidifier);
+    if (device.info.hasHumidifier && config.isHumidifierEnabled === false) {
+        const humidifierAccessory = humidityAccessory || airPurifierAccessory;
+        const existingHumidifierService = humidifierAccessory.getService(Service.HumidifierDehumidifier);
         if (existingHumidifierService) {
-            humidityAccessory.removeService(existingHumidifierService);
-            platform.api.updatePlatformAccessories([humidityAccessory]);
+            humidifierAccessory.removeService(existingHumidifierService);
+            platform.api.updatePlatformAccessories([humidifierAccessory]);
         }
     }
 
@@ -509,7 +521,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             stateValue(productState[key]) === expectedValue
         );
         if (applied) {
-            platform.log.info(serialNumber + ' - ' + pendingStateConfirmation.description + ' confirmed by device.');
+            platform.log.debug(serialNumber + ' - ' + pendingStateConfirmation.description + ' confirmed by device.');
             clearStateConfirmation();
         }
     }
@@ -1108,15 +1120,17 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     }
 
     // Subscribes for changes of the swing mode characteristic
-    airPurifierService.getCharacteristic(Characteristic.SwingMode).on('set', function (value, callback) {
-        platform.log.info(serialNumber + ' - set SwingMode to ' + value + ': ' + JSON.stringify({ oson: value === Characteristic.SwingMode.SWING_DISABLED ? 'OFF' : 'ON' }));
-        device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
-            msg: 'STATE-SET',
-            time: new Date().toISOString(),
-            data: { oson: value === Characteristic.SwingMode.SWING_DISABLED ? 'OFF' : 'ON' }
-        }));
-        callback(null);
-    });
+    if (device.info.hasOscillation) {
+        airPurifierService.getCharacteristic(Characteristic.SwingMode).on('set', function (value, callback) {
+            platform.log.info(serialNumber + ' - set SwingMode to ' + value + ': ' + JSON.stringify({ oson: value === Characteristic.SwingMode.SWING_DISABLED ? 'OFF' : 'ON' }));
+            device.mqttClient.publish(productType + '/' + serialNumber + '/command', JSON.stringify({
+                msg: 'STATE-SET',
+                time: new Date().toISOString(),
+                data: { oson: value === Characteristic.SwingMode.SWING_DISABLED ? 'OFF' : 'ON' }
+            }));
+            callback(null);
+        });
+    }
 
     // Subscribes for changes of the oscillation
     if (oscillationSwitchService) {
