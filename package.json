@@ -15,8 +15,7 @@
     "test": "tap test/*.js"
   },
   "dependencies": {
-    "mqtt": "~> 2.15.0",
-    "request": "^2.88.0"
+    "mqtt": "^5.16.1"
   },
   "repository": {
     "type": "git",
