@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.12.0] - 2026-11-21
+### Changes
+- Report unreachable devices as "No Response" in HomeKit after a 30-second grace period and reject commands while disconnected instead of replaying them on reconnect (thanks to zmanuel1234 for the PR)
+- Replaced the deprecated request package with native HTTP(S) requests and updated MQTT to v5 (thanks to zmanuel1234 for the PR)
+- Preserved automatic reconnection after temporary MQTT broker rejections
+
 ## [2.11.0] - 2026-11-08
 ### Changes
 - Improved control protocol and sensor support for the Dyson HushJet Purifier Compact HJ10 (thanks to kacperduras for the PR)

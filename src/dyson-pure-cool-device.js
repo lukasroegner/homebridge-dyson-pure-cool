@@ -482,6 +482,8 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         password: password,
         protocolVersion: 3,
         protocolId: 'MQIsdp',
+        // Keeps retrying after broker rejections, as MQTT v2 did.
+        reconnectOnConnackError: true,
         queueQoSZero: false
     });
     platform.log.debug(serialNumber + ' - MQTT connection requested for ' + config.ipAddress + '.');
