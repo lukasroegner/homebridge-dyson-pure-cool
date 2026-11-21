@@ -476,11 +476,13 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     }
 
     // Initializes the MQTT client for local communication with the device
+    // Commands are not queued while the device is offline, so that they are not replayed (possibly hours later) on reconnect
     device.mqttClient = mqtt.connect('mqtt://' + config.ipAddress, {
         username: serialNumber,
         password: password,
         protocolVersion: 3,
-        protocolId: 'MQIsdp'
+        protocolId: 'MQIsdp',
+        queueQoSZero: false
     });
     platform.log.debug(serialNumber + ' - MQTT connection requested for ' + config.ipAddress + '.');
 
@@ -563,10 +565,39 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
         return Object.keys(expectedState).length ? expectedState : null;
     }
 
+    // Tracks whether the device is reachable. The device is only reported as unreachable after the grace period,
+    // so that short reconnects do not cause "No Response" in the Home app.
+    const unreachableGracePeriod = 30 * 1000;
+    let lastConnectionError = null;
+    let unreachableTimeoutHandle = null;
+    device.isReachable = true;
+    const startUnreachableTimeout = function () {
+        if (unreachableTimeoutHandle || !device.isReachable) {
+            return;
+        }
+        unreachableTimeoutHandle = setTimeout(function () {
+            unreachableTimeoutHandle = null;
+            device.isReachable = false;
+            platform.log.warn(serialNumber + ' - device at ' + config.ipAddress + ' has not been reachable for ' + (unreachableGracePeriod / 1000) + ' seconds' + (lastConnectionError ? ' (' + lastConnectionError + ')' : '') + '. It is shown as "No Response" in HomeKit until it is back.');
+        }, unreachableGracePeriod);
+    };
+
+    // The device has to connect within the grace period after startup
+    startUnreachableTimeout();
+
     // Subscribes for events of the MQTT client
     let updateIntervalHandle = null;
     device.mqttClient.on('connect', function () {
         platform.log.debug(serialNumber + ' - MQTT connection established.');
+        if (unreachableTimeoutHandle) {
+            clearTimeout(unreachableTimeoutHandle);
+            unreachableTimeoutHandle = null;
+        }
+        if (!device.isReachable) {
+            platform.log.info(serialNumber + ' - device at ' + config.ipAddress + ' is reachable again.');
+        }
+        device.isReachable = true;
+        lastConnectionError = null;
 
         // Subscribes to the status topic to receive updates
         device.mqttClient.subscribe(productType + '/' + serialNumber + '/status/current', function () {
@@ -592,6 +623,7 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
     });
     device.mqttClient.on('error', function (error) {
         platform.log.debug(serialNumber + ' - MQTT error: ' + error);
+        lastConnectionError = error && error.message ? error.message : String(error);
     });
     device.mqttClient.on('reconnect', function () {
         platform.log.debug(serialNumber + ' - MQTT reconnecting.');
@@ -602,12 +634,18 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             clearInterval(updateIntervalHandle);
             updateIntervalHandle = null;
         }
+        if (!device.isShuttingDown) {
+            startUnreachableTimeout();
+        }
     });
     device.mqttClient.on('offline', function () {
         platform.log.debug(serialNumber + ' - MQTT offline.');
         if (updateIntervalHandle) {
             clearInterval(updateIntervalHandle);
             updateIntervalHandle = null;
+        }
+        if (!device.isShuttingDown) {
+            startUnreachableTimeout();
         }
     });
     device.mqttClient.on('end', function () {
@@ -1296,6 +1334,48 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
             callback(null);
         });
     }
+
+    // Clears the reachability timer on shutdown
+    device.stopReachabilityTracking = function () {
+        device.isShuttingDown = true;
+        if (unreachableTimeoutHandle) {
+            clearTimeout(unreachableTimeoutHandle);
+            unreachableTimeoutHandle = null;
+        }
+    };
+
+    // Reports the connection state to HomeKit:
+    // - reads fail with a communication error while the device is unreachable, so that the Home app shows "No Response"
+    //   instead of the last known state
+    // - changes are rejected while there is no MQTT connection, instead of being silently lost
+    const { HapStatusError, HAPStatus } = platform.api.hap;
+    const uniqueDeviceAccessories = deviceAccessories.filter(function (a, i) { return deviceAccessories.indexOf(a) === i; });
+    for (let i = 0; i < uniqueDeviceAccessories.length; i++) {
+        const services = uniqueDeviceAccessories[i].services.filter(function (s) { return s.UUID !== Service.AccessoryInformation.UUID; });
+        for (let j = 0; j < services.length; j++) {
+            const characteristics = services[j].characteristics.filter(function (c) { return c.UUID !== Characteristic.Name.UUID; });
+            for (let k = 0; k < characteristics.length; k++) {
+                const characteristic = characteristics[k];
+                characteristic.onGet(function () {
+                    if (!device.isReachable) {
+                        throw new HapStatusError(HAPStatus.SERVICE_COMMUNICATION_FAILURE);
+                    }
+                    return characteristic.value;
+                });
+                const setListeners = characteristic.listeners('set');
+                if (setListeners.length > 0) {
+                    characteristic.removeAllListeners('set');
+                    characteristic.on('set', function (value, callback, context, connectionId) {
+                        if (!device.mqttClient || !device.mqttClient.connected) {
+                            platform.log.warn(serialNumber + ' - cannot set ' + characteristic.displayName + ' to ' + value + ': the device is not connected.');
+                            return callback(new HapStatusError(HAPStatus.SERVICE_COMMUNICATION_FAILURE));
+                        }
+                        setListeners[0].call(this, value, callback, context, connectionId);
+                    });
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -1303,6 +1383,11 @@ function DysonPureCoolDevice(platform, name, serialNumber, productType, version,
  */
 DysonPureCoolDevice.prototype.shutdown = function () {
     const device = this;
+
+    // Stops reporting the device as unreachable
+    if (device.stopReachabilityTracking) {
+        device.stopReachabilityTracking();
+    }
 
     // Ends the MQTT connection
     if (device.mqttClient) {
