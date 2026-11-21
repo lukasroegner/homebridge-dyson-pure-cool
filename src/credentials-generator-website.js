@@ -1,6 +1,6 @@
 const http = require('http');
 const url = require('url');
-const request = require('request');
+const request = require('./https-request');
 const crypto = require('crypto');
 
 /**
