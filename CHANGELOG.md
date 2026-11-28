@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [2.12.1] - 2026-11-28
+### Changes
+- Fixed selecting Heat in HomeKit while the device is off by powering on the device and enabling heating in a single command (thanks to tomabuct for the PR)
+
 ## [2.12.0] - 2026-11-21
 ### Changes
 - Report unreachable devices as "No Response" in HomeKit after a 30-second grace period and reject commands while disconnected instead of replaying them on reconnect (thanks to zmanuel1234 for the PR)
